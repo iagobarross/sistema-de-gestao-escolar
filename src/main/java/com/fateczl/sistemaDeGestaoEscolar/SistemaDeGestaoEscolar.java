@@ -1,13 +1,13 @@
-package com.fateczl.sistema.de.gestao.escolar;
+package com.fateczl.sistemaDeGestaoEscolar;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Application {
+public class SistemaDeGestaoEscolar {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(SistemaDeGestaoEscolar.class, args);
 	}
 
 }
