@@ -25,8 +25,12 @@ public class EscolaService {
 				.orElseThrow(() -> new ResourceNotFoundException("Escola não encontrada com o ID: " + id));
 	}
 	
+	public List<Escola> findByName(String nome) {
+		return escolaRepository.findByNomeStartsWith(nome);
+	}
+	
 	public Escola create(Escola escola) {
-		if(escolaRepository.existsById(escola.getId()))
+		if(escolaRepository.existsByCnpj(escola.getCnpj()))
 			throw new BusinessException("CNPJ já cadastrado.");
 		return escolaRepository.save(escola);
 	}
@@ -36,7 +40,7 @@ public class EscolaService {
 		escola.setNome(escolaAtualizada.getNome());
 		escola.setCodigo(escolaAtualizada.getCodigo());
 		escola.setCnpj(escolaAtualizada.getCnpj());
-		escola.setEndereco(escola.getEndereco());
+		escola.setEndereco(escolaAtualizada.getEndereco());
 		return escolaRepository.save(escola);
 	}
 	
