@@ -39,8 +39,8 @@ public class EscolaController {
 		return ResponseEntity.ok(escolaMapper.toResponseDTO(escola));
 	}
 	
-	@GetMapping("buscarPorNome")
-	public List<Escola> buscarEscolaPorNome(String nome){
+	@GetMapping("searchByName")
+	public List<Escola> buscarEscolaPorNome(@RequestParam(required=false) String nome){
 		return escolaService.findByName(nome);
 	}
 	
