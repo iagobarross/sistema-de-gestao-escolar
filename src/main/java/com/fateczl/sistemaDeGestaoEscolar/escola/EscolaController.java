@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -36,6 +37,11 @@ public class EscolaController {
 	public ResponseEntity<EscolaResponseDTO> buscarEscolaPorId(@PathVariable Long id){
 		Escola escola = escolaService.findById(id);
 		return ResponseEntity.ok(escolaMapper.toResponseDTO(escola));
+	}
+	
+	@GetMapping("buscarPorNome")
+	public List<Escola> buscarEscolaPorNome(String nome){
+		return escolaService.findByName(nome);
 	}
 	
 	@PostMapping

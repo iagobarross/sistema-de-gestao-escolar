@@ -1,5 +1,7 @@
 package com.fateczl.sistemaDeGestaoEscolar.escola;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,4 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface EscolaRepository extends JpaRepository<Escola,Long> {
 
+	List<Escola> findByNomeStartsWith (String nome);
+	
+	boolean existsByCnpj(String cnpj);
 }
