@@ -13,6 +13,7 @@ public class EscolaMapper {
 		dto.setId(escola.getId());
 		dto.setNome(escola.getNome());
 		dto.setCodigo(escola.getCodigo());
+		dto.setCnpj(escola.getCnpj());
 		dto.setEndereco(escola.getEndereco());
 		return dto;
 	}
