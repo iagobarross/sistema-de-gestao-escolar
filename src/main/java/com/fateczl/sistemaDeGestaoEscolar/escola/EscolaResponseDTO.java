@@ -7,6 +7,7 @@ public class EscolaResponseDTO {
 	private Long id;
 	private String codigo;
 	private String nome;
+	private String cnpj;
 	private String endereco;
 	
 }
