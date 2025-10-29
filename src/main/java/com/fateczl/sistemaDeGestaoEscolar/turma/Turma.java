@@ -1,7 +1,7 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.turma
 package com.fateczl.sistemaDeGestaoEscolar.turma;
 
-import com.fateczl.sistemaDeGestaoEscolar.aluno.Aluno;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.Aluno;
 // Importe outras entidades relacionadas se necessário (MatrizDisciplina, DiarioDeClasse)
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

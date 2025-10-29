@@ -1,5 +1,5 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
-package com.fateczl.sistemaDeGestaoEscolar.aluno;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import lombok.Data;
 import java.time.LocalDate;

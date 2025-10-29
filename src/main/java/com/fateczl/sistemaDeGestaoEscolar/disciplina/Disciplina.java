@@ -24,6 +24,8 @@ public class Disciplina {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="disciplina_id")
 	private Long id;
+    @Column(unique = true, nullable = false, length = 20)
+    private String codigo;
     private String nome;
     private String descricao;
     private double notaMinima;

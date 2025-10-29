@@ -1,5 +1,5 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
-package com.fateczl.sistemaDeGestaoEscolar.aluno;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -1,7 +1,8 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
-package com.fateczl.sistemaDeGestaoEscolar.aluno;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
+import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
 import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario; // Herança correta
 
@@ -11,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity // <--- Tem que ser @Entity
-@Table(name = "alunos")
+@Table(name = "aluno")
 // REMOVA QUALQUER ANOTAÇÃO @Inheritance AQUI SE ELA EXISTIR.
 @Getter
 @Setter
@@ -36,5 +37,5 @@ public class Aluno extends Usuario { // <--- Herda de Usuario
 
     // --- Relacionamento N:M com Turma ---
     @ManyToMany(mappedBy = "alunos", fetch = FetchType.LAZY)
-    private List<com.fateczl.sistemaDeGestaoEscolar.turma.Turma> turmas;
+    private List<Turma> turmas;
 }

@@ -1,5 +1,5 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
-package com.fateczl.sistemaDeGestaoEscolar.aluno;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;

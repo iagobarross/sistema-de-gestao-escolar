@@ -1,5 +1,4 @@
-// Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
-package com.fateczl.sistemaDeGestaoEscolar.aluno;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import org.springframework.stereotype.Component;
 import java.util.List;

@@ -1,5 +1,5 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
-package com.fateczl.sistemaDeGestaoEscolar.aluno;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

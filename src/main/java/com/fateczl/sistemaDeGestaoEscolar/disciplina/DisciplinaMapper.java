@@ -11,6 +11,7 @@ public class DisciplinaMapper {
     public DisciplinaResponseDTO toResponseDTO(Disciplina disciplina){
         DisciplinaResponseDTO dto = new DisciplinaResponseDTO();
         dto.setId(disciplina.getId());
+        dto.setCodigo(disciplina.getCodigo());
         dto.setNome(disciplina.getNome());
         dto.setDescricao(disciplina.getDescricao());
         dto.setNotaMinima(disciplina.getNotaMinima());
@@ -25,6 +26,7 @@ public class DisciplinaMapper {
     public Disciplina toEntity(DisciplinaRequestDTO dto){
         Disciplina disciplina = new Disciplina();
         disciplina.setNome(dto.getNome());
+        disciplina.setCodigo(dto.getCodigo());
         disciplina.setDescricao(dto.getDescricao());
         disciplina.setNotaMinima(dto.getNotaMinima());
         disciplina.setCargaHoraria(dto.getCargaHoraria());

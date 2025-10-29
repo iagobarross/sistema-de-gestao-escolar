@@ -49,21 +49,21 @@ public class DataSeeder implements CommandLineRunner {
         escolaRepository.saveAll(escolas);
     }
 	
-	private void seedDisciplinas() {
+    private void seedDisciplinas() {
         List<Disciplina> disciplinas = List.of(
-            new Disciplina(null, "Português", "Leitura e gramática", 5.0, 100),
-            new Disciplina(null, "Matemática", "Álgebra e geometria", 5.0, 100),
-            new Disciplina(null, "História", "História do Brasil e Geral", 5.0, 80),
-            new Disciplina(null, "Geografia", "Geografia física e política", 5.0, 80),
-            new Disciplina(null, "Ciências", "Biologia, física e química", 6.0, 100),
-            new Disciplina(null, "Inglês", "Leitura e conversação", 5.0, 60),
-            new Disciplina(null, "Educação Física", "Prática de esportes", 5.0, 40),
-            new Disciplina(null, "Artes", "História da arte e prática", 5.0, 40),
-            new Disciplina(null, "Filosofia", "Pensadores e correntes filosóficas", 6.0, 60),
-            new Disciplina(null, "Sociologia", "Estudo da sociedade", 6.0, 60)
+            new Disciplina(null, "POR", "Português", "Leitura e gramática", 5.0, 100),
+            new Disciplina(null, "MAT", "Matemática", "Álgebra e geometria", 5.0, 100),
+            new Disciplina(null, "HIS", "História", "História do Brasil e Geral", 5.0, 80),
+            new Disciplina(null, "GEO", "Geografia", "Geografia física e política", 5.0, 80),
+            new Disciplina(null, "CIE", "Ciências", "Biologia, física e química", 6.0, 100),
+            new Disciplina(null, "ING", "Inglês", "Leitura e conversação", 5.0, 60),
+            new Disciplina(null, "EDF", "Educação Física", "Prática de esportes", 5.0, 40),
+            new Disciplina(null, "ART", "Artes", "História da arte e prática", 5.0, 40),
+            new Disciplina(null, "FIL", "Filosofia", "Pensadores e correntes filosóficas", 6.0, 60),
+            new Disciplina(null, "SOC", "Sociologia", "Estudo da sociedade", 6.0, 60)
         );
-        
-        disciplinaRepository.saveAll(disciplinas);
+    
+        disciplinaRepository.saveAll(disciplinas); //
     }
 	
 	

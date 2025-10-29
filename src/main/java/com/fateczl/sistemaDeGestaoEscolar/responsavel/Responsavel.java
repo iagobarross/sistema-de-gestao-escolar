@@ -1,30 +1,24 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.responsavel
 package com.fateczl.sistemaDeGestaoEscolar.responsavel;
 
-import com.fateczl.sistemaDeGestaoEscolar.aluno.Aluno;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
 
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.Aluno;
+
 @Entity
-@Table(name = "responsaveis")
+@Table(name = "responsavel")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = "id")
-public class Responsavel {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, length = 150)
-    private String nome; // Campo adicionado (essencial)
+public class Responsavel extends Usuario{
 
     @Column(nullable = false, unique = true, length = 11)
     private String cpf;
