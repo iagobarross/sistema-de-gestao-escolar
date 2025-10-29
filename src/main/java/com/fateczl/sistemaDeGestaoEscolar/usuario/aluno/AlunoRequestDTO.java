@@ -1,42 +1,41 @@
-package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
+// Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
+package com.fateczl.sistemaDeGestaoEscolar.aluno;
 
-import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
-import org.hibernate.validator.constraints.br.CPF;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import java.time.LocalDate;
 
 @Data
 public class AlunoRequestDTO {
-    
-    @NotBlank(message = "Matrícula é obrigatória")
-    private String matricula;
 
-    @NotBlank(message = "Curso é obrigatório")
-    private String curso;   
-
+    // --- Campos do Usuario ---
     @NotBlank(message = "Nome é obrigatório")
+    @Size(min = 3, message = "Nome deve ter no mínimo 3 caracteres")
     private String nome;
 
-    @NotBlank(message = "Email é obrigatório")  
-    @Email(message = "Email inválido")
+    @NotBlank(message = "Email é obrigatório")
+    @Email(message = "Email deve ser válido")
     private String email;
 
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 8, message = "Senha deve ter no mínimo 6 caracteres")   
+    @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     private String senha;
 
-    @NotBlank(message = "dataNascimento é obrigatória")
-    private String dataNascimento;
+    @NotNull(message = "ID da Escola é obrigatório")
+    private Long escolaId;
 
-    @NotBlank(message = "telefone é obrigatório")
-    private String telefone;
+    // --- Campos do Aluno ---
+    @NotBlank(message = "Matrícula é obrigatória")
+    private String matricula;
 
-    @NotBlank(message = "CPF é obrigatório")
-    @CPF(message = "CPF inválido")
-    private String CPF;
-    
-    // id do responsável (p.ex. id de um usuário responsável)
+    @NotNull(message = "Data de Nascimento é obrigatória")
+    @Past(message = "Data de Nascimento deve ser no passado")
+    private LocalDate dataNascimento;
+
+    @NotNull(message = "ID do Responsável é obrigatório")
     private Long responsavelId;
 }
