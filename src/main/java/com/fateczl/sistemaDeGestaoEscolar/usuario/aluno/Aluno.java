@@ -1,31 +1,40 @@
-package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
+// Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
+package com.fateczl.sistemaDeGestaoEscolar.aluno;
 
+import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
+import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario; // Herança correta
+
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 
-import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
-
-//pesquisar o superbuilder
-@Entity
-@Table(name="aluno")
+@Entity // <--- Tem que ser @Entity
+@Table(name = "alunos")
+// REMOVA QUALQUER ANOTAÇÃO @Inheritance AQUI SE ELA EXISTIR.
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
-@EqualsAndHashCode(callSuper = true)
-public class Aluno extends Usuario {
-    
+public class Aluno extends Usuario { // <--- Herda de Usuario
+
+    @Column(nullable = false, unique = true, length = 50)
     private String matricula;
+
     private LocalDate dataNascimento;
-    private Long responsavelId;
-    
+
+    // --- Relacionamento N:1 com Escola (Correto) ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "escola_id", nullable = false)
+    private Escola escola;
+
+    // --- Relacionamento N:1 com Responsavel ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id", nullable = false)
+    private Responsavel responsavel;
+
+    // --- Relacionamento N:M com Turma ---
+    @ManyToMany(mappedBy = "alunos", fetch = FetchType.LAZY)
+    private List<com.fateczl.sistemaDeGestaoEscolar.turma.Turma> turmas;
 }

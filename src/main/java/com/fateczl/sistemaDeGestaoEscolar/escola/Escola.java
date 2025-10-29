@@ -13,17 +13,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name="escola")
+@Table(name = "escola")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of="id")
+@EqualsAndHashCode(of = "id")
 public class Escola {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="escola_id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "escola_id")
 	private Long id;
 	private String codigo;
 	private String nome;

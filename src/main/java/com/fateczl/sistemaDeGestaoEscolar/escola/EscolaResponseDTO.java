@@ -9,5 +9,5 @@ public class EscolaResponseDTO {
 	private String nome;
 	private String cnpj;
 	private String endereco;
-	
+
 }

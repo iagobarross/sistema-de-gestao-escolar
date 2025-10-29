@@ -1,36 +1,62 @@
-package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
-
-import java.util.stream.Collectors;
+// Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
+package com.fateczl.sistemaDeGestaoEscolar.aluno;
 
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class AlunoMapper {
 
     public AlunoResponseDTO toResponseDTO(Aluno aluno) {
         AlunoResponseDTO dto = new AlunoResponseDTO();
-        dto.setMatricula(aluno.getMatricula());
+
+        // --- Dados do Usuario ---
+        dto.setId(aluno.getId());
         dto.setNome(aluno.getNome());
         dto.setEmail(aluno.getEmail());
-        dto.setDataNascimento(aluno.getDataNascimento().toString());
-        dto.setResponsavelId(aluno.getResponsavelId());
-        return dto;
-    }
+        dto.setDataCriacao(aluno.getDataCriacao());
 
-    public Aluno toEntity(AlunoRequestDTO dto) {
-        Aluno aluno = new Aluno();
-        aluno.setMatricula(dto.getMatricula());
-        aluno.setNome(dto.getNome());
-        aluno.setEmail(dto.getEmail());
-        aluno.setDataNascimento(LocalDate.parse(dto.getDataNascimento()));
-        aluno.setResponsavelId(dto.getResponsavelId());
-        return aluno;
+        // --- Dados do Aluno ---
+        dto.setMatricula(aluno.getMatricula());
+        dto.setDataNascimento(aluno.getDataNascimento());
+
+        // --- Dados de Relacionamento ---
+        if (aluno.getEscola() != null) {
+            dto.setEscolaId(aluno.getEscola().getId());
+            dto.setNomeEscola(aluno.getEscola().getNome());
+        }
+        if (aluno.getResponsavel() != null) {
+            dto.setResponsavelId(aluno.getResponsavel().getId());
+            // Assumindo que Responsavel tem um campo 'nome' (não está no diagrama, mas é
+            // provável)
+            // Se não tiver, use o CPF ou outro identificador.
+            // dto.setNomeResponsavel(aluno.getResponsavel().getNome());
+        }
+
+        return dto;
     }
 
     public List<AlunoResponseDTO> toResponseDTOList(List<Aluno> alunos) {
         return alunos.stream().map(this::toResponseDTO).collect(Collectors.toList());
+    }
+
+    public Aluno toEntity(AlunoRequestDTO dto) {
+        Aluno aluno = new Aluno();
+
+        // --- Dados do Usuario ---
+        aluno.setNome(dto.getNome());
+        aluno.setEmail(dto.getEmail());
+        aluno.setSenha(dto.getSenha()); // A senha será criptografada no Service
+
+        // --- Dados do Aluno ---
+        aluno.setMatricula(dto.getMatricula());
+        aluno.setDataNascimento(dto.getDataNascimento());
+
+        // IDs de relacionamento (Escola e Responsavel)
+        // NÃO são definidos aqui. O Service irá buscar as entidades
+        // e associá-las ao Aluno antes de salvar.
+
+        return aluno;
     }
 }
