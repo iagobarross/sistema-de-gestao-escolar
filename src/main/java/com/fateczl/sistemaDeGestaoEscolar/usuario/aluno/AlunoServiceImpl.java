@@ -29,15 +29,18 @@ public class AlunoServiceImpl implements AlunoService{
     @Autowired
     private PasswordEncoder passwordEncoder; // Injeção necessária
 
+    @Override
     public List<Aluno> findAll() {
         return alunoRepository.findAll(Sort.by("nome").ascending());
     }
 
+    @Override
     public Aluno findById(Long id) {
         return alunoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Aluno não encontrado com o ID: " + id));
     }
 
+    @Override
     public Aluno create(Aluno alunoMapeado, Long escolaId, Long responsavelId) {
         // 1. Validar duplicidade de Email e Matrícula
         if (alunoRepository.existsByEmail(alunoMapeado.getEmail())) {
@@ -64,6 +67,7 @@ public class AlunoServiceImpl implements AlunoService{
         return alunoRepository.save(alunoMapeado);
     }
 
+    @Override
     public Aluno update(Long id, Aluno dadosAtualizacao, Long escolaId, Long responsavelId) {
         // 1. Buscar Aluno existente
         Aluno alunoDB = this.findById(id);
@@ -103,6 +107,7 @@ public class AlunoServiceImpl implements AlunoService{
         return alunoRepository.save(alunoDB);
     }
 
+    @Override
     public void deleteById(Long id) {
         if (!alunoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Aluno não encontrado com o ID: " + id);

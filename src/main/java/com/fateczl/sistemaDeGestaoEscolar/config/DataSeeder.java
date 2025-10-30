@@ -1,38 +1,65 @@
 package com.fateczl.sistemaDeGestaoEscolar.config;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime; // Corrigido de LocalDate para LocalDateTime
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fateczl.sistemaDeGestaoEscolar.disciplina.Disciplina;
 import com.fateczl.sistemaDeGestaoEscolar.disciplina.DisciplinaRepository;
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
+import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel;
+import com.fateczl.sistemaDeGestaoEscolar.responsavel.ResponsavelRepository;
+import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
+import com.fateczl.sistemaDeGestaoEscolar.turma.TurmaRepository;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.Aluno;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoRepository;
 
 @Configuration
 public class DataSeeder implements CommandLineRunner {
 
-	@Autowired
-	private EscolaRepository escolaRepository;
-	
-	@Autowired
-	private DisciplinaRepository disciplinaRepository;
-	
-	@Override
-	@Transactional
-	public void run(String... args) throws Exception {
-		if(escolaRepository.count() == 0)
-			seedEscolas();
-		
-		if(disciplinaRepository.count() == 0)
-			seedDisciplinas();
-		
-	}
-	
-	private void seedEscolas() {
+    @Autowired
+    private EscolaRepository escolaRepository;
+    @Autowired
+    private DisciplinaRepository disciplinaRepository;
+    @Autowired
+    private ResponsavelRepository responsavelRepository;
+    @Autowired
+    private AlunoRepository alunoRepository;
+    @Autowired
+    private TurmaRepository turmaRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public void run(String... args) throws Exception {
+        // Ordem de criação é importante por causa das chaves estrangeiras
+        if (escolaRepository.count() == 0)
+            seedEscolas();
+        
+        if (disciplinaRepository.count() == 0)
+            seedDisciplinas();
+        
+        if (responsavelRepository.count() == 0)
+            seedResponsaveis();
+        
+        // Alunos precisam que Escolas e Responsaveis já existam
+        if (alunoRepository.count() == 0)
+            seedAlunos();
+        
+        // Turmas precisam que Alunos já existam
+        if (turmaRepository.count() == 0)
+            seedTurmas();
+    }
+
+    private void seedEscolas() {
         List<Escola> escolas = List.of(
             new Escola(null, "ESC001", "Colégio Viver", "11111111000101", "Rua das Flores, 123"),
             new Escola(null, "ESC002", "Escola Aprender Mais", "11111111000102", "Av. Principal, 456"),
@@ -45,12 +72,12 @@ public class DataSeeder implements CommandLineRunner {
             new Escola(null, "ESC009", "Escola Nova Geração", "11111111000109", "Av. Brasil, 606"),
             new Escola(null, "ESC010", "Centro Integrado de Educação", "11111111000110", "Rua Dez, 707")
         );
-
         escolaRepository.saveAll(escolas);
     }
-	
+
     private void seedDisciplinas() {
         List<Disciplina> disciplinas = List.of(
+            // Construtor: id, codigo, nome, descricao, notaMinima, cargaHoraria
             new Disciplina(null, "POR", "Português", "Leitura e gramática", 5.0, 100),
             new Disciplina(null, "MAT", "Matemática", "Álgebra e geometria", 5.0, 100),
             new Disciplina(null, "HIS", "História", "História do Brasil e Geral", 5.0, 80),
@@ -62,10 +89,68 @@ public class DataSeeder implements CommandLineRunner {
             new Disciplina(null, "FIL", "Filosofia", "Pensadores e correntes filosóficas", 6.0, 60),
             new Disciplina(null, "SOC", "Sociologia", "Estudo da sociedade", 6.0, 60)
         );
-    
-        disciplinaRepository.saveAll(disciplinas); //
+        disciplinaRepository.saveAll(disciplinas);
     }
-	
-	
 
+    private void seedResponsaveis() {
+        // Construtor (assumido) de Responsavel:
+        // (id, nome, email, senha, ativo, dataCriacao, cpf, telefone, alunos)
+        List<Responsavel> responsaveis = List.of(
+            new Responsavel(null, "Marcos Silva", "marcos.silva@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "11122233344", "11988887777", null),
+            new Responsavel(null, "Ana Costa", "ana.costa@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "22233344455", "11955554444", null),
+            new Responsavel(null, "Carlos Pereira", "carlos.pereira@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "33344455566", "11944443333", null),
+            new Responsavel(null, "Fernanda Lima", "fernanda.lima@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "44455566677", "11977776666", null),
+            new Responsavel(null, "Bruno Rocha", "bruno.rocha@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "55566677788", "11966665555", null),
+            new Responsavel(null, "Juliana Alves", "juliana.alves@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "66677788899", "11955556666", null),
+            new Responsavel(null, "Rafael Santos", "rafael.santos@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "77788899900", "11944447777", null),
+            new Responsavel(null, "Paula Mendes", "paula.mendes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "88899900011", "11933332222", null),
+            new Responsavel(null, "Eduardo Gomes", "eduardo.gomes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "99900011122", "11922221111", null),
+            new Responsavel(null, "Camila Nunes", "camila.nunes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "00011122233", "11911110000", null)
+        );
+        responsavelRepository.saveAll(responsaveis);
+    }
+
+    private void seedAlunos() {
+        // Busca as entidades relacionadas que acabamos de salvar
+        List<Escola> escolas = escolaRepository.findAll();
+        List<Responsavel> responsaveis = responsavelRepository.findAll();
+
+        // Construtor (assumido) de Aluno:
+        // (id, nome, email, senha, ativo, dataCriacao, matricula, dataNascimento, escola, responsavel, turmas)
+        List<Aluno> alunos = List.of(
+            new Aluno(null, "Lucas Silva", "lucas.silva@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA001", LocalDate.of(2010, 5, 15), escolas.get(0), responsaveis.get(0), null),
+            new Aluno(null, "Maria Costa", "maria.costa@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA002", LocalDate.of(2011, 8, 20), escolas.get(0), responsaveis.get(1), null),
+            new Aluno(null, "Pedro Pereira", "pedro.pereira@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA003", LocalDate.of(2010, 3, 10), escolas.get(1), responsaveis.get(2), null),
+            new Aluno(null, "Ana Lima", "ana.lima@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA004", LocalDate.of(2011, 4, 18), escolas.get(1), responsaveis.get(3), null),
+            new Aluno(null, "Bruno Rocha Jr", "bruno.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA005", LocalDate.of(2010, 6, 12), escolas.get(2), responsaveis.get(4), null),
+            new Aluno(null, "Juliana Alves", "juliana.alves@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA006", LocalDate.of(2011, 7, 22), escolas.get(2), responsaveis.get(5), null),
+            new Aluno(null, "Rafael Santos Jr", "rafael.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA007", LocalDate.of(2010, 2, 5), escolas.get(3), responsaveis.get(6), null),
+            new Aluno(null, "Paula Mendes", "paula.mendes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA008", LocalDate.of(2011, 9, 30), escolas.get(3), responsaveis.get(7), null),
+            new Aluno(null, "Eduardo Gomes", "eduardo.gomes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA009", LocalDate.of(2010, 12, 10), escolas.get(4), responsaveis.get(8), null),
+            new Aluno(null, "Camila Nunes", "camila.nunes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA010", LocalDate.of(2011, 1, 15), escolas.get(4), responsaveis.get(9), null)
+        );
+
+        alunoRepository.saveAll(alunos);
+    }
+
+    private void seedTurmas() {
+        // Busca os alunos que acabamos de salvar
+        List<Aluno> alunos = alunoRepository.findAll();
+
+        // Construtor (assumido) da Turma: id, ano, serie, turno, alunos (List<Aluno>)
+        List<Turma> turmas = List.of(
+            new Turma(null, 2025, "6º Ano", "Manhã", List.of(alunos.get(0), alunos.get(2))),
+            new Turma(null, 2025, "6º Ano", "Tarde", List.of(alunos.get(1), alunos.get(3))),
+            new Turma(null, 2025, "5º Ano", "Manhã", List.of(alunos.get(4), alunos.get(6))),
+            new Turma(null, 2025, "5º Ano", "Tarde", List.of(alunos.get(5), alunos.get(7))),
+            new Turma(null, 2025, "4º Ano", "Manhã", List.of(alunos.get(8), alunos.get(9))),
+            new Turma(null, 2025, "4º Ano", "Tarde", List.of(alunos.get(0), alunos.get(1))), // Alunos podem estar em mais de uma "turma"? Se sim.
+            new Turma(null, 2025, "3º Ano", "Manhã", List.of(alunos.get(2), alunos.get(3))),
+            new Turma(null, 2025, "3º Ano", "Tarde", List.of(alunos.get(4), alunos.get(5))),
+            new Turma(null, 2025, "2º Ano", "Manhã", List.of(alunos.get(6), alunos.get(7))),
+            new Turma(null, 2025, "2º Ano", "Tarde", List.of(alunos.get(8), alunos.get(9)))
+        );
+
+        turmaRepository.saveAll(turmas);
+    }
 }

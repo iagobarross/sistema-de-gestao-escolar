@@ -12,7 +12,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Entity
-@Table(name = "turmas")
+@Table(name = "turma")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,7 +35,7 @@ public class Turma {
 
     // Relacionamento N:M com Aluno (Turma é a dona da relação)
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "turma_alunos", // Nome da tabela de junção
+    @JoinTable(name = "turma_aluno", // Nome da tabela de junção
             joinColumns = @JoinColumn(name = "turma_id"), inverseJoinColumns = @JoinColumn(name = "aluno_id"))
     private List<Aluno> alunos;
 

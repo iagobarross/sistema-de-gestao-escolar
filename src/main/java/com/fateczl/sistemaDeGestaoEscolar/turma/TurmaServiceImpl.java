@@ -23,21 +23,25 @@ public class TurmaServiceImpl implements TurmaService{
 
     // --- CRUD Básico (Padrão Disciplina) ---
 
+    @Override
     public List<Turma> findAll() {
         return turmaRepository.findAll(Sort.by("ano", "serie", "turno").ascending());
     }
 
+    @Override
     public Turma findById(Long id) {
         return turmaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Turma não encontrada com o ID: " + id));
     }
 
+    @Override
     public Turma create(Turma turma) {
         if (turmaRepository.existsByAnoAndSerieAndTurno(turma.getAno(), turma.getSerie(), turma.getTurno()))
             throw new BusinessException("Esta turma (Ano, Série, Turno) já está cadastrada.");
         return turmaRepository.save(turma);
     }
 
+    @Override
     public Turma update(Long id, Turma dadosAtualizacao) {
         Turma turmaDB = this.findById(id);
 
@@ -53,6 +57,7 @@ public class TurmaServiceImpl implements TurmaService{
         return turmaRepository.save(turmaDB);
     }
 
+    @Override
     public void deleteById(Long id) {
         if (!turmaRepository.existsById(id)) {
             throw new ResourceNotFoundException("Turma não encontrada com o ID: " + id);
@@ -69,6 +74,7 @@ public class TurmaServiceImpl implements TurmaService{
 
     // --- Gerenciamento de Associações (Lógica de Negócio) ---
 
+    @Override
     @Transactional
     public void adicionarAluno(Long turmaId, Long alunoId) {
         Turma turma = this.findById(turmaId);
@@ -82,6 +88,7 @@ public class TurmaServiceImpl implements TurmaService{
         turmaRepository.save(turma); // Salva o dono do relacionamento (Turma)
     }
 
+    @Override
     @Transactional
     public void removerAluno(Long turmaId, Long alunoId) {
         Turma turma = this.findById(turmaId);

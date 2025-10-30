@@ -16,21 +16,25 @@ public class ResponsavelServiceImpl implements ResponsavelService{
     @Autowired
     private ResponsavelRepository responsavelRepository;
 
+    @Override
     public List<Responsavel> findAll() {
         return responsavelRepository.findAll(Sort.by("nome").ascending());
     }
 
+    @Override
     public Responsavel findById(Long id) {
         return responsavelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com o ID: " + id));
     }
 
+    @Override
     public Responsavel create(Responsavel responsavel) {
         if (responsavelRepository.existsByCpf(responsavel.getCpf()))
             throw new BusinessException("CPF já cadastrado.");
         return responsavelRepository.save(responsavel);
     }
 
+    @Override
     public Responsavel update(Long id, Responsavel dadosAtualizacao) {
         Responsavel responsavelDB = this.findById(id);
 
@@ -45,6 +49,7 @@ public class ResponsavelServiceImpl implements ResponsavelService{
         return responsavelRepository.save(responsavelDB);
     }
 
+    @Override
     public void deleteById(Long id) {
         if (!responsavelRepository.existsById(id)) {
             throw new ResourceNotFoundException("Responsável não encontrado com o ID: " + id);

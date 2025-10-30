@@ -16,21 +16,25 @@ public class DisciplinaServiceImpl implements DisciplinaService{
     @Autowired
     private DisciplinaRepository disciplinaRepository;
 
+	@Override
     public List<Disciplina> findAll(){
         return disciplinaRepository.findAll(Sort.by("nome").ascending());
     }
 
+	@Override
     public Disciplina findById(Long id){
         return disciplinaRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Disciplina não encontrada com o ID: " + id));
     }
 
+	@Override
     public Disciplina create(Disciplina disciplina) {
 		if(disciplinaRepository.existsByCodigo(disciplina.getCodigo()))
 			throw new BusinessException("Disciplina já cadastrada.");
 		return disciplinaRepository.save(disciplina);
 	}
 
+	@Override
     public Disciplina update(Long id, Disciplina disciplinaAtualizada) {
 		Disciplina disciplina = this.findById(id);
 		disciplina.setNome(disciplinaAtualizada.getNome());
@@ -40,6 +44,7 @@ public class DisciplinaServiceImpl implements DisciplinaService{
 		return disciplinaRepository.save(disciplina);
 	}
 
+	@Override
     public void deleteById(Long id) {
 		try{
 			disciplinaRepository.deleteById(id);

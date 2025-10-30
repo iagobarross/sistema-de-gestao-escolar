@@ -1,15 +1,26 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.aluno
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
-import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
-import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
-import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel;
-import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario; // Herança correta
-
-import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
+import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel; // Herança correta
+import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity // <--- Tem que ser @Entity
 @Table(name = "aluno")
@@ -38,4 +49,13 @@ public class Aluno extends Usuario { // <--- Herda de Usuario
     // --- Relacionamento N:M com Turma ---
     @ManyToMany(mappedBy = "alunos", fetch = FetchType.LAZY)
     private List<Turma> turmas;
+
+    public Aluno(Long id, String nome, String email, String senha, boolean ativo, LocalDateTime dataCriacao, String matricula, LocalDate dataNascimento, Escola escola, Responsavel responsavel, List<Turma> turmas){
+        super(id, nome, email, senha, ativo, dataCriacao);
+        this.matricula = matricula;
+        this.dataNascimento = dataNascimento;
+        this.escola = escola;
+        this.responsavel = responsavel;
+        this.turmas = turmas;
+    }
 }
