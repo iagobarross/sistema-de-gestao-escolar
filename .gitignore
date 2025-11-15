@@ -1,33 +1,46 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+*.log
+.DS_Store
+Thumbs.db
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+backend/src/main/resources/application.properties
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
 
-### VS Code ###
-.vscode/
+backend/.apt_generated
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings/
+backend/.springBeans
+backend/.sts4-cache/
+backend/.idea/
+backend/*.iml
+backend/*.ipr
+backend/*.iws
+backend/nbproject/private/
+backend/nbbuild/
+backend/dist/
+backend/nbdist/
+backend/.nb-gradle/
+backend/.vscode/
+
+
+frontend/.dart_tool/
+frontend/.packages
+frontend/.pub-cache/
+frontend/pubspec.lock
+frontend/build/
+frontend/android/local.properties
+frontend/android/.gradle/
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/ios/Runner/GeneratedPluginRegistrant.h
+frontend/ios/Runner/GeneratedPluginRegistrant.m
+frontend/ios/Flutter/ephemeral_plugin_symlinks/
+frontend/.idea/
+frontend/.vscode/
+frontend/*.iml
