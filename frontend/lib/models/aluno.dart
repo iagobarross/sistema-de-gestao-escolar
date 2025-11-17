@@ -1,8 +1,5 @@
 import 'dart:convert';
 
-import 'package:gestao_escolar_app/models/escola.dart';
-import 'package:gestao_escolar_app/models/responsavel.dart';
-
 List<Aluno> alunoFromJson(String str) =>
     List<Aluno>.from(jsonDecode(str).map((x) => Aluno.fromJson(x)));
 
@@ -18,6 +15,9 @@ class Aluno {
   final DateTime dataNascimento;
   final int escolaId;
   final int responsavelId;
+  final String nomeEscola;
+  final String nomeResponsavel;
+  final List<String> turmas;
 
   Aluno({
     required this.id,
@@ -28,6 +28,9 @@ class Aluno {
     required this.dataNascimento,
     required this.escolaId,
     required this.responsavelId,
+    required this.nomeEscola,
+    required this.nomeResponsavel,
+    required this.turmas,
   });
 
   factory Aluno.fromJson(Map<String, dynamic> json) => Aluno(
@@ -39,6 +42,9 @@ class Aluno {
     dataNascimento: DateTime.parse(json["dataNascimento"]),
     escolaId: json["escolaId"],
     responsavelId: json["responsavelId"],
+    nomeEscola: json["nomeEscola"] ?? 'N/A',
+    nomeResponsavel: json["nomeResponsavel"] ?? 'N/A',
+    turmas: List<String>.from(json["turmas"] ?? []),
   );
 
   Map<String, dynamic> toJson() => {
@@ -46,9 +52,13 @@ class Aluno {
     "nome": nome,
     "email": email,
     "dataCriacao": dataCriacao.toIso8601String(),
-    "dataNascimento": dataNascimento.toIso8601String(),
+    "dataNascimento":
+        "${dataNascimento.year.toString().padLeft(4, '0')} - ${dataNascimento.month.toString().padLeft(2, '0')} - ${dataNascimento.day.toString().padLeft(2, '0')}",
     "escolaId": escolaId,
     "matricula": matricula,
     "responsavelId": responsavelId,
+    "nomeEscola": nomeEscola,
+    "nomeResponsavel": nomeResponsavel,
+    "turmas": turmas,
   };
 }

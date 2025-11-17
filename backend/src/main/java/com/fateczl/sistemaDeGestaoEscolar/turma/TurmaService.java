@@ -3,6 +3,8 @@ package com.fateczl.sistemaDeGestaoEscolar.turma;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoResponseDTO;
+
 import java.util.List;
 
 @Service
@@ -23,4 +25,6 @@ public interface TurmaService {
 
     @Transactional
     public void removerAluno(Long turmaId, Long alunoId);
+    
+    public List<AlunoResponseDTO> findAlunosByTurmaId(Long turmaId);
 }

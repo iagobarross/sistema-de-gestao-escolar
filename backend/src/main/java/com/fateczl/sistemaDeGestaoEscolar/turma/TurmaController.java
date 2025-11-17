@@ -5,6 +5,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoResponseDTO;
+
 import java.util.List;
 
 @RestController
@@ -55,6 +58,13 @@ public class TurmaController {
     }
 
     // --- Endpoints de Associação (Aluno <-> Turma) ---
+    
+    @GetMapping("/{turmaId}/alunos")
+    public ResponseEntity<List<AlunoResponseDTO>> getAlunosDaTurma(@PathVariable Long turmaId) {
+        // AGORA: Apenas chama o serviço, que faz todo o trabalho transacional
+        List<AlunoResponseDTO> alunosDTO = turmaService.findAlunosByTurmaId(turmaId);
+        return ResponseEntity.ok(alunosDTO);
+    }
 
     @PostMapping("/{turmaId}/alunos/{alunoId}")
     public ResponseEntity<Void> adicionarAlunoNaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {

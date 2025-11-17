@@ -113,7 +113,6 @@ class DisciplinaService {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
-          // Espelha o EscolaRequestDTO
           'nome': nome,
           'codigo': codigo,
           'descricao': descricao,
@@ -128,7 +127,12 @@ class DisciplinaService {
       } else {
         String errorMessage = response.body;
         try {
-          /* ... (mesma lógica de erro do POST) ... */
+          final decoded = jsonDecode(response.body);
+          if (decoded['message'] != null) {
+            errorMessage = decoded['message'];
+          } else if (decoded['errors'] != null) {
+            errorMessage = decoded['errors'].toString();
+          }
         } catch (_) {}
         throw Exception(
           "Falha ao atualizar disciplina: $errorMessage (Status: ${response.statusCode})",

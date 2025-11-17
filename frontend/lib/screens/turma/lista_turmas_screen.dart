@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/turma/detalhes_turmas_screen.dart';
 import '../../models/turma.dart';
 import '../../services/turma_service.dart';
 import 'form_turmas_screen.dart';
@@ -24,6 +25,18 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
     });
   }
 
+  Future<void> _navegarParaDetalhes(int turmaId) async {
+    final bool? resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetalhesTurmasScreen(turmaId: turmaId),
+      ),
+    );
+    if (resultado == true) {
+      _carregarTurmas();
+    }
+  }
+
   Future<void> _navegarParaFormulario({Turma? turma}) async {
     final bool? resultado = await Navigator.push(
       context,
@@ -37,28 +50,40 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
   }
 
   Future<void> _deletarTurma(int id) async {
-    bool confirmou = await showDialog<bool>(
+    bool confirmou =
+        await showDialog<bool>(
           context: context,
-          builder: (BuildContext context) { 
+          builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Confirmar Exclusão'),
               content: Text('Deseja realmente excluir esta turma?'),
               actions: <Widget>[
-                TextButton(child: Text('Cancelar'), onPressed: () => Navigator.of(context).pop(false)),
-                TextButton(child: Text('Excluir'), onPressed: () => Navigator.of(context).pop(true)),
+                TextButton(
+                  child: Text('Cancelar'),
+                  onPressed: () => Navigator.of(context).pop(false),
+                ),
+                TextButton(
+                  child: Text('Excluir'),
+                  onPressed: () => Navigator.of(context).pop(true),
+                ),
               ],
             );
-           }
-        ) ?? false;
+          },
+        ) ??
+        false;
 
     if (confirmou) {
       if (!mounted) return;
       try {
         await _turmaService.deleteTurma(id);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Turma excluída com sucesso!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Turma excluída com sucesso!')));
         _carregarTurmas();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -68,7 +93,11 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Turmas"),
-        actions: [IconButton(icon: Icon(Icons.refresh), onPressed: _carregarTurmas)],
+        backgroundColor: Colors.red.shade900,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(icon: Icon(Icons.refresh), onPressed: _carregarTurmas),
+        ],
       ),
       body: FutureBuilder<List<Turma>>(
         future: _futureTurmas,
@@ -76,7 +105,12 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text("Erro: ${snapshot.error}")));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text("Erro: ${snapshot.error}"),
+              ),
+            );
           } else if (snapshot.hasData) {
             final turmas = snapshot.data!;
             if (turmas.isEmpty) {
@@ -93,7 +127,7 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
                     icon: Icon(Icons.delete_outline, color: Colors.red),
                     onPressed: () => _deletarTurma(turma.id),
                   ),
-                  onTap: () => _navegarParaFormulario(turma: turma),
+                  onTap: () => _navegarParaDetalhes(turma.id),
                   // TODO: Adicionar um botão/gesto para navegar para a tela de "Gerenciar Alunos da Turma"
                 );
               },

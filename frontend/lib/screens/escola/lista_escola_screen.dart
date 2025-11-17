@@ -3,6 +3,7 @@ import 'package:gestao_escolar_app/services/escola_service.dart';
 
 import '../../models/escola.dart';
 import 'form_escola_screen.dart';
+import 'detalhes_escola_screen.dart';
 
 class ListaEscolaScreen extends StatefulWidget {
   @override
@@ -25,7 +26,20 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
     });
   }
 
-  Future<void> _navegarParaFormulario({Escola? escola}) async {
+  Future<void> _navegarParaDetalhes(int escolaId) async {
+    final bool? resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetalhesEscolaScreen(escolaId: escolaId),
+      ),
+    );
+
+    if (resultado == true) {
+      _carregarEscolas();
+    }
+  }
+
+  /*Future<void> _navegarParaFormulario({Escola? escola}) async {
     final bool? resultado = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -35,7 +49,7 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
     if (resultado == true) {
       _carregarEscolas();
     }
-  }
+  }*/
 
   Future<void> _deletarEscola(int id) async {
     bool confirmou =
@@ -84,7 +98,7 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Escolas"),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red.shade900,
         foregroundColor: Colors.white,
         actions: [
           IconButton(icon: Icon(Icons.refresh), onPressed: _carregarEscolas),
@@ -120,7 +134,7 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
                     icon: Icon(Icons.delete_outline, color: Colors.red),
                     onPressed: () => _deletarEscola(escola.id),
                   ),
-                  onTap: () => _navegarParaFormulario(escola: escola),
+                  onTap: () => _navegarParaDetalhes(escola.id),
                 );
               },
             );
@@ -131,7 +145,18 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _navegarParaFormulario(),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FormEscolaScreen(escolaParaEditar: null),
+            ),
+          ).then((resultado) {
+            if (resultado == true) {
+              _carregarEscolas();
+            }
+          });
+        },
         child: Icon(Icons.add),
         tooltip: 'Nova Escola',
       ),

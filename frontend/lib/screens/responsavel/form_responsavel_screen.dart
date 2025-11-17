@@ -29,10 +29,20 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
     super.initState();
     _isEditando = widget.responsavelParaEditar != null;
 
-    _nomeController = TextEditingController(text: _isEditando ? widget.responsavelParaEditar!.nome : '');
-    _senhaController = TextEditingController(); // Senha fica vazia por padrão na edição
-    _cpfController = TextEditingController(text: _isEditando ? widget.responsavelParaEditar!.cpf : '');
-    _telefoneController = TextEditingController(text: _isEditando ? widget.responsavelParaEditar!.telefone : '');
+    _nomeController = TextEditingController(
+      text: _isEditando ? widget.responsavelParaEditar!.nome : '',
+    );
+    _senhaController =
+        TextEditingController(); // Senha fica vazia por padrão na edição
+    _emailController = TextEditingController(
+      text: _isEditando ? widget.responsavelParaEditar!.email : '',
+    );
+    _cpfController = TextEditingController(
+      text: _isEditando ? widget.responsavelParaEditar!.cpf : '',
+    );
+    _telefoneController = TextEditingController(
+      text: _isEditando ? widget.responsavelParaEditar!.telefone : '',
+    );
   }
 
   @override
@@ -48,7 +58,9 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
   Future<void> _salvarResponsavel() async {
     if (_formKey.currentState!.validate()) {
       if (!mounted) return;
-      setState(() { _isLoading = true; });
+      setState(() {
+        _isLoading = true;
+      });
 
       String? errorMessage;
       try {
@@ -59,7 +71,8 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
             _emailController.text,
             _cpfController.text,
             _telefoneController.text,
-            _senhaController.text, // Envia a nova senha (ou null/vazio se não digitou)
+            _senhaController
+                .text, // Envia a nova senha (ou null/vazio se não digitou)
           );
         } else {
           await _service.createResponsavel(
@@ -75,16 +88,22 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Responsável salvo com sucesso!')),
         );
-        Navigator.of(context).pop(true); // Retorna 'true' para recarregar a lista
-
+        Navigator.of(
+          context,
+        ).pop(true); // Retorna 'true' para recarregar a lista
       } catch (e) {
         errorMessage = e.toString();
       } finally {
         if (mounted) {
-          setState(() { _isLoading = false; });
+          setState(() {
+            _isLoading = false;
+          });
           if (errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         }
@@ -107,25 +126,35 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
               TextFormField(
                 controller: _nomeController,
                 decoration: InputDecoration(labelText: 'Nome Completo'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Campo obrigatório' : null,
+                validator: (value) => (value == null || value.isEmpty)
+                    ? 'Campo obrigatório'
+                    : null,
               ),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Campo obrigatório';
+                  if (value == null || value.isEmpty)
+                    return 'Campo obrigatório';
                   if (!value.contains('@')) return 'Email inválido';
                   return null;
                 },
               ),
               TextFormField(
                 controller: _senhaController,
-                decoration: InputDecoration(labelText: 'Senha', hintText: _isEditando ? 'Deixe em branco para manter a atual' : ''),
+                decoration: InputDecoration(
+                  labelText: 'Senha',
+                  hintText: _isEditando
+                      ? 'Deixe em branco para manter a atual'
+                      : '',
+                ),
                 obscureText: true,
                 validator: (value) {
-                  if (!_isEditando && (value == null || value.isEmpty)) return 'Campo obrigatório';
-                  if (value != null && value.isNotEmpty && value.length < 6) return 'Senha deve ter no mínimo 6 caracteres';
+                  if (!_isEditando && (value == null || value.isEmpty))
+                    return 'Campo obrigatório';
+                  if (value != null && value.isNotEmpty && value.length < 6)
+                    return 'Senha deve ter no mínimo 6 caracteres';
                   return null;
                 },
               ),
@@ -134,7 +163,8 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
                 decoration: InputDecoration(labelText: 'CPF'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Campo obrigatório';
+                  if (value == null || value.isEmpty)
+                    return 'Campo obrigatório';
                   if (value.length != 11) return 'CPF deve ter 11 dígitos';
                   return null;
                 },
@@ -147,7 +177,9 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _isLoading ? null : _salvarResponsavel,
-                child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('Salvar'),
+                child: _isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text('Salvar'),
               ),
             ],
           ),

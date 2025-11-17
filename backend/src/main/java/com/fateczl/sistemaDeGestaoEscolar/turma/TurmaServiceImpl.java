@@ -1,6 +1,7 @@
 package com.fateczl.sistemaDeGestaoEscolar.turma;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -11,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.BusinessException;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundException;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.Aluno;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoMapper;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoRepository;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoResponseDTO;
 
 @Service
 public class TurmaServiceImpl implements TurmaService{
@@ -20,6 +23,9 @@ public class TurmaServiceImpl implements TurmaService{
 
     @Autowired
     private AlunoRepository alunoRepository; // Necessário para associações
+    
+    @Autowired
+    private AlunoMapper alunoMapper;
 
     // --- CRUD Básico (Padrão Disciplina) ---
 
@@ -32,6 +38,17 @@ public class TurmaServiceImpl implements TurmaService{
     public Turma findById(Long id) {
         return turmaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Turma não encontrada com o ID: " + id));
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlunoResponseDTO> findAlunosByTurmaId(Long turmaId) {
+        Turma turma = this.findById(turmaId);
+        
+
+        return turma.getAlunos().stream()
+                .map(alunoMapper::toResponseDTO) // O mapeamento ocorre aqui
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -100,5 +117,6 @@ public class TurmaServiceImpl implements TurmaService{
         }
         turma.getAlunos().remove(aluno);
         turmaRepository.save(turma);
-    }
+    }    
+    
 }

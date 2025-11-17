@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/aluno.dart';
 import '../../services/aluno_service.dart';
 import 'form_alunos_screen.dart';
+import 'detalhes_alunos_screen.dart';
 
 class ListaAlunoScreen extends StatefulWidget {
   @override
@@ -22,6 +23,19 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
     setState(() {
       _futureAlunos = _alunoService.getAlunos();
     });
+  }
+
+  Future<void> _navegarParaDetalhes(int alunoId) async {
+    final bool? resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetalhesAlunoScreen(alunoId: alunoId),
+      ),
+    );
+
+    if (resultado == true) {
+      _carregarAlunos();
+    }
   }
 
   Future<void> _navegarParaFormulario({Aluno? aluno}) async {
@@ -80,6 +94,8 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Alunos"),
+        backgroundColor: Colors.red.shade900,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(icon: Icon(Icons.refresh), onPressed: _carregarAlunos),
         ],
@@ -108,13 +124,14 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
                 return ListTile(
                   title: Text(aluno.nome),
                   subtitle: Text(
-                    "RA: ${aluno.matricula} | Escola: ${aluno.escolaId}",
+                    "RA: ${aluno.matricula} | Turmas: ${aluno.turmas.join(', ')}\nEscola: ${aluno.nomeEscola}",
                   ),
+                  isThreeLine: true,
                   trailing: IconButton(
                     icon: Icon(Icons.delete_outline, color: Colors.red),
                     onPressed: () => _deletarAluno(aluno.id),
                   ),
-                  onTap: () => _navegarParaFormulario(aluno: aluno),
+                  onTap: () => _navegarParaDetalhes(aluno.id),
                 );
               },
             );

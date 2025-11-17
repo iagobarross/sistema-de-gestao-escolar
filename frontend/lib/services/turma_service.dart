@@ -1,3 +1,4 @@
+import 'package:gestao_escolar_app/models/aluno.dart';
 import 'package:http/http.dart' as http;
 import '../models/turma.dart';
 import 'dart:convert';
@@ -31,6 +32,36 @@ class TurmaService {
       );
     } catch (e) {
       throw Exception("Erro ao buscar turmas: ${e.toString()}");
+    }
+  }
+
+  Future<Turma> getTurmaById(int id) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      if (response.statusCode == 200) {
+        return Turma.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception(
+          "Falha ao carregar turma. Status: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      throw Exception("Erro ao buscar turma: ${e.toString()}");
+    }
+  }
+
+  Future<List<Aluno>> getAlunosByTurma(int turmaId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/$turmaId/alunos'));
+      if (response.statusCode == 200) {
+        return alunoFromJson(response.body);
+      } else {
+        throw Exception(
+          "Falha ao carregar alunos da turma. Status: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      throw Exception("Erro ao buscar alunos da turma: ${e.toString()}");
     }
   }
 
@@ -109,6 +140,21 @@ class TurmaService {
       }
     } catch (e) {
       throw Exception("Erro ao adicionar aluno: ${e.toString()}");
+    }
+  }
+
+  Future<void> removerAlunoDaTurma(int turmaId, int alunoId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$turmaId/alunos/$alunoId'),
+      );
+      if (response.statusCode != 204) {
+        throw Exception(
+          "Falha ao remover aluno da turma. Status: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      throw Exception("Erro ao remover aluno: ${e.toString()}");
     }
   }
 }

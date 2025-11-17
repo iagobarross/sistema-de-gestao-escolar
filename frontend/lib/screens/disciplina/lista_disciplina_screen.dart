@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/disciplina/detalhes_disciplina_screen.dart';
 import '../../models/disciplina.dart';
 import '../../services/disciplina_service.dart';
 
@@ -23,6 +24,19 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
     setState(() {
       _futureDisciplinas = _disciplinaService.getDisciplinas();
     });
+  }
+
+  Future<void> _navegarParaDetalhes(int disciplinaId) async {
+    final bool? resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            DetalhesDisciplinaScreen(disciplinaId: disciplinaId),
+      ),
+    );
+    if (resultado == true) {
+      _carregarDisciplinas();
+    }
   }
 
   Future<void> _navegarParaFormulario({Disciplina? disciplina}) async {
@@ -85,7 +99,7 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Disciplinas"),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red.shade900,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -122,7 +136,7 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
                     icon: Icon(Icons.delete_outline, color: Colors.red),
                     onPressed: () => _deletarDisciplina(disciplina.id),
                   ),
-                  onTap: () => _navegarParaFormulario(disciplina: disciplina),
+                  onTap: () => _navegarParaDetalhes(disciplina.id),
                 );
               },
             );

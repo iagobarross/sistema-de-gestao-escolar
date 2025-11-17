@@ -43,7 +43,9 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
     );
     _dataNascimentoController = TextEditingController(
       text: _isEditando
-          ? widget.alunoParaEditar!.dataNascimento.toString()
+          ? widget.alunoParaEditar!.dataNascimento
+                .toIso8601String()
+                .splitMapJoin('T')[0]
           : '',
     );
     _escolaIdController = TextEditingController(

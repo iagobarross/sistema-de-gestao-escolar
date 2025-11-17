@@ -34,6 +34,21 @@ class ResponsavelService {
     }
   }
 
+  Future<Responsavel> getResponsavelById(int id) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      if (response.statusCode == 200) {
+        return Responsavel.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception(
+          "Falha ao carregar responsável. Status: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      throw Exception("Erro ao buscar responsável: ${e.toString()}");
+    }
+  }
+
   Future<Responsavel> createResponsavel(
     String nome,
     String email,

@@ -34,6 +34,21 @@ class AlunoService {
     }
   }
 
+  Future<Aluno> getAlunoById(int id) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      if (response.statusCode == 200) {
+        return Aluno.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception(
+          "Falha ao carregar aluno. Status: ${response.statusCode}",
+        );
+      }
+    } catch (e) {
+      throw Exception("Erro ao buscar aluno: ${e.toString()}");
+    }
+  }
+
   Map<String, dynamic> _createAlunoBody(AlunoRequestDTO dto) {
     return {
       'nome': dto.nome,
