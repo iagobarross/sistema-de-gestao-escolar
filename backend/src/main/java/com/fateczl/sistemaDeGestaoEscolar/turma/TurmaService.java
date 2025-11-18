@@ -27,4 +27,7 @@ public interface TurmaService {
     public void removerAluno(Long turmaId, Long alunoId);
     
     public List<AlunoResponseDTO> findAlunosByTurmaId(Long turmaId);
+
+    @Transactional // Importante para garantir que a conexão com o banco persista durante a chamada
+    public String matricularAlunoViaProcedure(Long alunoId, Long turmaId);
 }

@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface ResponsavelRepository extends JpaRepository<Responsavel, Long> {
 
     boolean existsByCpf(String cpf);
-
+    boolean existsByEmail(String email);
     Optional<Responsavel> findByCpfAndIdNot(String cpf, Long id);
+    Optional<Responsavel> findByEmailAndIdNot(String email,Long id);
+    
 }

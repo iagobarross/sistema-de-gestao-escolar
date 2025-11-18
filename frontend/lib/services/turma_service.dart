@@ -131,7 +131,7 @@ class TurmaService {
   Future<void> adicionarAlunoNaTurma(int turmaId, int alunoId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/$turmaId/alunos/$alunoId'),
+        Uri.parse('$baseUrl/$turmaId/matricular/$alunoId'),
       );
       if (response.statusCode != 200) {
         throw Exception(

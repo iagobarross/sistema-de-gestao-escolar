@@ -25,6 +25,8 @@ public class ResponsavelMapper {
         Responsavel responsavel = new Responsavel();
         responsavel.setNome(dto.getNome());
         responsavel.setCpf(dto.getCpf());
+        responsavel.setEmail(dto.getEmail());
+        responsavel.setSenha(dto.getSenha());
         responsavel.setTelefone(dto.getTelefone());
         return responsavel;
     }

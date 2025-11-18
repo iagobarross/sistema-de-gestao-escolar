@@ -117,6 +117,12 @@ public class TurmaServiceImpl implements TurmaService{
         }
         turma.getAlunos().remove(aluno);
         turmaRepository.save(turma);
-    }    
+    }  
+    
+    @Transactional // Importante para garantir que a conexão com o banco persista durante a chamada
+    public String matricularAlunoViaProcedure(Long alunoId, Long turmaId) {
+        // Chama o repositório
+        return turmaRepository.matricularAluno(alunoId, turmaId);
+    }
     
 }
