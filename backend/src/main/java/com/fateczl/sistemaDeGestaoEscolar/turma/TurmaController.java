@@ -1,14 +1,22 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.turma
 package com.fateczl.sistemaDeGestaoEscolar.turma;
 
-import jakarta.validation.Valid;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoResponseDTO;
 
-import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/turma")
@@ -58,7 +66,7 @@ public class TurmaController {
     }
 
     // --- Endpoints de Associação (Aluno <-> Turma) ---
-    
+
     @GetMapping("/{turmaId}/alunos")
     public ResponseEntity<List<AlunoResponseDTO>> getAlunosDaTurma(@PathVariable Long turmaId) {
         // AGORA: Apenas chama o serviço, que faz todo o trabalho transacional
@@ -77,4 +85,15 @@ public class TurmaController {
         turmaService.removerAluno(turmaId, alunoId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{turmaId}/matricular/{alunoId}")
+    public ResponseEntity<?> matricular(@PathVariable Long turmaId,@PathVariable Long alunoId) {
+        String resultado = turmaService.matricularAlunoViaProcedure(alunoId, turmaId);
+
+        if (resultado.startsWith("ERRO")) {
+            return ResponseEntity.badRequest().body(resultado);
+        }
+        return ResponseEntity.ok(resultado);
+    }
+
 }
