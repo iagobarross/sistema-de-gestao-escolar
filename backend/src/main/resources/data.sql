@@ -1,4 +1,5 @@
-DELIMITER //
+DROP PROCEDURE IF EXISTS sp_matricular_aluno
+//
 
 CREATE PROCEDURE sp_matricular_aluno(
     IN p_aluno_id BIGINT,
@@ -7,18 +8,16 @@ CREATE PROCEDURE sp_matricular_aluno(
 )
 BEGIN   
     DECLARE v_count INT;
-    -- 1. Verifica se o aluno já está matriculado na turma
+    
     SELECT COUNT(*) INTO v_count 
     FROM turma_aluno 
-    WHERE aluno_id = p_aluno_id AND turma_id = p_turma_id;
+    WHERE aluno_id = p_aluno_id;
 
     IF v_count > 0 THEN
-        SET p_resultado = 'ERRO: Aluno já matriculado nesta turma.';
+        SET p_resultado = 'ERRO: O aluno já está matriculado em uma turma. Não é permitido múltiplas matrículas.';
     ELSE
-        -- 2. Insere o relacionamento
         INSERT INTO turma_aluno (turma_id, aluno_id) VALUES (p_turma_id, p_aluno_id);
         SET p_resultado = 'SUCESSO: Matrícula realizada com sucesso.';
     END IF;
-END //
-
-DELIMITER ;
+END 
+//

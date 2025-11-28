@@ -133,13 +133,19 @@ class TurmaService {
       final response = await http.post(
         Uri.parse('$baseUrl/$turmaId/matricular/$alunoId'),
       );
-      if (response.statusCode != 200) {
+
+      if (response.statusCode == 200) {
+        return; // Sucesso
+      } else if (response.statusCode == 400) {
+        throw Exception(response.body);
+      } else {
         throw Exception(
           "Falha ao adicionar aluno à turma. Status: ${response.statusCode}",
         );
       }
     } catch (e) {
-      throw Exception("Erro ao adicionar aluno: ${e.toString()}");
+      // Repassa a exceção para a tela tratar
+      rethrow;
     }
   }
 

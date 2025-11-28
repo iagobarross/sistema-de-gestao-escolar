@@ -49,6 +49,9 @@ public class AlunoServiceImpl implements AlunoService{
         if (alunoRepository.existsByMatricula(alunoMapeado.getMatricula())) {
             throw new BusinessException("Matrícula já cadastrada.");
         }
+        if (alunoMapeado.getSenha() == null || alunoMapeado.getSenha().isEmpty() || alunoMapeado.getSenha().length() < 6 ) {
+        	throw new BusinessException("A senha é obrigatória e deve ter no mínimo 6 caracteres.");
+        }
 
         // 2. Buscar entidades relacionadas
         Escola escola = escolaRepository.findById(escolaId)

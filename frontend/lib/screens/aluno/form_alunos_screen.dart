@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import '../../models/aluno.dart';
 import '../../services/aluno_service.dart';
@@ -23,6 +25,8 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
   late TextEditingController _escolaIdController;
   late TextEditingController _responsavelIdController;
 
+  DateTime? _dataSelecionada;
+
   bool _isEditando = false;
   bool _isLoading = false;
 
@@ -41,13 +45,15 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
     _matriculaController = TextEditingController(
       text: _isEditando ? widget.alunoParaEditar!.matricula : '',
     );
-    _dataNascimentoController = TextEditingController(
-      text: _isEditando
-          ? widget.alunoParaEditar!.dataNascimento
-                .toIso8601String()
-                .splitMapJoin('T')[0]
-          : '',
-    );
+    if (_isEditando) {
+      _dataSelecionada = widget.alunoParaEditar!.dataNascimento;
+      String dia = _dataSelecionada!.day.toString().padLeft(2, '0');
+      String mes = _dataSelecionada!.month.toString().padLeft(2, '0');
+      String ano = _dataSelecionada!.year.toString();
+      _dataNascimentoController = TextEditingController(text: "$dia/$mes/$ano");
+    } else {
+      _dataNascimentoController = TextEditingController();
+    }
     _escolaIdController = TextEditingController(
       text: _isEditando ? widget.alunoParaEditar!.escolaId.toString() : '',
     );
@@ -66,6 +72,25 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
     _escolaIdController.dispose();
     _responsavelIdController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selecionarData(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _dataSelecionada ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null && picked != _dataSelecionada) {
+      setState(() {
+        _dataSelecionada = picked;
+        String dia = _dataSelecionada!.day.toString().padLeft(2, '0');
+        String mes = _dataSelecionada!.month.toString().padLeft(2, '0');
+        String ano = _dataSelecionada!.year.toString();
+        _dataNascimentoController.text = "$dia/$mes/$ano";
+      });
+    }
   }
 
   Future<void> _salvarAluno() async {
@@ -87,7 +112,12 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
           );
         }
 
-        // (Adicionar validador de data YYYY-MM-DD se necessário)
+        if (_dataSelecionada == null) {
+          throw Exception("Data de nascimento inválida.");
+        }
+
+        String dataFormatadaParaBackend =
+            "${_dataSelecionada!.year}-${_dataSelecionada!.month.toString().padLeft(2, '0')}-${_dataSelecionada!.day.toString().padLeft(2, '0')}";
 
         AlunoRequestDTO dto = AlunoRequestDTO(
           nome: _nomeController.text,
@@ -95,7 +125,7 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
           senha: _senhaController.text, // (Vazio na edição se não for alterado)
           escolaId: escolaId,
           matricula: _matriculaController.text,
-          dataNascimento: _dataNascimentoController.text, // "YYYY-MM-DD"
+          dataNascimento: dataFormatadaParaBackend, // "YYYY-MM-DD"
           responsavelId: responsavelId,
         );
 
@@ -182,11 +212,13 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
                 controller: _dataNascimentoController,
                 decoration: InputDecoration(
                   labelText: 'Data Nascimento',
-                  hintText: 'AAAA-MM-DD',
+                  hintText: 'DD/MM/AAAA',
+                  suffixIcon: Icon(Icons.calendar_today),
                 ),
-                keyboardType: TextInputType.datetime,
+                readOnly: true,
+                onTap: () => _selecionarData(context),
                 validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                    (_dataSelecionada == null) ? 'Campo obrigatório' : null,
               ),
               TextFormField(
                 controller: _escolaIdController,

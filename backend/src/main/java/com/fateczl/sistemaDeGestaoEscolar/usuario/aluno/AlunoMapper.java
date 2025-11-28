@@ -27,10 +27,12 @@ public class AlunoMapper {
         }
         if (aluno.getResponsavel() != null) {
             dto.setResponsavelId(aluno.getResponsavel().getId());
-            // Assumindo que Responsavel tem um campo 'nome' (não está no diagrama, mas é
-            // provável)
-            // Se não tiver, use o CPF ou outro identificador.
-            // dto.setNomeResponsavel(aluno.getResponsavel().getNome());
+            dto.setNomeResponsavel(aluno.getResponsavel().getNome());
+        }
+        if (aluno.getTurmas() != null) {
+        	List<String> nomesTurmas = aluno.getTurmas().stream().map(t -> t.getSerie() + " (" + t.getTurno() + ")")
+        			.collect(Collectors.toList());
+        	dto.setTurmas(nomesTurmas);
         }
 
         return dto;

@@ -1,7 +1,7 @@
 package com.fateczl.sistemaDeGestaoEscolar.config;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime; // Corrigido de LocalDate para LocalDateTime
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +77,6 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedDisciplinas() {
         List<Disciplina> disciplinas = List.of(
-            // Construtor: id, codigo, nome, descricao, notaMinima, cargaHoraria
             new Disciplina(null, "POR", "Português", "Leitura e gramática", 5.0, 100),
             new Disciplina(null, "MAT", "Matemática", "Álgebra e geometria", 5.0, 100),
             new Disciplina(null, "HIS", "História", "História do Brasil e Geral", 5.0, 80),
@@ -93,8 +92,6 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedResponsaveis() {
-        // Construtor (assumido) de Responsavel:
-        // (id, nome, email, senha, ativo, dataCriacao, cpf, telefone, alunos)
         List<Responsavel> responsaveis = List.of(
             new Responsavel(null, "Marcos Silva", "marcos.silva@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "11122233344", "11988887777", null),
             new Responsavel(null, "Ana Costa", "ana.costa@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "22233344455", "11955554444", null),
@@ -105,18 +102,26 @@ public class DataSeeder implements CommandLineRunner {
             new Responsavel(null, "Rafael Santos", "rafael.santos@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "77788899900", "11944447777", null),
             new Responsavel(null, "Paula Mendes", "paula.mendes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "88899900011", "11933332222", null),
             new Responsavel(null, "Eduardo Gomes", "eduardo.gomes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "99900011122", "11922221111", null),
-            new Responsavel(null, "Camila Nunes", "camila.nunes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "00011122233", "11911110000", null)
+            new Responsavel(null, "Camila Nunes", "camila.nunes@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "00011122233", "11911110000", null),
+            
+            new Responsavel(null, "Roberto Almeida", "roberto.almeida@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "12312312312", "11912121212", null),
+            new Responsavel(null, "Patricia Souza", "patricia.souza@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "23423423423", "11923232323", null),
+            new Responsavel(null, "Fernando Oliveira", "fernando.oliveira@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "34534534534", "11934343434", null),
+            new Responsavel(null, "Gabrielle Ferreira", "gabrielle.ferreira@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "45645645645", "11945454545", null),
+            new Responsavel(null, "Ricardo Martins", "ricardo.martins@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "56756756756", "11956565656", null),
+            new Responsavel(null, "Larissa Silva", "larissa.silva@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "67867867867", "11967676767", null),
+            new Responsavel(null, "Marcelo Costa", "marcelo.costa@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "78978978978", "11978787878", null),
+            new Responsavel(null, "Vanessa Santos", "vanessa.santos@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "89089089089", "11989898989", null),
+            new Responsavel(null, "Andre Rodrigues", "andre.rodrigues@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "90190190190", "11909090909", null),
+            new Responsavel(null, "Bianca Lima", "bianca.lima@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "01201201201", "11901010101", null)
         );
         responsavelRepository.saveAll(responsaveis);
     }
 
     private void seedAlunos() {
-        // Busca as entidades relacionadas que acabamos de salvar
         List<Escola> escolas = escolaRepository.findAll();
         List<Responsavel> responsaveis = responsavelRepository.findAll();
 
-        // Construtor (assumido) de Aluno:
-        // (id, nome, email, senha, ativo, dataCriacao, matricula, dataNascimento, escola, responsavel, turmas)
         List<Aluno> alunos = List.of(
             new Aluno(null, "Lucas Silva", "lucas.silva@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA001", LocalDate.of(2010, 5, 15), escolas.get(0), responsaveis.get(0), null),
             new Aluno(null, "Maria Costa", "maria.costa@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA002", LocalDate.of(2011, 8, 20), escolas.get(0), responsaveis.get(1), null),
@@ -127,28 +132,42 @@ public class DataSeeder implements CommandLineRunner {
             new Aluno(null, "Rafael Santos Jr", "rafael.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA007", LocalDate.of(2010, 2, 5), escolas.get(3), responsaveis.get(6), null),
             new Aluno(null, "Paula Mendes", "paula.mendes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA008", LocalDate.of(2011, 9, 30), escolas.get(3), responsaveis.get(7), null),
             new Aluno(null, "Eduardo Gomes", "eduardo.gomes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA009", LocalDate.of(2010, 12, 10), escolas.get(4), responsaveis.get(8), null),
-            new Aluno(null, "Camila Nunes", "camila.nunes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA010", LocalDate.of(2011, 1, 15), escolas.get(4), responsaveis.get(9), null)
+            new Aluno(null, "Camila Nunes", "camila.nunes@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA010", LocalDate.of(2011, 1, 15), escolas.get(4), responsaveis.get(9), null),
+            
+            new Aluno(null, "Roberto Almeida Jr", "roberto.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA011", LocalDate.of(2012, 2, 20), escolas.get(5), responsaveis.get(10), null),
+            new Aluno(null, "Patricia Souza Jr", "patricia.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA012", LocalDate.of(2012, 3, 25), escolas.get(5), responsaveis.get(11), null),
+            new Aluno(null, "Fernando Oliveira Jr", "fernando.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA013", LocalDate.of(2011, 11, 11), escolas.get(6), responsaveis.get(12), null),
+            new Aluno(null, "Gabrielle Ferreira Jr", "gabrielle.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA014", LocalDate.of(2011, 10, 10), escolas.get(6), responsaveis.get(13), null),
+            new Aluno(null, "Ricardo Martins Jr", "ricardo.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA015", LocalDate.of(2012, 5, 5), escolas.get(7), responsaveis.get(14), null),
+            new Aluno(null, "Larissa Silva Jr", "larissa.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA016", LocalDate.of(2012, 6, 6), escolas.get(7), responsaveis.get(15), null),
+            new Aluno(null, "Marcelo Costa Jr", "marcelo.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA017", LocalDate.of(2011, 12, 12), escolas.get(8), responsaveis.get(16), null),
+            new Aluno(null, "Vanessa Santos Jr", "vanessa.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA018", LocalDate.of(2011, 1, 30), escolas.get(8), responsaveis.get(17), null),
+            new Aluno(null, "Andre Rodrigues Jr", "andre.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA019", LocalDate.of(2010, 7, 7), escolas.get(9), responsaveis.get(18), null),
+            new Aluno(null, "Bianca Lima Jr", "bianca.jr@aluno.com", passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA020", LocalDate.of(2010, 8, 8), escolas.get(9), responsaveis.get(19), null)
         );
 
         alunoRepository.saveAll(alunos);
     }
 
     private void seedTurmas() {
-        // Busca os alunos que acabamos de salvar
         List<Aluno> alunos = alunoRepository.findAll();
 
-        // Construtor (assumido) da Turma: id, ano, serie, turno, alunos (List<Aluno>)
+        // Distribuição: 20 alunos únicos espalhados por 10 turmas (2 por turma)
         List<Turma> turmas = List.of(
             new Turma(null, 2025, "6º Ano", "Manhã", List.of(alunos.get(0), alunos.get(2))),
             new Turma(null, 2025, "6º Ano", "Tarde", List.of(alunos.get(1), alunos.get(3))),
+            
             new Turma(null, 2025, "5º Ano", "Manhã", List.of(alunos.get(4), alunos.get(6))),
             new Turma(null, 2025, "5º Ano", "Tarde", List.of(alunos.get(5), alunos.get(7))),
+            
             new Turma(null, 2025, "4º Ano", "Manhã", List.of(alunos.get(8), alunos.get(9))),
-            new Turma(null, 2025, "4º Ano", "Tarde", List.of(alunos.get(0), alunos.get(1))), // Alunos podem estar em mais de uma "turma"? Se sim.
-            new Turma(null, 2025, "3º Ano", "Manhã", List.of(alunos.get(2), alunos.get(3))),
-            new Turma(null, 2025, "3º Ano", "Tarde", List.of(alunos.get(4), alunos.get(5))),
-            new Turma(null, 2025, "2º Ano", "Manhã", List.of(alunos.get(6), alunos.get(7))),
-            new Turma(null, 2025, "2º Ano", "Tarde", List.of(alunos.get(8), alunos.get(9)))
+            new Turma(null, 2025, "4º Ano", "Tarde", List.of(alunos.get(10), alunos.get(11))), 
+            
+            new Turma(null, 2025, "3º Ano", "Manhã", List.of(alunos.get(12), alunos.get(13))),
+            new Turma(null, 2025, "3º Ano", "Tarde", List.of(alunos.get(14), alunos.get(15))),
+            
+            new Turma(null, 2025, "2º Ano", "Manhã", List.of(alunos.get(16), alunos.get(17))),
+            new Turma(null, 2025, "2º Ano", "Tarde", List.of(alunos.get(18), alunos.get(19)))
         );
 
         turmaRepository.saveAll(turmas);

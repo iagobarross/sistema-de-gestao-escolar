@@ -14,6 +14,7 @@ public class ResponsavelMapper {
         dto.setNome(responsavel.getNome());
         dto.setCpf(responsavel.getCpf());
         dto.setTelefone(responsavel.getTelefone());
+        dto.setEmail(responsavel.getEmail());
         return dto;
     }
 

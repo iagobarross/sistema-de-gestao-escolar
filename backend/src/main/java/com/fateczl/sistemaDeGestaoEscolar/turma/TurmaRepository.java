@@ -13,13 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface TurmaRepository extends JpaRepository<Turma, Long> {
 
-    // Para validação no Service
     boolean existsByAnoAndSerieAndTurno(int ano, String serie, String turno);
 
     Optional<Turma> findByAnoAndSerieAndTurnoAndIdNot(int ano, String serie, String turno, Long id);
 
-// Opção A: Mapeamento direto pelo nome da procedure no banco
-    @Procedure(procedureName = "sp_matricular_aluno")
+    @Procedure(procedureName = "sp_matricular_aluno", outputParameterName = "p_resultado")
     String matricularAluno(
         @Param("p_aluno_id") Long alunoId, 
         @Param("p_turma_id") Long turmaId

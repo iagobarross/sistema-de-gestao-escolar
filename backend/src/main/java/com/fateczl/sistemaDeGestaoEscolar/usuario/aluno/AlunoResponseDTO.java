@@ -4,6 +4,7 @@ package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class AlunoResponseDTO {
@@ -23,4 +24,5 @@ public class AlunoResponseDTO {
     // --- Campos de Relacionamento (Nomes para clareza) ---
     private String nomeEscola; // Boa prática
     private String nomeResponsavel; // Boa prática
+    private List<String> turmas;
 }
