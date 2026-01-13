@@ -34,14 +34,14 @@ public class Professor extends Usuario {
     @JoinColumn(name = "escola_id", nullable = false)
     private Escola escola;
 
-    @ManyToMany(mappedBy = "professores", fetch = FetchType.LAZY)
-    private List<Turma> turmas;
+    /*@ManyToMany(mappedBy = "professores", fetch = FetchType.LAZY)
+    private List<Turma> turmas;*/
 
     public Professor(Long id, String nome, String email, String senha, boolean ativo, LocalDateTime dataCriacao,
-            String especialidade, Escola escola, List<Turma> turmas) {
+            String especialidade, Escola escola) { //List<Turma> turmas
         super(id, nome, email, senha, ativo, dataCriacao);
         this.especialidade = especialidade;
         this.escola = escola;
-        this.turmas = turmas;
+        //this.turmas = turmas;
     }
 }

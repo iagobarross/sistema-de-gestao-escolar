@@ -39,6 +39,10 @@ public class Turma {
             joinColumns = @JoinColumn(name = "turma_id"), inverseJoinColumns = @JoinColumn(name = "aluno_id"))
     private List<Aluno> alunos;
 
+   /* @ManyToMany(mappedBy = "turmas", fetch = FetchType.LAZY)
+    private List<Turma> professores;*/
+
+
     // Relacionamento 1:N com MatrizDisciplina
     // @OneToMany(mappedBy = "turma", cascade = CascadeType.ALL, fetch =
     // FetchType.LAZY)

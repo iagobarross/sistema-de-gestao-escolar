@@ -21,12 +21,12 @@ public class ProfessorMapper {
             dto.setNomeEscola(professor.getEscola().getNome());
         }
 
-        if (professor.getTurmas() != null) {
+       /* if (professor.getTurmas() != null) {
             List<String> nomesTurmas = professor.getTurmas().stream()
                     .map(t -> t.getSerie() + " (" + t.getTurno() + ")")
                     .collect(Collectors.toList());
             dto.setTurmas(nomesTurmas);
-        }
+        }*/
 
         return dto;
     }
