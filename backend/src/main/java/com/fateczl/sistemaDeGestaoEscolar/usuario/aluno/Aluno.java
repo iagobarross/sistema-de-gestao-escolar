@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
-import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel; // Herança correta
+import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 
@@ -22,9 +22,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity // <--- Tem que ser @Entity
+@Entity
 @Table(name = "aluno")
-// REMOVA QUALQUER ANOTAÇÃO @Inheritance AQUI SE ELA EXISTIR.
 @Getter
 @Setter
 @NoArgsConstructor

@@ -39,13 +39,8 @@ public class AlunoController {
 
     @PostMapping
     public ResponseEntity<AlunoResponseDTO> criarAluno(@Valid @RequestBody AlunoRequestDTO dto) {
-        // Mapper converte o DTO para uma entidade "crua" (sem relacionamentos)
         Aluno novoAluno = alunoMapper.toEntity(dto);
-
-        // Service recebe a entidade "crua" + os IDs para fazer a lógica de associação
         Aluno alunoSalvo = alunoService.create(novoAluno, dto.getEscolaId(), dto.getResponsavelId());
-
-        // Mapeia a entidade salva (agora completa) para a resposta
         AlunoResponseDTO responseDTO = alunoMapper.toResponseDTO(alunoSalvo);
         return ResponseEntity.status(201).body(responseDTO);
     }

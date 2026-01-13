@@ -12,8 +12,8 @@ import com.fateczl.sistemaDeGestaoEscolar.config.exception.BusinessException;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundException;
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
-import com.fateczl.sistemaDeGestaoEscolar.responsavel.Responsavel;
-import com.fateczl.sistemaDeGestaoEscolar.responsavel.ResponsavelRepository;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.ResponsavelRepository;
 
 @Service
 public class AlunoServiceImpl implements AlunoService{

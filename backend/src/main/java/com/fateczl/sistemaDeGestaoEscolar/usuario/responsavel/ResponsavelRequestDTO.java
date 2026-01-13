@@ -1,5 +1,4 @@
-// Pacote: com.fateczl.sistemaDeGestaoEscolar.responsavel
-package com.fateczl.sistemaDeGestaoEscolar.responsavel;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -1,5 +1,4 @@
-// Pacote: com.fateczl.sistemaDeGestaoEscolar.responsavel
-package com.fateczl.sistemaDeGestaoEscolar.responsavel;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 
 import org.springframework.stereotype.Component;
 import java.util.List;

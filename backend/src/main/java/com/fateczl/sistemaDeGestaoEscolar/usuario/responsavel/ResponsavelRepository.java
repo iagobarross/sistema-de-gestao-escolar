@@ -1,5 +1,4 @@
-// Pacote: com.fateczl.sistemaDeGestaoEscolar.responsavel
-package com.fateczl.sistemaDeGestaoEscolar.responsavel;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

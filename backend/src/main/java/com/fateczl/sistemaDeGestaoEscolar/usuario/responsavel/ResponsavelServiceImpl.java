@@ -1,4 +1,4 @@
-package com.fateczl.sistemaDeGestaoEscolar.responsavel;
+package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 
 import java.util.List;
 
