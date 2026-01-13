@@ -40,8 +40,10 @@ public class EscolaController {
 	}
 	
 	@GetMapping("searchByName")
-	public List<Escola> buscarEscolaPorNome(@RequestParam(required=false) String nome){
-		return escolaService.findByName(nome);
+	public ResponseEntity<List<EscolaResponseDTO>> buscarEscolaPorNome(@RequestParam(required=false) String nome){
+		List<Escola> listaEntity = escolaService.findByName(nome);
+		List<EscolaResponseDTO> listaDTO = escolaMapper.toResponseDTOList(listaEntity);
+		return ResponseEntity.ok(listaDTO);
 	}
 	
 	@PostMapping

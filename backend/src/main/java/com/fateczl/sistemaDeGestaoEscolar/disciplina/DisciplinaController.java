@@ -48,7 +48,7 @@ public class DisciplinaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DisciplinaResponseDTO> atualizarEscola(@PathVariable Long id, @Valid @RequestBody DisciplinaRequestDTO dto){
+    public ResponseEntity<DisciplinaResponseDTO> atualizarDisciplina(@PathVariable Long id, @Valid @RequestBody DisciplinaRequestDTO dto){
         Disciplina dadosAtualizacao = disciplinaMapper.toEntity(dto);
         Disciplina disciplina = disciplinaService.update(id, dadosAtualizacao);
         return ResponseEntity.ok(disciplinaMapper.toResponseDTO(disciplina));
