@@ -35,19 +35,34 @@ public class EscolaServiceImpl implements EscolaService{
 	public Escola create(Escola escola) {
 		if(escolaRepository.existsByCnpj(escola.getCnpj()))
 			throw new BusinessException("CNPJ já cadastrado.");
+
+		if(escolaRepository.existsByCodigo(escola.getCodigo()))
+			throw new BusinessException("Código já cadastrado.");
+
 		return escolaRepository.save(escola);
 	}
-	
-    @Override
+
+	@Override
 	public Escola update(Long id, Escola escolaAtualizada) {
-		Escola escola = this.findById(id);
-		escola.setNome(escolaAtualizada.getNome());
-		escola.setCodigo(escolaAtualizada.getCodigo());
-		escola.setCnpj(escolaAtualizada.getCnpj());
-		escola.setEndereco(escolaAtualizada.getEndereco());
-		return escolaRepository.save(escola);
+		Escola escolaExistente = escolaRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Escola não encontrada com ID: " + id));
+
+		if (escolaRepository.existsByCnpjAndIdNot(escolaAtualizada.getCnpj(), id)) {
+			throw new BusinessException("Já existe outra escola com este CNPJ.");
+		}
+
+		if (escolaRepository.existsByCodigoAndIdNot(escolaAtualizada.getCodigo(), id)) {
+			throw new BusinessException("Já existe outra escola com este Código.");
+		}
+
+		escolaExistente.setNome(escolaAtualizada.getNome());
+		escolaExistente.setCnpj(escolaAtualizada.getCnpj());
+		escolaExistente.setCodigo(escolaAtualizada.getCodigo());
+		escolaExistente.setEndereco(escolaAtualizada.getEndereco()); // Se houver endereço
+
+		return escolaRepository.save(escolaExistente);
 	}
-	
+
     @Override
 	public void deleteById(Long id) {
 		try{
