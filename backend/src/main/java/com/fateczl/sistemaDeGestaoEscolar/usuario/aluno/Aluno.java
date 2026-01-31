@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
@@ -50,7 +51,7 @@ public class Aluno extends Usuario { // <--- Herda de Usuario
     private List<Turma> turmas;
 
     public Aluno(Long id, String nome, String email, String senha, boolean ativo, LocalDateTime dataCriacao, String matricula, LocalDate dataNascimento, Escola escola, Responsavel responsavel, List<Turma> turmas){
-        super(id, nome, email, senha, ativo, dataCriacao);
+        super(id, nome, email, senha, Role.ALUNO, ativo, dataCriacao);
         this.matricula = matricula;
         this.dataNascimento = dataNascimento;
         this.escola = escola;

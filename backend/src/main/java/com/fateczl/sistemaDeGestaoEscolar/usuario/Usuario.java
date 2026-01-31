@@ -1,26 +1,30 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.usuario
 package com.fateczl.sistemaDeGestaoEscolar.usuario;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass; // <-- ESSA ANOTAÇÃO É A CHAVE
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
-@MappedSuperclass // Diz ao JPA para incluir os campos desta classe nas tabelas filhas
+@Data
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-public abstract class Usuario { // Recomenda-se ser abstrata
+public abstract class Usuario implements UserDetails {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,10 +39,39 @@ public abstract class Usuario { // Recomenda-se ser abstrata
 	@Column(nullable = false)
 	private String senha;
 
-	// Use um valor default ou defina-o no construtor
+	@Enumerated(EnumType.STRING)
+	private Role role;
+
 	private boolean ativo = true;
 
 	private LocalDateTime dataCriacao = LocalDateTime.now();
 
-	// Outros campos comuns (como autenticacao/perfil)
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		if (this.role == null) return List.of();
+		return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+	}
+
+	@Override
+	public String getPassword() {
+		return this.senha;
+	}
+	@Override
+	public String getUsername() {
+		return this.email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() { return true;}
+
+	@Override
+	public boolean isAccountNonLocked() { return true;}
+
+	@Override
+	public boolean isCredentialsNonExpired() { return true;}
+
+	@Override
+	public boolean isEnabled() { return true;}
+
+
 }

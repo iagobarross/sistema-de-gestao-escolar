@@ -4,6 +4,7 @@ package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.Aluno;
 
@@ -36,7 +37,7 @@ public class Responsavel extends Usuario{
     private List<Aluno> alunos;
 
     public Responsavel(Long id, String nome, String email, String senha, boolean ativo, LocalDateTime dataCriacao, String cpf, String telefone, List<Aluno> alunos){
-        super(id, nome, email, senha, ativo, dataCriacao);
+        super(id, nome, email, senha, Role.RESPONSAVEL, ativo, dataCriacao);
         this.cpf = cpf;
         this.telefone = telefone;
         this.alunos = alunos;

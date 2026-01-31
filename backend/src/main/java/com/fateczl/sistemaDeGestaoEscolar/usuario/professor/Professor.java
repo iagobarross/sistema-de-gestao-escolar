@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 
 import jakarta.persistence.Column;
@@ -39,7 +40,7 @@ public class Professor extends Usuario {
 
     public Professor(Long id, String nome, String email, String senha, boolean ativo, LocalDateTime dataCriacao,
             String especialidade, Escola escola) { //List<Turma> turmas
-        super(id, nome, email, senha, ativo, dataCriacao);
+        super(id, nome, email, senha, Role.PROFESSOR, ativo, dataCriacao);
         this.especialidade = especialidade;
         this.escola = escola;
         //this.turmas = turmas;
