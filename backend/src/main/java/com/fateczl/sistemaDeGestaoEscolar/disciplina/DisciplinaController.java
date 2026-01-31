@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,7 @@ public class DisciplinaController {
     private DisciplinaMapper disciplinaMapper;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<DisciplinaResponseDTO>> listarTodasDisciplinas(){
         List<Disciplina> listaEntity = disciplinaService.findAll();
         List<DisciplinaResponseDTO> listaDTO = disciplinaMapper.toResponseDTOList(listaEntity);
@@ -34,12 +36,14 @@ public class DisciplinaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DisciplinaResponseDTO> buscarDisciplinaPorId(@PathVariable Long id){
         Disciplina disciplina = disciplinaService.findById(id);
         return ResponseEntity.ok(disciplinaMapper.toResponseDTO(disciplina));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DisciplinaResponseDTO> criarDisciplina(@Valid @RequestBody DisciplinaRequestDTO dto){
         Disciplina novaDisciplina = disciplinaMapper.toEntity(dto);
         Disciplina disciplinaSalva = disciplinaService.create(novaDisciplina);
@@ -48,6 +52,7 @@ public class DisciplinaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DisciplinaResponseDTO> atualizarDisciplina(@PathVariable Long id, @Valid @RequestBody DisciplinaRequestDTO dto){
         Disciplina dadosAtualizacao = disciplinaMapper.toEntity(dto);
         Disciplina disciplina = disciplinaService.update(id, dadosAtualizacao);
@@ -55,6 +60,7 @@ public class DisciplinaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> deletarDisciplina(@PathVariable Long id){
 		disciplinaService.deleteById(id);
 		return ResponseEntity.noContent().build();
