@@ -43,7 +43,7 @@ public class EscolaServiceTest {
         BusinessException excecaoLancada = assertThrows(BusinessException.class, () -> escolaService.create(escolaParaSalvar));
 
         // Valida se a mensagem do erro é exatamente a que definimos no código
-        assertEquals("CNPJ já cadastrado.", excecaoLancada.getMessage());
+        assertEquals("CNPJ da escola já cadastrado.", excecaoLancada.getMessage());
 
         // Validação Crítica de Segurança: Garante que o sistema NÃO tentou salvar no banco mesmo dando erro
         verify(escolaRepository, never()).save(any(Escola.class));

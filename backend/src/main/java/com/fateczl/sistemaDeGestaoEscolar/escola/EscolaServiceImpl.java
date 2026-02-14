@@ -34,10 +34,10 @@ public class EscolaServiceImpl implements EscolaService{
     @Override
 	public Escola create(Escola escola) {
 		if(escolaRepository.existsByCnpj(escola.getCnpj()))
-			throw new BusinessException("CNPJ já cadastrado.");
+			throw new BusinessException("CNPJ da escola já cadastrado.");
 
 		if(escolaRepository.existsByCodigo(escola.getCodigo()))
-			throw new BusinessException("Código já cadastrado.");
+			throw new BusinessException("Código da escola já cadastrado.");
 
 		return escolaRepository.save(escola);
 	}

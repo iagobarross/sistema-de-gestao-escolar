@@ -3,6 +3,7 @@ package com.fateczl.sistemaDeGestaoEscolar.escola;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.hibernate.validator.constraints.br.CNPJ;
 
 @Data
 public class EscolaRequestDTO {
@@ -13,7 +14,7 @@ public class EscolaRequestDTO {
 	private String nome;
 	
 	@NotBlank(message = "CNPJ é obrigatório")
-	@Size(min = 14, max = 14, message = "CNPJ deve ter 14 dígitos")
+	@CNPJ(message= " CNPJ em formato inválido")
 	private String cnpj;
 	
 	@NotBlank(message = "Endereço é obrigatório")
