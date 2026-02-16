@@ -104,46 +104,50 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
           IconButton(icon: Icon(Icons.refresh), onPressed: _carregarEscolas),
         ],
       ),
-      body: FutureBuilder<List<Escola>>(
-        future: _futureEscolas,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text("Erro: ${snapshot.error}"),
-              ),
-            );
-          } else if (snapshot.hasData) {
-            final escolas = snapshot.data!;
-            if (escolas.isEmpty) {
-              return Center(child: Text("Nenhuma escola cadastrada."));
-            }
-            return ListView.builder(
-              itemCount: escolas.length,
-              itemBuilder: (context, index) {
-                final escola = escolas[index];
-                return ListTile(
-                  title: Text(escola.nome),
-                  subtitle: Text(
-                    "Código: ${escola.codigo} - End: ${escola.endereco}",
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<List<Escola>>(
+            future: _futureEscolas,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Erro: ${snapshot.error}"),
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _deletarEscola(escola.id),
-                  ),
-                  onTap: () => _navegarParaDetalhes(escola.id),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text("Nenhuma escola encontrada."));
-          }
-        },
+              } else if (snapshot.hasData) {
+                final escolas = snapshot.data!;
+                if (escolas.isEmpty) {
+                  return Center(child: Text("Nenhuma escola cadastrada."));
+                }
+                return ListView.builder(
+                  itemCount: escolas.length,
+                  itemBuilder: (context, index) {
+                    final escola = escolas[index];
+                    return ListTile(
+                      title: Text(escola.nome),
+                      subtitle: Text(
+                        "Código: ${escola.codigo} - End: ${escola.endereco}",
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _deletarEscola(escola.id),
+                      ),
+                      onTap: () => _navegarParaDetalhes(escola.id),
+                    );
+                  },
+                );
+              } else {
+                return Center(child: Text("Nenhuma escola encontrada."));
+              }
+            },
+          ),
+        ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

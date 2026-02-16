@@ -1,23 +1,18 @@
+import 'package:gestao_escolar_app/services/api_client.dart';
 import 'package:http/http.dart' as http;
 import '../models/escola.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 class EscolaService {
-  String get baseUrl => getBaseUrl();
-
-  String getBaseUrl() {
-    if (kIsWeb) {
-      return 'http://localhost:8081/api/v1/escola';
-    } else {
-      return 'http://10.0.2.2:8081/api/v1/escola';
-    }
-  }
+  final String baseUrl = '${ApiClient.baseDomain}/escola';
 
   Future<List<Escola>> getEscolas() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
+      final response = await http.get(
+        Uri.parse(baseUrl),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return escolaFromJson(response.body);
       } else {
@@ -36,7 +31,10 @@ class EscolaService {
 
   Future<Escola> getEscolaById(int id) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return Escola.fromJson(jsonDecode(response.body));
       } else if (response.statusCode == 404) {
@@ -62,9 +60,7 @@ class EscolaService {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(<String, String>{
           // Espelha o EscolaRequestDTO
           'codigo': codigo,
@@ -106,9 +102,7 @@ class EscolaService {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/$id'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(<String, String>{
           // Espelha o EscolaRequestDTO
           'codigo': codigo,
@@ -124,7 +118,12 @@ class EscolaService {
       } else {
         String errorMessage = response.body;
         try {
-          /* ... (mesma lógica de erro do POST) ... */
+          final decoded = jsonDecode(response.body);
+          if (decoded['message'] != null) {
+            errorMessage = decoded['message'];
+          } else if (decoded['errors'] != null) {
+            errorMessage = decoded['errors'].toString();
+          }
         } catch (_) {}
         throw Exception(
           "Falha ao atualizar escola: $errorMessage (Status: ${response.statusCode})",
@@ -139,7 +138,10 @@ class EscolaService {
 
   Future<void> deleteEscola(int id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/$id'));
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
 
       if (response.statusCode == 204) {
         return; // Sucesso

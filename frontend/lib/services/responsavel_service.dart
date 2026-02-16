@@ -1,23 +1,18 @@
+import 'package:gestao_escolar_app/services/api_client.dart';
 import 'package:http/http.dart' as http;
 import '../models/responsavel.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 class ResponsavelService {
-  String get baseUrl => getBaseUrl();
-
-  String getBaseUrl() {
-    if (kIsWeb) {
-      return 'http://localhost:8081/api/v1/responsavel';
-    } else {
-      return 'http://10.0.2.2:8081/api/v1/responsavel';
-    }
-  }
+  final String baseUrl = '${ApiClient.baseDomain}/responsavel';
 
   Future<List<Responsavel>> getResponsaveis() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
+      final response = await http.get(
+        Uri.parse(baseUrl),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return responsavelFromJson(response.body);
       } else {
@@ -36,7 +31,10 @@ class ResponsavelService {
 
   Future<Responsavel> getResponsavelById(int id) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return Responsavel.fromJson(jsonDecode(response.body));
       } else {
@@ -59,9 +57,7 @@ class ResponsavelService {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(<String, dynamic>{
           'nome': nome,
           'email': email,
@@ -104,9 +100,7 @@ class ResponsavelService {
 
       final response = await http.put(
         Uri.parse('$baseUrl/$id'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(body),
       );
       if (response.statusCode == 200) {
@@ -123,7 +117,10 @@ class ResponsavelService {
 
   Future<void> deleteResponsavel(int id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/$id'));
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode != 204) {
         throw Exception(
           "Falha ao excluir responsável. Status: ${response.statusCode}",

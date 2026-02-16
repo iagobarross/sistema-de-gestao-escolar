@@ -108,44 +108,48 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Disciplina>>(
-        future: _futureDisciplinas,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text("Erro: ${snapshot.error}"),
-              ),
-            );
-          } else if (snapshot.hasData) {
-            final disciplinas = snapshot.data!;
-            if (disciplinas.isEmpty) {
-              return Center(child: Text("Nenhuma disciplina cadastrada."));
-            }
-            return ListView.builder(
-              itemCount: disciplinas.length,
-              itemBuilder: (context, index) {
-                final disciplina = disciplinas[index];
-                return ListTile(
-                  title: Text(disciplina.nome),
-                  subtitle: Text("${disciplina.descricao}"),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _deletarDisciplina(disciplina.id),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<List<Disciplina>>(
+            future: _futureDisciplinas,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Erro: ${snapshot.error}"),
                   ),
-                  onTap: () => _navegarParaDetalhes(disciplina.id),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text("Nenhuma disciplina encontrada."));
-          }
-        },
+              } else if (snapshot.hasData) {
+                final disciplinas = snapshot.data!;
+                if (disciplinas.isEmpty) {
+                  return Center(child: Text("Nenhuma disciplina cadastrada."));
+                }
+                return ListView.builder(
+                  itemCount: disciplinas.length,
+                  itemBuilder: (context, index) {
+                    final disciplina = disciplinas[index];
+                    return ListTile(
+                      title: Text(disciplina.nome),
+                      subtitle: Text("${disciplina.descricao}"),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _deletarDisciplina(disciplina.id),
+                      ),
+                      onTap: () => _navegarParaDetalhes(disciplina.id),
+                    );
+                  },
+                );
+              } else {
+                return Center(child: Text("Nenhuma disciplina encontrada."));
+              }
+            },
+          ),
+        ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),
         child: Icon(Icons.add),

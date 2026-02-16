@@ -27,9 +27,15 @@ class _FormTurmaScreenState extends State<FormTurmaScreen> {
     super.initState();
     _isEditando = widget.turmaParaEditar != null;
 
-    _anoController = TextEditingController(text: _isEditando ? widget.turmaParaEditar!.ano.toString() : '');
-    _serieController = TextEditingController(text: _isEditando ? widget.turmaParaEditar!.serie : '');
-    _turnoController = TextEditingController(text: _isEditando ? widget.turmaParaEditar!.turno : '');
+    _anoController = TextEditingController(
+      text: _isEditando ? widget.turmaParaEditar!.ano.toString() : '',
+    );
+    _serieController = TextEditingController(
+      text: _isEditando ? widget.turmaParaEditar!.serie : '',
+    );
+    _turnoController = TextEditingController(
+      text: _isEditando ? widget.turmaParaEditar!.turno : '',
+    );
   }
 
   @override
@@ -43,9 +49,11 @@ class _FormTurmaScreenState extends State<FormTurmaScreen> {
   Future<void> _salvarTurma() async {
     if (_formKey.currentState!.validate()) {
       if (!mounted) return;
-      setState(() { _isLoading = true; });
+      setState(() {
+        _isLoading = true;
+      });
       String? errorMessage;
-      
+
       try {
         final int? ano = int.tryParse(_anoController.text);
         if (ano == null) {
@@ -68,17 +76,23 @@ class _FormTurmaScreenState extends State<FormTurmaScreen> {
         }
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Turma salva com sucesso!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Turma salva com sucesso!')));
         Navigator.of(context).pop(true);
-
       } catch (e) {
         errorMessage = e.toString();
       } finally {
         if (mounted) {
-          setState(() { _isLoading = false; });
+          setState(() {
+            _isLoading = false;
+          });
           if (errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         }
@@ -89,37 +103,63 @@ class _FormTurmaScreenState extends State<FormTurmaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditando ? 'Editar Turma' : 'Nova Turma'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: <Widget>[
-              TextFormField(
-                controller: _anoController,
-                decoration: InputDecoration(labelText: 'Ano'),
-                keyboardType: TextInputType.number,
-                validator: (v) => (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+      appBar: AppBar(title: Text(_isEditando ? 'Editar Turma' : 'Nova Turma')),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: <Widget>[
+                  const SizedBox(height: 40),
+                  TextFormField(
+                    controller: _anoController,
+                    decoration: InputDecoration(
+                      labelText: 'Ano',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 40),
+                  TextFormField(
+                    controller: _serieController,
+                    decoration: InputDecoration(
+                      labelText: 'Série (ex: 6º Ano)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 40),
+                  TextFormField(
+                    controller: _turnoController,
+                    decoration: InputDecoration(
+                      labelText: 'Turno (ex: Manhã)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _salvarTurma,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text('Salvar'),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _serieController,
-                decoration: InputDecoration(labelText: 'Série (ex: 6º Ano)'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-              ),
-              TextFormField(
-                controller: _turnoController,
-                decoration: InputDecoration(labelText: 'Turno (ex: Manhã)'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _salvarTurma,
-                child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('Salvar'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

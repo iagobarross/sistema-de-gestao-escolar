@@ -117,71 +117,99 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
       appBar: AppBar(
         title: Text(_isEditando ? 'Editar Responsável' : 'Novo Responsável'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: <Widget>[
-              TextFormField(
-                controller: _nomeController,
-                decoration: InputDecoration(labelText: 'Nome Completo'),
-                validator: (value) => (value == null || value.isEmpty)
-                    ? 'Campo obrigatório'
-                    : null,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: <Widget>[
+                  TextFormField(
+                    controller: _nomeController,
+                    decoration: InputDecoration(
+                      labelText: 'Nome Completo',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? 'Campo obrigatório'
+                        : null,
+                  ),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty)
+                        return 'Campo obrigatório';
+                      if (!value.contains('@')) return 'Email inválido';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _senhaController,
+                    decoration: InputDecoration(
+                      labelText: 'Senha',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: _isEditando
+                          ? 'Deixe em branco para manter a atual'
+                          : '',
+                    ),
+                    obscureText: true,
+                    validator: (value) {
+                      if (!_isEditando && (value == null || value.isEmpty))
+                        return 'Campo obrigatório';
+                      if (value != null && value.isNotEmpty && value.length < 6)
+                        return 'Senha deve ter no mínimo 6 caracteres';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _cpfController,
+                    decoration: InputDecoration(
+                      labelText: 'CPF',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty)
+                        return 'Campo obrigatório';
+                      if (value.length != 11) return 'CPF deve ter 11 dígitos';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _telefoneController,
+                    decoration: InputDecoration(
+                      labelText: 'Telefone',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _salvarResponsavel,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text('Salvar'),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Campo obrigatório';
-                  if (!value.contains('@')) return 'Email inválido';
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _senhaController,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  hintText: _isEditando
-                      ? 'Deixe em branco para manter a atual'
-                      : '',
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (!_isEditando && (value == null || value.isEmpty))
-                    return 'Campo obrigatório';
-                  if (value != null && value.isNotEmpty && value.length < 6)
-                    return 'Senha deve ter no mínimo 6 caracteres';
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _cpfController,
-                decoration: InputDecoration(labelText: 'CPF'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Campo obrigatório';
-                  if (value.length != 11) return 'CPF deve ter 11 dígitos';
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _telefoneController,
-                decoration: InputDecoration(labelText: 'Telefone'),
-                keyboardType: TextInputType.phone,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _salvarResponsavel,
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text('Salvar'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

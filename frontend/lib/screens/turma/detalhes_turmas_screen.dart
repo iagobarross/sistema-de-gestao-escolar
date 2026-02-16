@@ -111,83 +111,90 @@ class _DetalhesTurmaScreenState extends State<DetalhesTurmasScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Turma>(
-        future: _futureTurma,
-        builder: (context, snapshotTurma) {
-          if (snapshotTurma.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshotTurma.hasError) {
-            return Center(child: Text("Erro: ${snapshotTurma.error}"));
-          } else if (snapshotTurma.hasData) {
-            final turma = snapshotTurma.data!;
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        title: Text(turma.serie),
-                        subtitle: Text("Série"),
-                      ),
-                      ListTile(
-                        title: Text(turma.ano.toString()),
-                        subtitle: Text("Ano"),
-                      ),
-                      ListTile(
-                        title: Text(turma.turno),
-                        subtitle: Text("Turno"),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(),
-                Text(
-                  "Alunos na Turma",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Expanded(
-                  child: FutureBuilder<List<Aluno>>(
-                    future: _futureAlunos,
-                    builder: (context, snapshotAlunos) {
-                      if (snapshotAlunos.connectionState ==
-                          ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      } else if (snapshotAlunos.hasError) {
-                        return Center(
-                          child: Text(
-                            "Erro ao buscar alunos: ${snapshotAlunos.error}",
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<Turma>(
+            future: _futureTurma,
+            builder: (context, snapshotTurma) {
+              if (snapshotTurma.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshotTurma.hasError) {
+                return Center(child: Text("Erro: ${snapshotTurma.error}"));
+              } else if (snapshotTurma.hasData) {
+                final turma = snapshotTurma.data!;
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            title: Text(turma.serie),
+                            subtitle: Text("Série"),
                           ),
-                        );
-                      } else if (snapshotAlunos.hasData) {
-                        final alunos = snapshotAlunos.data!;
-                        if (alunos.isEmpty) {
-                          return Center(
-                            child: Text("Nenhum aluno nesta turma."),
-                          );
-                        }
-                        return ListView.builder(
-                          itemCount: alunos.length,
-                          itemBuilder: (context, index) {
-                            final aluno = alunos[index];
-                            return ListTile(
-                              title: Text(aluno.nome),
-                              subtitle: Text("RA: ${aluno.matricula}"),
+                          ListTile(
+                            title: Text(turma.ano.toString()),
+                            subtitle: Text("Ano"),
+                          ),
+                          ListTile(
+                            title: Text(turma.turno),
+                            subtitle: Text("Turno"),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(),
+                    Text(
+                      "Alunos na Turma",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    Expanded(
+                      child: FutureBuilder<List<Aluno>>(
+                        future: _futureAlunos,
+                        builder: (context, snapshotAlunos) {
+                          if (snapshotAlunos.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (snapshotAlunos.hasError) {
+                            return Center(
+                              child: Text(
+                                "Erro ao buscar alunos: ${snapshotAlunos.error}",
+                              ),
                             );
-                          },
-                        );
-                      } else {
-                        return Center(child: Text("Nenhum aluno encontrado."));
-                      }
-                    },
-                  ),
-                ),
-              ],
-            );
-          } else {
-            return Center(child: Text("Turma não encontrada."));
-          }
-        },
+                          } else if (snapshotAlunos.hasData) {
+                            final alunos = snapshotAlunos.data!;
+                            if (alunos.isEmpty) {
+                              return Center(
+                                child: Text("Nenhum aluno nesta turma."),
+                              );
+                            }
+                            return ListView.builder(
+                              itemCount: alunos.length,
+                              itemBuilder: (context, index) {
+                                final aluno = alunos[index];
+                                return ListTile(
+                                  title: Text(aluno.nome),
+                                  subtitle: Text("RA: ${aluno.matricula}"),
+                                );
+                              },
+                            );
+                          } else {
+                            return Center(
+                              child: Text("Nenhum aluno encontrado."),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                return Center(child: Text("Turma não encontrada."));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FutureBuilder<Turma>(
         future: _futureTurma,

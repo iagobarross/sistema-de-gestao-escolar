@@ -209,7 +209,12 @@ class _GerenciarAlunosTurmaScreenState
             },
           ),
         ),
-        body: _buildBody(),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 1000),
+            child: _buildBody(),
+          ),
+        ),
       ),
     );
   }

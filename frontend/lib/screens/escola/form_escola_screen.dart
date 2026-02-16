@@ -115,68 +115,93 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: <Widget>[
-              TextFormField(
-                controller: _nomeController,
-                decoration: InputDecoration(labelText: 'Nome'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o nome';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _codigoController,
-                decoration: InputDecoration(labelText: 'Código'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o código';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              TextFormField(
-                controller: _cnpjController,
-                decoration: InputDecoration(labelText: 'CNPJ'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o CNPJ';
-                  }
-                  if (value.length != 14) {
-                    return 'CNPJ deve ter 14 dígitos';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 30),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: <Widget>[
+                  TextFormField(
+                    controller: _nomeController,
+                    decoration: InputDecoration(
+                      labelText: 'Nome',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o nome';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _codigoController,
+                    decoration: InputDecoration(
+                      labelText: 'Código',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o código';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  TextFormField(
+                    controller: _cnpjController,
+                    decoration: InputDecoration(
+                      labelText: 'CNPJ',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o CNPJ';
+                      }
+                      if (value.length != 14) {
+                        return 'CNPJ deve ter 14 dígitos';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 30),
 
-              TextFormField(
-                controller: _enderecoController,
-                decoration: InputDecoration(labelText: 'Endereço'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o endereço';
-                  }
-                  return null;
-                },
+                  TextFormField(
+                    controller: _enderecoController,
+                    decoration: InputDecoration(
+                      labelText: 'Endereço',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o endereço';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _salvarEscola,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(_isEditando ? 'Atualizar' : 'Salvar'),
+                  ),
+                ],
               ),
-              SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _salvarEscola,
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text(_isEditando ? 'Atualizar' : 'Salvar'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -1,23 +1,19 @@
+import 'package:gestao_escolar_app/services/api_client.dart';
+
 import '../../models/disciplina.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 class DisciplinaService {
-  String get baseUrl => getBaseUrl();
-
-  String getBaseUrl() {
-    if (kIsWeb) {
-      return 'http://localhost:8081/api/v1/disciplina';
-    } else {
-      return 'http://10.0.2.2:8081/api/v1/disciplina';
-    }
-  }
+  final String baseUrl = '${ApiClient.baseDomain}/disciplina';
 
   Future<List<Disciplina>> getDisciplinas() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
+      final response = await http.get(
+        Uri.parse(baseUrl),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return disciplinaFromJson(response.body);
       } else {
@@ -36,7 +32,10 @@ class DisciplinaService {
 
   Future<Disciplina> getDisciplinaById(int id) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return Disciplina.fromJson(jsonDecode(response.body));
       } else if (response.statusCode == 404) {
@@ -63,9 +62,7 @@ class DisciplinaService {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(<String, dynamic>{
           // Espelha o DisciplinaRequestDTO
           'nome': nome,
@@ -109,9 +106,7 @@ class DisciplinaService {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/$id'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(<String, dynamic>{
           'nome': nome,
           'codigo': codigo,
@@ -147,7 +142,10 @@ class DisciplinaService {
 
   Future<void> deleteDisciplina(int id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/$id'));
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
 
       if (response.statusCode == 204) {
         return; // Sucesso

@@ -95,46 +95,51 @@ class _DetalhesDisciplinaScreenState extends State<DetalhesDisciplinaScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Disciplina>(
-        future: _futureDisciplina,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Erro: ${snapshot.error}"));
-          } else if (snapshot.hasData) {
-            final disciplina = snapshot.data!;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  ListTile(
-                    title: Text(disciplina.nome),
-                    subtitle: Text("Nome"),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<Disciplina>(
+            future: _futureDisciplina,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text("Erro: ${snapshot.error}"));
+              } else if (snapshot.hasData) {
+                final disciplina = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ListView(
+                    children: [
+                      ListTile(
+                        title: Text(disciplina.nome),
+                        subtitle: Text("Nome"),
+                      ),
+                      ListTile(
+                        title: Text(disciplina.codigo),
+                        subtitle: Text("Código"),
+                      ),
+                      ListTile(
+                        title: Text(disciplina.descricao),
+                        subtitle: Text("Descrição"),
+                      ),
+                      ListTile(
+                        title: Text(disciplina.notaMinima.toString()),
+                        subtitle: Text("Nota Mínima"),
+                      ),
+                      ListTile(
+                        title: Text(disciplina.cargaHoraria.toString()),
+                        subtitle: Text("Carga Horária (h)"),
+                      ),
+                    ],
                   ),
-                  ListTile(
-                    title: Text(disciplina.codigo),
-                    subtitle: Text("Código"),
-                  ),
-                  ListTile(
-                    title: Text(disciplina.descricao),
-                    subtitle: Text("Descrição"),
-                  ),
-                  ListTile(
-                    title: Text(disciplina.notaMinima.toString()),
-                    subtitle: Text("Nota Mínima"),
-                  ),
-                  ListTile(
-                    title: Text(disciplina.cargaHoraria.toString()),
-                    subtitle: Text("Carga Horária (h)"),
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return Center(child: Text("Disciplina não encontrada."));
-          }
-        },
+                );
+              } else {
+                return Center(child: Text("Disciplina não encontrada."));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FutureBuilder<Disciplina>(
         future: _futureDisciplina,

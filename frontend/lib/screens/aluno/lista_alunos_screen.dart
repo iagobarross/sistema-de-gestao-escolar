@@ -100,45 +100,50 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
           IconButton(icon: Icon(Icons.refresh), onPressed: _carregarAlunos),
         ],
       ),
-      body: FutureBuilder<List<Aluno>>(
-        future: _futureAlunos,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text("Erro: ${snapshot.error}"),
-              ),
-            );
-          } else if (snapshot.hasData) {
-            final alunos = snapshot.data!;
-            if (alunos.isEmpty) {
-              return Center(child: Text("Nenhum aluno cadastrado."));
-            }
-            return ListView.builder(
-              itemCount: alunos.length,
-              itemBuilder: (context, index) {
-                final aluno = alunos[index];
-                return ListTile(
-                  title: Text(aluno.nome),
-                  subtitle: Text(
-                    "RA: ${aluno.matricula} | Turmas: ${aluno.turmas.join(', ')}\nEscola: ${aluno.nomeEscola}",
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<List<Aluno>>(
+            future: _futureAlunos,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Erro: ${snapshot.error}"),
                   ),
-                  isThreeLine: true,
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _deletarAluno(aluno.id),
-                  ),
-                  onTap: () => _navegarParaDetalhes(aluno.id),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text("Nenhum aluno encontrado."));
-          }
-        },
+              } else if (snapshot.hasData) {
+                final alunos = snapshot.data!;
+                if (alunos.isEmpty) {
+                  return Center(child: Text("Nenhum aluno cadastrado."));
+                }
+                return ListView.builder(
+                  itemCount: alunos.length,
+                  itemBuilder: (context, index) {
+                    final aluno = alunos[index];
+                    return ListTile(
+                      title: Text(aluno.nome),
+                      subtitle: Text(
+                        "RA: ${aluno.matricula} | Turmas: ${aluno.turmas.join(', ')}\nEscola: ${aluno.nomeEscola}",
+                      ),
+                      isThreeLine: true,
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _deletarAluno(aluno.id),
+                      ),
+                      onTap: () => _navegarParaDetalhes(aluno.id),
+                    );
+                  },
+                );
+              } else {
+                return Center(child: Text("Nenhum aluno encontrado."));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),

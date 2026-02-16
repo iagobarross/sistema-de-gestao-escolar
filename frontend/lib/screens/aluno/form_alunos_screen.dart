@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import '../../models/aluno.dart';
 import '../../services/aluno_service.dart';
@@ -170,78 +168,124 @@ class _FormAlunoScreenState extends State<FormAlunoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(_isEditando ? 'Editar Aluno' : 'Novo Aluno')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            // Usar ListView para evitar overflow
-            children: <Widget>[
-              TextFormField(
-                controller: _nomeController,
-                decoration: InputDecoration(labelText: 'Nome'),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                // Usar ListView para evitar overflow
+                children: <Widget>[
+                  TextFormField(
+                    controller: _nomeController,
+                    decoration: InputDecoration(
+                      labelText: 'Nome',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) =>
+                        (v == null || v.isEmpty || !v.contains('@'))
+                        ? 'Email inválido'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _senhaController,
+                    decoration: InputDecoration(
+                      labelText: 'Senha',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: _isEditando
+                          ? 'Deixe em branco para manter'
+                          : '',
+                    ),
+                    obscureText: true,
+                    validator: (v) => (!_isEditando && (v == null || v.isEmpty))
+                        ? 'Campo obrigatório'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _matriculaController,
+                    decoration: InputDecoration(
+                      labelText: 'Matrícula (RA)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _dataNascimentoController,
+                    decoration: InputDecoration(
+                      labelText: 'Data Nascimento',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: 'DD/MM/AAAA',
+                      suffixIcon: Icon(Icons.calendar_today),
+                    ),
+                    readOnly: true,
+                    onTap: () => _selecionarData(context),
+                    validator: (v) =>
+                        (_dataSelecionada == null) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _escolaIdController,
+                    decoration: InputDecoration(
+                      labelText: 'ID da Escola',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _responsavelIdController,
+                    decoration: InputDecoration(
+                      labelText: 'ID do Responsável',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _salvarAluno,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text('Salvar'),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => (v == null || v.isEmpty || !v.contains('@'))
-                    ? 'Email inválido'
-                    : null,
-              ),
-              TextFormField(
-                controller: _senhaController,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  hintText: _isEditando ? 'Deixe em branco para manter' : '',
-                ),
-                obscureText: true,
-                validator: (v) => (!_isEditando && (v == null || v.isEmpty))
-                    ? 'Campo obrigatório'
-                    : null,
-              ),
-              TextFormField(
-                controller: _matriculaController,
-                decoration: InputDecoration(labelText: 'Matrícula (RA)'),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-              ),
-              TextFormField(
-                controller: _dataNascimentoController,
-                decoration: InputDecoration(
-                  labelText: 'Data Nascimento',
-                  hintText: 'DD/MM/AAAA',
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () => _selecionarData(context),
-                validator: (v) =>
-                    (_dataSelecionada == null) ? 'Campo obrigatório' : null,
-              ),
-              TextFormField(
-                controller: _escolaIdController,
-                decoration: InputDecoration(labelText: 'ID da Escola'),
-                keyboardType: TextInputType.number,
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-              ),
-              TextFormField(
-                controller: _responsavelIdController,
-                decoration: InputDecoration(labelText: 'ID do Responsável'),
-                keyboardType: TextInputType.number,
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _salvarAluno,
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text('Salvar'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

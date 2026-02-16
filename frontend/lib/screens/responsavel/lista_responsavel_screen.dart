@@ -104,44 +104,49 @@ class _ListaResponsavelScreenState extends State<ListaResponsavelScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Responsavel>>(
-        future: _futureResponsaveis,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text("Erro: ${snapshot.error}"),
-              ),
-            );
-          } else if (snapshot.hasData) {
-            final responsaveis = snapshot.data!;
-            if (responsaveis.isEmpty) {
-              return Center(child: Text("Nenhum responsável cadastrado."));
-            }
-            return ListView.builder(
-              itemCount: responsaveis.length,
-              itemBuilder: (context, index) {
-                final responsavel = responsaveis[index];
-                return ListTile(
-                  title: Text(responsavel.nome),
-                  subtitle: Text(
-                    "CPF: ${responsavel.cpf} | Telefone: ${responsavel.telefone}",
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<List<Responsavel>>(
+            future: _futureResponsaveis,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Erro: ${snapshot.error}"),
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _deletarResponsavel(responsavel.id),
-                  ),
-                  onTap: () => _navegarParaDetalhes(responsavel.id),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text("Nenhum responsável encontrado."));
-          }
-        },
+              } else if (snapshot.hasData) {
+                final responsaveis = snapshot.data!;
+                if (responsaveis.isEmpty) {
+                  return Center(child: Text("Nenhum responsável cadastrado."));
+                }
+                return ListView.builder(
+                  itemCount: responsaveis.length,
+                  itemBuilder: (context, index) {
+                    final responsavel = responsaveis[index];
+                    return ListTile(
+                      title: Text(responsavel.nome),
+                      subtitle: Text(
+                        "CPF: ${responsavel.cpf} | Telefone: ${responsavel.telefone}",
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _deletarResponsavel(responsavel.id),
+                      ),
+                      onTap: () => _navegarParaDetalhes(responsavel.id),
+                    );
+                  },
+                );
+              } else {
+                return Center(child: Text("Nenhum responsável encontrado."));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),

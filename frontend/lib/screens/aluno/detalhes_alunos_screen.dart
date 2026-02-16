@@ -91,50 +91,58 @@ class _DetalhesAlunoScreenState extends State<DetalhesAlunoScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Aluno>(
-        future: _futureAluno,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Erro: ${snapshot.error}"));
-          } else if (snapshot.hasData) {
-            final aluno = snapshot.data!;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  ListTile(title: Text(aluno.nome), subtitle: Text("Nome")),
-                  ListTile(title: Text(aluno.email), subtitle: Text("Email")),
-                  ListTile(
-                    title: Text(aluno.matricula),
-                    subtitle: Text("Matrícula (RA)"),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<Aluno>(
+            future: _futureAluno,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text("Erro: ${snapshot.error}"));
+              } else if (snapshot.hasData) {
+                final aluno = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ListView(
+                    children: [
+                      ListTile(title: Text(aluno.nome), subtitle: Text("Nome")),
+                      ListTile(
+                        title: Text(aluno.email),
+                        subtitle: Text("Email"),
+                      ),
+                      ListTile(
+                        title: Text(aluno.matricula),
+                        subtitle: Text("Matrícula (RA)"),
+                      ),
+                      ListTile(
+                        title: Text(
+                          aluno.dataNascimento.toIso8601String().split('T')[0],
+                        ),
+                        subtitle: Text("Data de Nascimento"),
+                      ),
+                      ListTile(
+                        title: Text(aluno.nomeEscola),
+                        subtitle: Text("Escola"),
+                      ),
+                      ListTile(
+                        title: Text(aluno.nomeResponsavel),
+                        subtitle: Text("Responsável"),
+                      ),
+                      ListTile(
+                        title: Text(aluno.turmas.toString()),
+                        subtitle: Text("Nº de Turmas"),
+                      ),
+                    ],
                   ),
-                  ListTile(
-                    title: Text(
-                      aluno.dataNascimento.toIso8601String().split('T')[0],
-                    ),
-                    subtitle: Text("Data de Nascimento"),
-                  ),
-                  ListTile(
-                    title: Text(aluno.nomeEscola),
-                    subtitle: Text("Escola"),
-                  ),
-                  ListTile(
-                    title: Text(aluno.nomeResponsavel),
-                    subtitle: Text("Responsável"),
-                  ),
-                  ListTile(
-                    title: Text(aluno.turmas.toString()),
-                    subtitle: Text("Nº de Turmas"),
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return Center(child: Text("Aluno não encontrado."));
-          }
-        },
+                );
+              } else {
+                return Center(child: Text("Aluno não encontrado."));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FutureBuilder<Aluno>(
         future: _futureAluno,

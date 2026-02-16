@@ -65,38 +65,42 @@ class _DetalhesEscolaScreenState extends State<DetalhesEscolaScreen> {
             },
           ),
         ),
-        body: FutureBuilder<Escola>(
-          future: _futureEscola,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+        body: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 1000),
+            child: FutureBuilder<Escola>(
+              future: _futureEscola,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
 
-            if (snapshot.hasError) {
-              return Center(
-                child: Text("Erro ao carregar detalhes: ${snapshot.error}"),
-              );
-            }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text("Erro ao carregar detalhes: ${snapshot.error}"),
+                  );
+                }
 
-            if (snapshot.hasData) {
-              final escola = snapshot.data!;
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ListView(
-                  children: <Widget>[
-                    _buildDetailRow(context, "Nome", escola.nome),
-                    _buildDetailRow(context, "Código", escola.codigo),
-                    _buildDetailRow(context, "Endereço", escola.endereco),
-                    _buildDetailRow(context, "CNPJ", escola.cnpj),
-                  ],
-                ),
-              );
-            }
+                if (snapshot.hasData) {
+                  final escola = snapshot.data!;
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ListView(
+                      children: <Widget>[
+                        _buildDetailRow(context, "Nome", escola.nome),
+                        _buildDetailRow(context, "Código", escola.codigo),
+                        _buildDetailRow(context, "Endereço", escola.endereco),
+                        _buildDetailRow(context, "CNPJ", escola.cnpj),
+                      ],
+                    ),
+                  );
+                }
 
-            return Center(child: Text("Escola não encontrada."));
-          },
+                return Center(child: Text("Escola não encontrada."));
+              },
+            ),
+          ),
         ),
-
         floatingActionButton: FutureBuilder<Escola>(
           future: _futureEscola,
           builder: (context, snapshot) {

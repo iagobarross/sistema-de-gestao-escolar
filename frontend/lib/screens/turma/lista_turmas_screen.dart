@@ -99,43 +99,50 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
           IconButton(icon: Icon(Icons.refresh), onPressed: _carregarTurmas),
         ],
       ),
-      body: FutureBuilder<List<Turma>>(
-        future: _futureTurmas,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text("Erro: ${snapshot.error}"),
-              ),
-            );
-          } else if (snapshot.hasData) {
-            final turmas = snapshot.data!;
-            if (turmas.isEmpty) {
-              return Center(child: Text("Nenhuma turma cadastrada."));
-            }
-            return ListView.builder(
-              itemCount: turmas.length,
-              itemBuilder: (context, index) {
-                final turma = turmas[index];
-                return ListTile(
-                  title: Text("Série: ${turma.serie}"),
-                  subtitle: Text("Ano: ${turma.ano} | Turno: ${turma.turno}"),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _deletarTurma(turma.id),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 1000),
+          child: FutureBuilder<List<Turma>>(
+            future: _futureTurmas,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Erro: ${snapshot.error}"),
                   ),
-                  onTap: () => _navegarParaDetalhes(turma.id),
-                  // TODO: Adicionar um botão/gesto para navegar para a tela de "Gerenciar Alunos da Turma"
                 );
-              },
-            );
-          } else {
-            return Center(child: Text("Nenhuma turma encontrada."));
-          }
-        },
+              } else if (snapshot.hasData) {
+                final turmas = snapshot.data!;
+                if (turmas.isEmpty) {
+                  return Center(child: Text("Nenhuma turma cadastrada."));
+                }
+                return ListView.builder(
+                  itemCount: turmas.length,
+                  itemBuilder: (context, index) {
+                    final turma = turmas[index];
+                    return ListTile(
+                      title: Text("Série: ${turma.serie}"),
+                      subtitle: Text(
+                        "Ano: ${turma.ano} | Turno: ${turma.turno}",
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _deletarTurma(turma.id),
+                      ),
+                      onTap: () => _navegarParaDetalhes(turma.id),
+                      // TODO: Adicionar um botão/gesto para navegar para a tela de "Gerenciar Alunos da Turma"
+                    );
+                  },
+                );
+              } else {
+                return Center(child: Text("Nenhuma turma encontrada."));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),

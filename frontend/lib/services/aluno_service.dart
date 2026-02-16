@@ -1,23 +1,18 @@
+import 'package:gestao_escolar_app/services/api_client.dart';
 import 'package:http/http.dart' as http;
 import '../models/aluno.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 class AlunoService {
-  String get baseUrl => getBaseUrl();
-
-  String getBaseUrl() {
-    if (kIsWeb) {
-      return 'http://localhost:8081/api/v1/aluno';
-    } else {
-      return 'http://10.0.2.2:8081/api/v1/aluno';
-    }
-  }
+  final String baseUrl = '${ApiClient.baseDomain}/aluno';
 
   Future<List<Aluno>> getAlunos() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
+      final response = await http.get(
+        Uri.parse(baseUrl),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return alunoFromJson(response.body);
       } else {
@@ -36,7 +31,10 @@ class AlunoService {
 
   Future<Aluno> getAlunoById(int id) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/$id'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode == 200) {
         return Aluno.fromJson(jsonDecode(response.body));
       } else {
@@ -65,9 +63,7 @@ class AlunoService {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(_createAlunoBody(dto)),
       );
       if (response.statusCode == 201) {
@@ -86,9 +82,7 @@ class AlunoService {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/$id'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: await ApiClient.getHeaders(),
         body: jsonEncode(
           _createAlunoBody(dto),
         ), // Envia o mesmo corpo da criação
@@ -107,7 +101,10 @@ class AlunoService {
 
   Future<void> deleteAluno(int id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/$id'));
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$id'),
+        headers: await ApiClient.getHeaders(),
+      );
       if (response.statusCode != 204) {
         throw Exception(
           "Falha ao excluir aluno. Status: ${response.statusCode}",

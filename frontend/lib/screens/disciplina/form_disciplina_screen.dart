@@ -138,77 +138,107 @@ class _FormDisciplinaScreenState extends State<FormDisciplinaScreen> {
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: <Widget>[
-              TextFormField(
-                controller: _nomeController,
-                decoration: InputDecoration(labelText: 'Nome'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o nome';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _codigoController,
-                decoration: InputDecoration(labelText: 'Código'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o código';
-                  }
-                  return null;
-                },
-              ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: <Widget>[
+                  TextFormField(
+                    controller: _nomeController,
+                    decoration: InputDecoration(
+                      labelText: 'Nome',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o nome';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _codigoController,
+                    decoration: InputDecoration(
+                      labelText: 'Código',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o código';
+                      }
+                      return null;
+                    },
+                  ),
 
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _descricaoController,
-                decoration: InputDecoration(labelText: 'Descrição'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira a descrição';
-                  }
-                  return null;
-                },
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _descricaoController,
+                    decoration: InputDecoration(
+                      labelText: 'Descrição',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira a descrição';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  TextFormField(
+                    controller: _notaMinimaController,
+                    decoration: InputDecoration(
+                      labelText: 'Nota Mínima',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira a nota mínima';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 30),
+                  TextFormField(
+                    controller: _cargaHorariaController,
+                    decoration: InputDecoration(
+                      labelText: 'Carga Horária',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira a carga horária';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _salvarDisciplina,
+                    child: _isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(_isEditando ? 'Atualizar' : 'Salvar'),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
-              TextFormField(
-                controller: _notaMinimaController,
-                decoration: InputDecoration(labelText: 'Nota Mínima'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira a nota mínima';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 30),
-              TextFormField(
-                controller: _cargaHorariaController,
-                decoration: InputDecoration(labelText: 'Carga Horária'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira a carga horária';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _salvarDisciplina,
-                child: _isLoading
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text(_isEditando ? 'Atualizar' : 'Salvar'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
