@@ -31,10 +31,10 @@ public class AuthenticationService {
 
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("id", user.getId());
-        extraClaims.put("role", user.getRole());
+        extraClaims.put("role", user.getRole().name());
         extraClaims.put("nome", user.getNome());
 
-        var jwtToken = jwtService.generateToken(user);
+        var jwtToken = jwtService.generateToken(extraClaims, user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
         return AuthenticationResponseDTO.builder()

@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +22,7 @@ import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
 import com.fateczl.sistemaDeGestaoEscolar.turma.TurmaRepository;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.Aluno;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.aluno.AlunoRepository;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.UsuarioRepository;
 
 @Configuration
 public class DataSeeder implements CommandLineRunner {
@@ -35,11 +38,14 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     private TurmaRepository turmaRepository;
     @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+
         // Ordem de criação é importante por causa das chaves estrangeiras
         if (escolaRepository.count() == 0)
             seedEscolas();
@@ -57,6 +63,15 @@ public class DataSeeder implements CommandLineRunner {
         // Turmas precisam que Alunos já existam
         if (turmaRepository.count() == 0)
             seedTurmas();
+
+        if (usuarioRepository.findByEmail("admin@email.com").isEmpty()) {
+            Responsavel admin = new Responsavel(null, "Admin", "admin@email.com",
+                    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "00000000000", "000", null);
+            admin.setRole(Role.ADMIN);
+            usuarioRepository.save(admin);
+        }
+
+
     }
 
     private void seedEscolas() {
