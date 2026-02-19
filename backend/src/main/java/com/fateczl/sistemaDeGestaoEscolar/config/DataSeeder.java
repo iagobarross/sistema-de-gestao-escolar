@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
-import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;

@@ -1,10 +1,12 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 public interface AlunoService {
 
-    public List<Aluno> findAll();
+    public Page<Aluno> findAll(Pageable pageable, String nome, String matricula, Long escolaId);
 
     public Aluno findById(Long id);
 

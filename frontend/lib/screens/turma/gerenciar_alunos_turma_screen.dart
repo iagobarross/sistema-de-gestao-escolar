@@ -1,12 +1,13 @@
-// frontend/lib/screens/turma/gerenciar_alunos_turma_screen.dart
 import 'package:flutter/material.dart';
-import 'package:gestao_escolar_app/models/aluno.dart';
-import 'package:gestao_escolar_app/services/aluno_service.dart';
-import 'package:gestao_escolar_app/services/turma_service.dart';
+import '../../models/aluno.dart'; // Ajuste o import conforme sua estrutura
+import '../../services/aluno_service.dart';
+import '../../services/turma_service.dart';
 
 class GerenciarAlunosTurmaScreen extends StatefulWidget {
   final int turmaId;
-  GerenciarAlunosTurmaScreen({required this.turmaId});
+
+  const GerenciarAlunosTurmaScreen({Key? key, required this.turmaId})
+    : super(key: key);
 
   @override
   _GerenciarAlunosTurmaScreenState createState() =>
@@ -35,16 +36,33 @@ class _GerenciarAlunosTurmaScreenState
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
       final results = await Future.wait([
+        // 0: Alunos JÁ na turma
         _turmaService.getAlunosByTurma(widget.turmaId),
-        _alunoService.getAlunos(),
+        // 1: Todos os alunos (paginado) - Trazemos 100 para tentar pegar todos
+        _alunoService.getAlunos(page: 0, size: 100),
       ]);
 
-      final List<Aluno> alunosNaTurma = results[0];
-      final List<Aluno> todosAlunos = results[1];
+      // --- CORREÇÃO DE CASTING AQUI ---
+      // O Future.wait retorna List<dynamic>, então precisamos fazer o cast seguro
+      final List<Aluno> alunosNaTurma = (results[0] as List)
+          .cast<Aluno>()
+          .toList();
 
+      // Tratamento da paginação do AlunoService
+      final alunosMap = results[1] as Map<String, dynamic>;
+      final List<dynamic> listaJson = alunosMap['content'];
+
+      // Converte JSON para Objetos Aluno
+      final List<Aluno> todosAlunos = listaJson
+          .map((json) => Aluno.fromJson(json))
+          .toList();
+
+      // Lógica para filtrar: Disponíveis = Todos - (Aqueles que já estão na turma)
       final Set<int> idsNaTurma = alunosNaTurma.map((a) => a.id).toSet();
+
       final List<Aluno> alunosDisponiveis = todosAlunos
           .where((aluno) => !idsNaTurma.contains(aluno.id))
           .toList();
@@ -55,6 +73,7 @@ class _GerenciarAlunosTurmaScreenState
         _isLoading = false;
       });
     } catch (e) {
+      print("Erro ao carregar dados: $e"); // Log para debug
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString();
@@ -63,129 +82,94 @@ class _GerenciarAlunosTurmaScreenState
   }
 
   Future<void> _adicionarAluno(int alunoId) async {
-    setState(() {
-      _isLoading = true;
-    });
+    // Feedback visual imediato (Opcional: optimistic UI)
+    setState(() => _isLoading = true);
+
     try {
       await _turmaService.adicionarAlunoNaTurma(widget.turmaId, alunoId);
+
       setState(() {
-        _hasChanges = true;
+        _hasChanges =
+            true; // Marca que houve alteração para atualizar a tela anterior
       });
+
+      // Recarrega as listas para atualizar a UI
       await _carregarDados();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Aluno adicionado!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Aluno adicionado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao adicionar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   Future<void> _removerAluno(int alunoId) async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
+
     try {
       await _turmaService.removerAlunoDaTurma(widget.turmaId, alunoId);
+
       setState(() {
         _hasChanges = true;
       });
+
       await _carregarDados();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Aluno removido!'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Aluno removido da turma.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao remover: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-    if (_errorMessage != null) {
-      return Center(child: Text("Erro: $_errorMessage"));
-    }
+  // --- Helpers de Construção de UI ---
 
-    return Column(
-      children: [
-        _buildSectionTitle(
-          context,
-          "Alunos na Turma (${_alunosNaTurma.length})",
-        ),
-        Expanded(
-          child: _alunosNaTurma.isEmpty
-              ? Center(child: Text("Nenhum aluno nesta turma."))
-              : ListView.builder(
-                  itemCount: _alunosNaTurma.length,
-                  itemBuilder: (context, index) {
-                    final aluno = _alunosNaTurma[index];
-                    return ListTile(
-                      title: Text(aluno.nome),
-                      subtitle: Text("RA: ${aluno.matricula}"),
-                      trailing: IconButton(
-                        icon: Icon(Icons.remove_circle, color: Colors.red),
-                        onPressed: () => _removerAluno(aluno.id),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        _buildSectionTitle(
-          context,
-          "Alunos Disponíveis (${_alunosDisponiveis.length})",
-        ),
-        Expanded(
-          child: _alunosDisponiveis.isEmpty
-              ? Center(child: Text("Nenhum aluno disponível para adicionar."))
-              : ListView.builder(
-                  itemCount: _alunosDisponiveis.length,
-                  itemBuilder: (context, index) {
-                    final aluno = _alunosDisponiveis[index];
-                    return ListTile(
-                      title: Text(aluno.nome),
-                      subtitle: Text("RA: ${aluno.matricula}"),
-                      trailing: IconButton(
-                        icon: Icon(Icons.add_circle, color: Colors.green),
-                        onPressed: () => _adicionarAluno(aluno.id),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Padding _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Text(
-        title,
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Container(
+      width: double.infinity,
+      color: Colors.grey[200],
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[700]),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -199,22 +183,111 @@ class _GerenciarAlunosTurmaScreenState
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Gerenciar Alunos"),
+          title: Text("Gerenciar Alunos da Turma"),
           backgroundColor: Colors.red.shade900,
           foregroundColor: Colors.white,
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.of(context).pop(_hasChanges);
-            },
+            onPressed: () => Navigator.of(context).pop(_hasChanges),
           ),
         ),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 1000),
-            child: _buildBody(),
-          ),
-        ),
+        body: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+            ? Center(child: Text("Erro: $_errorMessage"))
+            : Column(
+                children: [
+                  // --- METADE SUPERIOR: ALUNOS NA TURMA ---
+                  _buildSectionTitle(
+                    "Alunos Matriculados (${_alunosNaTurma.length})",
+                    Icons.check_circle_outline,
+                  ),
+                  Expanded(
+                    flex: 1, // Ocupa metade da tela
+                    child: _alunosNaTurma.isEmpty
+                        ? Center(
+                            child: Text(
+                              "Nenhum aluno nesta turma.",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: _alunosNaTurma.length,
+                            separatorBuilder: (_, __) => Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final aluno = _alunosNaTurma[index];
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.red.shade100,
+                                  child: Text(
+                                    aluno.nome[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: Colors.red.shade900,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(aluno.nome),
+                                subtitle: Text("Matrícula: ${aluno.matricula}"),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.remove_circle_outline,
+                                    color: Colors.red,
+                                  ),
+                                  tooltip: "Remover da turma",
+                                  onPressed: () => _removerAluno(aluno.id),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+
+                  Divider(height: 2, thickness: 2),
+
+                  // --- METADE INFERIOR: ALUNOS DISPONÍVEIS ---
+                  _buildSectionTitle(
+                    "Alunos Disponíveis (${_alunosDisponiveis.length})",
+                    Icons.person_add_alt,
+                  ),
+                  Expanded(
+                    flex: 1, // Ocupa a outra metade
+                    child: _alunosDisponiveis.isEmpty
+                        ? Center(
+                            child: Text(
+                              "Todos os alunos já estão nesta turma.",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: _alunosDisponiveis.length,
+                            separatorBuilder: (_, __) => Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final aluno = _alunosDisponiveis[index];
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.green.shade100,
+                                  child: Text(
+                                    aluno.nome[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: Colors.green.shade800,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(aluno.nome),
+                                subtitle: Text("Matrícula: ${aluno.matricula}"),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.add_circle_outline,
+                                    color: Colors.green[700],
+                                  ),
+                                  tooltip: "Adicionar à turma",
+                                  onPressed: () => _adicionarAluno(aluno.id),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
       ),
     );
   }

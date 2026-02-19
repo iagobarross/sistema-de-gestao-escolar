@@ -3,15 +3,12 @@ package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
@@ -25,10 +22,15 @@ public class AlunoController {
     private AlunoMapper alunoMapper;
 
     @GetMapping
-    public ResponseEntity<List<AlunoResponseDTO>> listarTodosAlunos() {
-        List<Aluno> listaEntity = alunoService.findAll();
-        List<AlunoResponseDTO> listaDTO = alunoMapper.toResponseDTOList(listaEntity);
-        return ResponseEntity.ok(listaDTO);
+    public ResponseEntity<Page<AlunoResponseDTO>> listarTodosAlunos(
+            @PageableDefault(page = 0, size = 10, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String matricula,
+            @RequestParam(required = false) Long escolaId
+    ) {
+        Page<Aluno> pageAlunos = alunoService.findAll(pageable, nome, matricula, escolaId);
+        Page<AlunoResponseDTO> pageDTO = pageAlunos.map(alunoMapper::toResponseDTO);
+        return ResponseEntity.ok(pageDTO);
     }
 
     @GetMapping("/{id}")

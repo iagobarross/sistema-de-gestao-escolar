@@ -4,7 +4,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +17,15 @@ import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.ResponsavelRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AlunoServiceImpl implements AlunoService{
     @Autowired
     private AlunoRepository alunoRepository;
+
+    @Autowired
+    private AlunoMapper alunoMapper;
 
     @Autowired
     private EscolaRepository escolaRepository; // Injeção necessária
@@ -30,8 +37,8 @@ public class AlunoServiceImpl implements AlunoService{
     private PasswordEncoder passwordEncoder; // Injeção necessária
 
     @Override
-    public List<Aluno> findAll() {
-        return alunoRepository.findAll(Sort.by("nome").ascending());
+    public Page<Aluno> findAll(Pageable pageable, String nome, String matricula, Long escolaId){
+        return alunoRepository.findAll(AlunoSpecification.comFiltros(nome, matricula, escolaId), pageable);
     }
 
     @Override

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="gestao_escolar_app"
+        android:label="SIGA TCC"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

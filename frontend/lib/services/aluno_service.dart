@@ -7,14 +7,34 @@ import 'dart:io';
 class AlunoService {
   final String baseUrl = '${ApiClient.baseDomain}/aluno';
 
-  Future<List<Aluno>> getAlunos() async {
+  Future<Map<String, dynamic>> getAlunos({
+    int page = 0,
+    int size = 10,
+    String? nome,
+    String? matricula,
+    int? escolaId,
+  }) async {
+    String queryParams = '?page=$page&size=$size';
+
+    if (nome != null && nome.isNotEmpty) {
+      queryParams += '&nome=$nome';
+    }
+
+    if (matricula != null && matricula.isNotEmpty) {
+      queryParams += '&matricula=$matricula';
+    }
+
+    if (escolaId != null) {
+      queryParams += '&escolaId=$escolaId';
+    }
+
     try {
       final response = await http.get(
-        Uri.parse(baseUrl),
+        Uri.parse('$baseUrl$queryParams'),
         headers: await ApiClient.getHeaders(),
       );
       if (response.statusCode == 200) {
-        return alunoFromJson(response.body);
+        return jsonDecode(utf8.decode(response.bodyBytes));
       } else {
         throw Exception(
           "Falha ao carregar alunos. Status: ${response.statusCode}",
