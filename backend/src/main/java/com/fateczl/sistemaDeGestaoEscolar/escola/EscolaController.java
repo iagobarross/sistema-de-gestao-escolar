@@ -49,13 +49,11 @@ public class EscolaController {
 		List<EscolaResponseDTO> listaDTO = escolaMapper.toResponseDTOList(listaEntity);
 		return ResponseEntity.ok(listaDTO);
 	}
-	
+
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<EscolaResponseDTO> criarEscola(@Valid @RequestBody EscolaRequestDTO dto){
-		Escola novaEscola = escolaMapper.toEntity(dto);
-		Escola escolaSalva = escolaService.create(novaEscola);
-		EscolaResponseDTO responseDTO = escolaMapper.toResponseDTO(escolaSalva);
+	public ResponseEntity<EscolaResponseDTO> criarEscolaComDiretor(@Valid @RequestBody EscolaComDiretorRequestDTO dto){
+		EscolaResponseDTO responseDTO = escolaService.createEscolaComDiretor(dto);
 		return ResponseEntity.status(201).body(responseDTO);
 	}
 	

@@ -3,6 +3,7 @@ package com.fateczl.sistemaDeGestaoEscolar.usuario.professor;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -17,18 +18,21 @@ public class ProfessorController {
     private ProfessorMapper professorMapper;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<List<ProfessorResponseDTO>> listarTodos() {
         List<Professor> professores = professorService.findAll();
         return ResponseEntity.ok(professorMapper.toResponseDTOList(professores));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<ProfessorResponseDTO> buscarPorId(@PathVariable Long id) {
         Professor professor = professorService.findById(id);
         return ResponseEntity.ok(professorMapper.toResponseDTO(professor));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<ProfessorResponseDTO> criar(@Valid @RequestBody ProfessorRequestDTO dto) {
         Professor novoProfessor = professorMapper.toEntity(dto);
         Professor salvo = professorService.create(novoProfessor, dto.getEscolaId());
@@ -36,6 +40,7 @@ public class ProfessorController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<ProfessorResponseDTO> atualizar(@PathVariable Long id,
             @Valid @RequestBody ProfessorRequestDTO dto) {
         Professor dados = professorMapper.toEntity(dto);
@@ -44,6 +49,7 @@ public class ProfessorController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         professorService.deleteById(id);
         return ResponseEntity.noContent().build();

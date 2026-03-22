@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +32,7 @@ public class TurmaController {
     // --- CRUD Básico ---
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()") // Exemplo de segurança: apenas usuários autenticados podem acessar
     public ResponseEntity<List<TurmaResponseDTO>> listarTodasTurmas() {
         List<Turma> listaEntity = turmaService.findAll();
         List<TurmaResponseDTO> listaDTO = turmaMapper.toResponseDTOList(listaEntity);
@@ -38,12 +40,14 @@ public class TurmaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TurmaResponseDTO> buscarTurmaPorId(@PathVariable Long id) {
         Turma turma = turmaService.findById(id);
         return ResponseEntity.ok(turmaMapper.toResponseDTO(turma));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<TurmaResponseDTO> criarTurma(@Valid @RequestBody TurmaRequestDTO dto) {
         Turma novaTurma = turmaMapper.toEntity(dto);
         Turma turmaSalva = turmaService.create(novaTurma);
@@ -52,6 +56,7 @@ public class TurmaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR')")
     public ResponseEntity<TurmaResponseDTO> atualizarTurma(@PathVariable Long id,
             @Valid @RequestBody TurmaRequestDTO dto) {
         Turma dadosAtualizacao = turmaMapper.toEntity(dto);
@@ -60,6 +65,7 @@ public class TurmaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR')")
     public ResponseEntity<Void> deletarTurma(@PathVariable Long id) {
         turmaService.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -68,6 +74,7 @@ public class TurmaController {
     // --- Endpoints de Associação (Aluno <-> Turma) ---
 
     @GetMapping("/{turmaId}/alunos")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA','COORDENADOR', 'PROFESSOR')")
     public ResponseEntity<List<AlunoResponseDTO>> getAlunosDaTurma(@PathVariable Long turmaId) {
         // AGORA: Apenas chama o serviço, que faz todo o trabalho transacional
         List<AlunoResponseDTO> alunosDTO = turmaService.findAlunosByTurmaId(turmaId);
@@ -75,18 +82,21 @@ public class TurmaController {
     }
 
     @PostMapping("/{turmaId}/alunos/{alunoId}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<Void> adicionarAlunoNaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
         turmaService.adicionarAluno(turmaId, alunoId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{turmaId}/alunos/{alunoId}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<Void> removerAlunoDaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
         turmaService.removerAluno(turmaId, alunoId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{turmaId}/matricular/{alunoId}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<?> matricular(@PathVariable Long turmaId,@PathVariable Long alunoId) {
         String resultado = turmaService.matricularAlunoViaProcedure(alunoId, turmaId);
 

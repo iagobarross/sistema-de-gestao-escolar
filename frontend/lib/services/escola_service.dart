@@ -52,21 +52,33 @@ class EscolaService {
   }
 
   Future<Escola> createEscola(
-    String codigo,
-    String nome,
-    String cnpj,
-    String endereco,
-  ) async {
+      String codigo,
+      String nome,
+      String cnpj,
+      String endereco,
+      // Novos parâmetros para o Diretor:
+      String diretorNome,
+      String diretorEmail,
+      String diretorSenha,
+      ) async {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: await ApiClient.getHeaders(),
-        body: jsonEncode(<String, String>{
-          // Espelha o EscolaRequestDTO
-          'codigo': codigo,
-          'nome': nome,
-          'cnpj': cnpj,
-          'endereco': endereco,
+        body: jsonEncode({
+          // Estrutura que espelha o EscolaComDiretorRequestDTO do Spring Boot
+          'escola': {
+            'codigo': codigo,
+            'nome': nome,
+            'cnpj': cnpj,
+            'endereco': endereco,
+          },
+          'diretor': {
+            'nome': diretorNome,
+            'email': diretorEmail,
+            'senha': diretorSenha,
+            'cargo': 'DIRETOR', // Fixamos o cargo como DIRETOR
+          }
         }),
       );
       if (response.statusCode == 201) {
@@ -91,7 +103,6 @@ class EscolaService {
       throw Exception("Erro ao criar escola: ${e.toString()}");
     }
   }
-
   Future<Escola> updateEscola(
     int id,
     String codigo,

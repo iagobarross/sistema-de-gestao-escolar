@@ -24,27 +24,54 @@ class _LoginScreenState extends State<LoginScreen> {
       String? role = await _authService.getRole();
       setState(() => _isLoading = false);
 
-      if (role == 'ADMIN') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AdminDashboard()),
-        );
+      if (role != null) {
+        // Redirecionamento baseado no cargo (Role)
+        switch (role) {
+          case 'ADMIN':
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminDashboard()),
+            );
+            break;
+          case 'DIRETOR':
+          case 'SECRETARIA':
+          case 'COORDENADOR':
+            // Aqui você pode criar um DiretorDashboard no futuro.
+            // Por enquanto, vamos mandar para o AdminDashboard ou HomeScreen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminDashboard()), // Mude para HomeScreen() se preferir
+            );
+            break;
+          case 'PROFESSOR':
+          case 'ALUNO':
+          case 'RESPONSAVEL':
+             // Exemplo de tela genérica para outros usuários
+             Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminDashboard()), // Substitua pela tela correta deles depois
+            );
+            break;
+          default:
+            _mostrarErro('Cargo desconhecido. Contate o suporte.');
+            await _authService.logout();
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Acesso negado: você precisa ser um administrador'),
-          ),
-        );
+        _mostrarErro('Erro ao ler as permissões do usuário.');
         await _authService.logout();
       }
     } else {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('E-mail ou senha incorretos!')),
-      );
+      _mostrarErro('E-mail ou senha incorretos!');
     }
   }
 
+  // Função auxiliar para mostrar as mensagens
+  void _mostrarErro(String mensagem) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensagem)),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

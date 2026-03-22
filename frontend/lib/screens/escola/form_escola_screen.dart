@@ -15,10 +15,16 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
   final _formKey = GlobalKey<FormState>();
   final EscolaService _escolaService = EscolaService();
 
+  // Controladores da Escola
   late TextEditingController _codigoController;
   late TextEditingController _nomeController;
   late TextEditingController _cnpjController;
   late TextEditingController _enderecoController;
+
+  // Controladores do Diretor (usados apenas na criação)
+  late TextEditingController _diretorNomeController;
+  late TextEditingController _diretorEmailController;
+  late TextEditingController _diretorSenhaController;
 
   bool _isEditando = false;
   bool _isLoading = false;
@@ -40,6 +46,11 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
     _enderecoController = TextEditingController(
       text: _isEditando ? widget.escolaParaEditar!.endereco : '',
     );
+
+    // Inicializar os controladores do diretor vazios
+    _diretorNomeController = TextEditingController();
+    _diretorEmailController = TextEditingController();
+    _diretorSenhaController = TextEditingController();
   }
 
   @override
@@ -48,6 +59,10 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
     _nomeController.dispose();
     _cnpjController.dispose();
     _enderecoController.dispose();
+
+    _diretorNomeController.dispose();
+    _diretorEmailController.dispose();
+    _diretorSenhaController.dispose();
     super.dispose();
   }
 
@@ -63,6 +78,7 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
 
       try {
         if (_isEditando) {
+          // A atualização não mexe no diretor
           await _escolaService.updateEscola(
             widget.escolaParaEditar!.id,
             _codigoController.text,
@@ -74,20 +90,24 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Escola atualizada com sucesso!')),
             );
-            Navigator.of(context).pop(true); // Navega APÓS sucesso
+            Navigator.of(context).pop(true);
           }
         } else {
+          // Criação da Escola inclui os dados do Diretor
           await _escolaService.createEscola(
             _codigoController.text,
             _nomeController.text,
             _cnpjController.text,
             _enderecoController.text,
+            _diretorNomeController.text,
+            _diretorEmailController.text,
+            _diretorSenhaController.text,
           );
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Escola criada com sucesso!')),
+              SnackBar(content: Text('Escola e Diretor criados com sucesso!')),
             );
-            Navigator.of(context).pop(true); // Navega APÓS sucesso
+            Navigator.of(context).pop(true);
           }
         }
       } catch (e) {
@@ -99,7 +119,7 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
           });
           if (errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erro ao salvar escola: $errorMessage')),
+              SnackBar(content: Text('Erro ao salvar: $errorMessage')),
             );
           }
         }
@@ -124,10 +144,15 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
               key: _formKey,
               child: ListView(
                 children: <Widget>[
+                  Text(
+                    'Dados da Escola',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 15),
                   TextFormField(
                     controller: _nomeController,
                     decoration: InputDecoration(
-                      labelText: 'Nome',
+                      labelText: 'Nome da Escola',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -155,7 +180,7 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 10),
                   TextFormField(
                     controller: _cnpjController,
                     decoration: InputDecoration(
@@ -175,8 +200,7 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 30),
-
+                  SizedBox(height: 10),
                   TextFormField(
                     controller: _enderecoController,
                     decoration: InputDecoration(
@@ -192,12 +216,86 @@ class _FormEscolaScreenState extends State<FormEscolaScreen> {
                       return null;
                     },
                   ),
+
+                  // SEÇÃO DO DIRETOR (Aparece apenas se não estiver a editar)
+                  if (!_isEditando) ...[
+                    SizedBox(height: 20),
+                    Divider(thickness: 2),
+                    SizedBox(height: 10),
+                    Text(
+                      'Dados do Diretor (Acesso ao Sistema)',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 15),
+                    TextFormField(
+                      controller: _diretorNomeController,
+                      decoration: InputDecoration(
+                        labelText: 'Nome do Diretor',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira o nome do diretor';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: _diretorEmailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email do Diretor (Login)',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira o email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Insira um email válido';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: _diretorSenhaController,
+                      decoration: InputDecoration(
+                        labelText: 'Senha Inicial do Diretor',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      obscureText: true, // Esconde a senha digitada
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira a senha';
+                        }
+                        if (value.length < 6) {
+                          return 'A senha deve ter pelo menos 6 caracteres';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+
                   SizedBox(height: 40),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _salvarEscola,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                    ),
                     child: _isLoading
                         ? CircularProgressIndicator(color: Colors.white)
-                        : Text(_isEditando ? 'Atualizar' : 'Salvar'),
+                        : Text(
+                      _isEditando ? 'Atualizar Escola' : 'Criar Escola e Diretor',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ],
               ),
