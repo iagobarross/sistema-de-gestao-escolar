@@ -15,4 +15,7 @@ public interface EscolaService {
 	public Escola update(Long id, Escola escolaAtualizada);
 	
 	public void deleteById(Long id);
+
+	public EscolaResponseDTO createEscolaComDiretor (EscolaComDiretorRequestDTO dto);
+
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -22,6 +23,7 @@ public class AlunoController {
     private AlunoMapper alunoMapper;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA','COORDENADOR', 'PROFESSOR')")
     public ResponseEntity<Page<AlunoResponseDTO>> listarTodosAlunos(
             @PageableDefault(page = 0, size = 10, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) String nome,
@@ -34,12 +36,14 @@ public class AlunoController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA','COORDENADOR', 'PROFESSOR','ALUNO','RESPONSAVEL')")
     public ResponseEntity<AlunoResponseDTO> buscarAlunoPorId(@PathVariable Long id) {
         Aluno aluno = alunoService.findById(id);
         return ResponseEntity.ok(alunoMapper.toResponseDTO(aluno));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<AlunoResponseDTO> criarAluno(@Valid @RequestBody AlunoRequestDTO dto) {
         Aluno novoAluno = alunoMapper.toEntity(dto);
         Aluno alunoSalvo = alunoService.create(novoAluno, dto.getEscolaId(), dto.getResponsavelId());
@@ -48,6 +52,7 @@ public class AlunoController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
     public ResponseEntity<AlunoResponseDTO> atualizarAluno(@PathVariable Long id,
             @Valid @RequestBody AlunoRequestDTO dto) {
         Aluno dadosAtualizacao = alunoMapper.toEntity(dto);
@@ -58,6 +63,7 @@ public class AlunoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR')")
     public ResponseEntity<Void> deletarAluno(@PathVariable Long id) {
         alunoService.deleteById(id);
         return ResponseEntity.noContent().build();

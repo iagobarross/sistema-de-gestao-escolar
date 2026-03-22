@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario.Funcionario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -64,12 +65,18 @@ public class DataSeeder implements CommandLineRunner {
             seedTurmas();
 
         if (usuarioRepository.findByEmail("admin@email.com").isEmpty()) {
-            Responsavel admin = new Responsavel(null, "Admin", "admin@email.com",
-                    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "00000000000", "000", null);
+            Funcionario admin = new Funcionario();
+            admin.setNome("Administrador Sistema");
+            admin.setEmail("admin@email.com");
+            admin.setSenha(passwordEncoder.encode("123456"));
             admin.setRole(Role.ADMIN);
+            admin.setCargo(Funcionario.Cargo.ADMIN);
+            admin.setEscola(null); // Admin é da prefeitura, escola = null
+            admin.setAtivo(true);
+            admin.setDataCriacao(LocalDateTime.now());
+
             usuarioRepository.save(admin);
         }
-
 
     }
 
