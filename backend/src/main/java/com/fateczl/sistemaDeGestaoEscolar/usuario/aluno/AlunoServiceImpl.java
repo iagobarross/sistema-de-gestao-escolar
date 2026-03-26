@@ -1,13 +1,10 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,15 +14,11 @@ import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.ResponsavelRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AlunoServiceImpl implements AlunoService{
     @Autowired
     private AlunoRepository alunoRepository;
-
-    @Autowired
-    private AlunoMapper alunoMapper;
 
     @Autowired
     private EscolaRepository escolaRepository; // Injeção necessária

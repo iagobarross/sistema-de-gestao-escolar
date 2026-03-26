@@ -1,8 +1,6 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
 import org.springframework.data.jpa.domain.Specification;
-import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
-import jakarta.persistence.criteria.Join;
 
 public class AlunoSpecification {
 

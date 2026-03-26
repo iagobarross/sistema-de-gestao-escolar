@@ -45,4 +45,22 @@ class AuthService {
     }
     return null;
   }
+
+  Future<Map<String, dynamic>?> getPayload() async {
+    String? token = await getToken();
+    if (token != null && !JwtDecoder.isExpired(token)) {
+      return JwtDecoder.decode(token);
+    }
+    return null;
+  }
+
+  Future<int?> getId() async {
+    final payload = await getPayload();
+    return payload?['id'];
+  }
+
+  Future<String?> getNome() async {
+    final payload = await getPayload();
+    return payload?['nome'];
+  }
 }
