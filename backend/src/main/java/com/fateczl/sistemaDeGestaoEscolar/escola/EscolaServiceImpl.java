@@ -24,7 +24,6 @@ public class EscolaServiceImpl implements EscolaService{
 	@Autowired
 	private EscolaMapper escolaMapper; // NOVO: Certifique-se que o Mapper da escola está injetado aqui
 
-	// ---> NOVAS INJEÇÕES NECESSÁRIAS PARA CRIAR O DIRETOR <---
 	@Autowired
 	private FuncionarioRepository funcionarioRepository;
 

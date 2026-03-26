@@ -1,7 +1,6 @@
 package com.fateczl.sistemaDeGestaoEscolar.escola;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.br.CNPJ;
 

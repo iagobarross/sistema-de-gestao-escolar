@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:gestao_escolar_app/models/aluno.dart';
+import '../models/aluno.dart';
 
 List<Turma> turmaFromJson(String str) =>
     List<Turma>.from(jsonDecode(str).map((x) => Turma.fromJson(x)));

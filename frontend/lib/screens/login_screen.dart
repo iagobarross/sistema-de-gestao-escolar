@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/aluno/aluno_dashboard.dart';
+import 'package:gestao_escolar_app/screens/coordenador/coordenador_dashboard.dart';
+import 'package:gestao_escolar_app/screens/diretor/diretor_dashboard.dart';
+import 'package:gestao_escolar_app/screens/professor/professor_dashboard.dart';
+import 'package:gestao_escolar_app/screens/responsavel/responsavel_dashboard.dart';
+import 'package:gestao_escolar_app/screens/secretaria/secretaria_dashboard.dart';
 import '../services/auth_service.dart';
 import 'admin/admin_dashboard.dart';
 
@@ -15,63 +21,72 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() async {
     setState(() => _isLoading = true);
+
     bool success = await _authService.login(
-      _emailController.text,
+      _emailController.text.trim(),
       _senhaController.text,
     );
 
-    if (success) {
-      String? role = await _authService.getRole();
+    if (!success) {
       setState(() => _isLoading = false);
-
-      if (role != null) {
-        // Redirecionamento baseado no cargo (Role)
-        switch (role) {
-          case 'ADMIN':
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => AdminDashboard()),
-            );
-            break;
-          case 'DIRETOR':
-          case 'SECRETARIA':
-          case 'COORDENADOR':
-            // Aqui você pode criar um DiretorDashboard no futuro.
-            // Por enquanto, vamos mandar para o AdminDashboard ou HomeScreen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => AdminDashboard()), // Mude para HomeScreen() se preferir
-            );
-            break;
-          case 'PROFESSOR':
-          case 'ALUNO':
-          case 'RESPONSAVEL':
-             // Exemplo de tela genérica para outros usuários
-             Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => AdminDashboard()), // Substitua pela tela correta deles depois
-            );
-            break;
-          default:
-            _mostrarErro('Cargo desconhecido. Contate o suporte.');
-            await _authService.logout();
-        }
-      } else {
-        _mostrarErro('Erro ao ler as permissões do usuário.');
-        await _authService.logout();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('E-mail ou senha incorretos!')),
+        );
       }
-    } else {
-      setState(() => _isLoading = false);
-      _mostrarErro('E-mail ou senha incorretos!');
+      return;
     }
-  }
 
-  // Função auxiliar para mostrar as mensagens
-  void _mostrarErro(String mensagem) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensagem)),
+    final String? role = await _authService.getRole();
+    setState(() => _isLoading = false);
+
+    if (!mounted) return;
+
+    Widget destino;
+    switch (role) {
+      case 'ADMIN':
+        destino = AdminDashboard();
+        break;
+      case 'DIRETOR':
+        destino = const DiretorDashboard();
+        break;
+      case 'COORDENADOR':
+        destino = const CoordenadorDashboard();
+        break;
+      case 'SECRETARIA':
+        destino = const SecretariaDashboard();
+        break;
+      case 'PROFESSOR':
+        destino = const ProfessorDashboard();
+        break;
+      case 'RESPONSAVEL':
+        destino = const ResponsavelDashboard();
+        break;
+      case 'ALUNO':
+        destino = const AlunoDashboard();
+        break;
+      default:
+        await _authService.logout();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Role não reconhecida — acesso negado.'),
+          ),
+        );
+        return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => destino),
     );
   }
+
+  void _mostrarErro(String mensagem) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensagem)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

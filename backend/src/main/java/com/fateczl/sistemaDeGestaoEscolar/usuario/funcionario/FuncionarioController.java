@@ -1,6 +1,5 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario;
 
-import com.fateczl.sistemaDeGestaoEscolar.usuario.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

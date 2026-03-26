@@ -1,10 +1,8 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.professor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
-import com.fateczl.sistemaDeGestaoEscolar.turma.Turma;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 
@@ -12,7 +10,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

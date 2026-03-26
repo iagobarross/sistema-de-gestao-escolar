@@ -11,8 +11,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -29,24 +27,49 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/h2-console/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            // Público
+            .requestMatchers("/api/v1/auth/**").permitAll()
+            .requestMatchers("/h2-console/**").permitAll()
+            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
 
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
+            // Somente Admin da Prefeitura
+            .requestMatchers(HttpMethod.POST, "/api/v1/escola/com-diretor").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/v1/escola/**").hasRole("ADMIN")
+            .requestMatchers("/api/v1/funcionario/**").hasAnyRole("ADMIN", "DIRETOR")
 
-        return http.build();
-    }
+            // Admin + Diretor podem criar/editar recursos da escola
+            .requestMatchers(HttpMethod.POST, "/api/v1/escola").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/api/v1/escola/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.POST, "/api/v1/turma").hasAnyRole("ADMIN","DIRETOR","SECRETARIA")
+            .requestMatchers(HttpMethod.PUT, "/api/v1/turma/**").hasAnyRole("ADMIN","DIRETOR","SECRETARIA")
+            .requestMatchers(HttpMethod.DELETE, "/api/v1/turma/**").hasAnyRole("ADMIN","DIRETOR")
+
+            // Alunos — SECRETARIA gerencia, demais leem
+            .requestMatchers(HttpMethod.POST, "/api/v1/aluno").hasAnyRole("ADMIN","SECRETARIA")
+            .requestMatchers(HttpMethod.PUT, "/api/v1/aluno/**").hasAnyRole("ADMIN","SECRETARIA")
+            .requestMatchers(HttpMethod.DELETE, "/api/v1/aluno/**").hasAnyRole("ADMIN","SECRETARIA")
+
+            // Disciplinas — somente Admin gerencia
+            .requestMatchers(HttpMethod.POST, "/api/v1/disciplina").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/api/v1/disciplina/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/v1/disciplina/**").hasRole("ADMIN")
+
+            // Tudo autenticado pode fazer GET
+            .anyRequest().authenticated()
+        )
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authenticationProvider(authenticationProvider)
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+    http.headers(h -> h.frameOptions(f -> f.disable()));
+    return http.build();
+}
 
     // 5. BEAN DE CONFIGURAÇÃO DO CORS
     // Este método define as regras de permissão
