@@ -4,19 +4,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
-@DataJpaTest(properties = {
-        "spring.sql.init.mode=never",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest
+@ActiveProfiles("test") // Isso força o Spring a usar o arquivo que criamos acima
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 public class EscolaRepositoryTest {
 
     @Autowired
     private EscolaRepository escolaRepository;
 
-    // Ferramenta nativa do Spring para inserir dados direto no banco durante os testes
+    // Ferramenta nativa do Spring para inserir dados direto no banco durante os
+    // testes
     @Autowired
     private TestEntityManager entityManager;
 
@@ -31,7 +34,7 @@ public class EscolaRepositoryTest {
         escola.setNome("Escola Teste Banco");
         escola.setCnpj("11.111.111/0001-11");
         entityManager.persist(escola); // Insere no banco
-        entityManager.flush();         // Força a gravação imediata
+        entityManager.flush(); // Força a gravação imediata
 
         // 2. Act: Usamos o método do nosso repository que queremos testar
         boolean existe = escolaRepository.existsByCnpj("11.111.111/0001-11");
@@ -61,12 +64,12 @@ public class EscolaRepositoryTest {
 
         entityManager.flush();
 
-        // 2. Act: Fingimos que somos a "Escola B" tentando atualizar o CNPJ usando o CNPJ da "Escola A"
+        // 2. Act: Fingimos que somos a "Escola B" tentando atualizar o CNPJ usando o
+        // CNPJ da "Escola A"
         // "Existe o CNPJ 99... em algum ID que NÃO SEJA o ID da Escola B?"
         boolean conflitoDeCnpj = escolaRepository.existsByCnpjAndIdNot(
                 "99.999.999/0001-99",
-                escolaBSalva.getId()
-        );
+                escolaBSalva.getId());
 
         // 3. Assert: O banco tem que responder que SIM, há conflito (true)
         assertTrue(conflitoDeCnpj);

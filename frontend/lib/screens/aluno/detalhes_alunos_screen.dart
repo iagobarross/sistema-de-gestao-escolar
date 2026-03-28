@@ -5,7 +5,7 @@ import 'form_alunos_screen.dart';
 
 class DetalhesAlunoScreen extends StatefulWidget {
   final int alunoId;
-  DetalhesAlunoScreen({required this.alunoId});
+  const DetalhesAlunoScreen({super.key, required this.alunoId});
 
   @override
   _DetalhesAlunoScreenState createState() => _DetalhesAlunoScreenState();
@@ -150,8 +150,8 @@ class _DetalhesAlunoScreenState extends State<DetalhesAlunoScreen> {
           if (snapshot.hasData) {
             return FloatingActionButton(
               onPressed: () => _navegarParaFormulario(snapshot.data!),
-              child: Icon(Icons.edit),
               tooltip: 'Editar Aluno',
+              child: Icon(Icons.edit),
             );
           }
           return Container();

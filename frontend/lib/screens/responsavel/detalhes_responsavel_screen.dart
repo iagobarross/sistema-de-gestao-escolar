@@ -5,7 +5,7 @@ import 'form_responsavel_screen.dart';
 
 class DetalhesResponsavelScreen extends StatefulWidget {
   final int responsavelId;
-  DetalhesResponsavelScreen({required this.responsavelId});
+  const DetalhesResponsavelScreen({super.key, required this.responsavelId});
 
   @override
   _DetalhesResponsavelScreenState createState() =>
@@ -133,8 +133,8 @@ class _DetalhesResponsavelScreenState extends State<DetalhesResponsavelScreen> {
           if (snapshot.hasData) {
             return FloatingActionButton(
               onPressed: () => _navegarParaFormulario(snapshot.data!),
-              child: Icon(Icons.edit),
               tooltip: 'Editar Responsável',
+              child: Icon(Icons.edit),
             );
           }
           return Container();

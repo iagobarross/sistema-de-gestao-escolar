@@ -6,6 +6,8 @@ import 'turma/lista_turmas_screen.dart';
 import 'responsavel/lista_responsavel_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }

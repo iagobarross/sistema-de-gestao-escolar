@@ -6,6 +6,8 @@ import 'form_escola_screen.dart';
 import 'detalhes_escola_screen.dart';
 
 class ListaEscolaScreen extends StatefulWidget {
+  const ListaEscolaScreen({super.key});
+
   @override
   _ListaEscolasScreenState createState() => _ListaEscolasScreenState();
 }
@@ -161,8 +163,8 @@ class _ListaEscolasScreenState extends State<ListaEscolaScreen> {
             }
           });
         },
-        child: Icon(Icons.add),
         tooltip: 'Nova Escola',
+        child: Icon(Icons.add),
       ),
     );
   }

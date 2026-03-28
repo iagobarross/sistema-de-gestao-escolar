@@ -7,6 +7,8 @@ import 'form_alunos_screen.dart';
 import 'detalhes_alunos_screen.dart';
 
 class ListaAlunoScreen extends StatefulWidget {
+  const ListaAlunoScreen({super.key});
+
   @override
   _ListaAlunoScreenState createState() => _ListaAlunoScreenState();
 }
@@ -93,7 +95,7 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
               SizedBox(height: 16),
 
               DropdownButtonFormField<Escola>(
-                value: _escola,
+                initialValue: _escola,
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: 'Escola',
@@ -382,11 +384,11 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),
-        child: Icon(Icons.add),
         tooltip: 'Novo Aluno',
         backgroundColor:
             Colors.red.shade900, // Ajuste para combinar com o AppBar
         foregroundColor: Colors.white,
+        child: Icon(Icons.add),
       ),
     );
   }

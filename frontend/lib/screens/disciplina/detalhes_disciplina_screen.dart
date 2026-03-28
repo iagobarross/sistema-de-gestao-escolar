@@ -5,7 +5,7 @@ import 'form_disciplina_screen.dart';
 
 class DetalhesDisciplinaScreen extends StatefulWidget {
   final int disciplinaId;
-  DetalhesDisciplinaScreen({required this.disciplinaId});
+  const DetalhesDisciplinaScreen({super.key, required this.disciplinaId});
 
   @override
   _DetalhesDisciplinaScreenState createState() =>
@@ -147,8 +147,8 @@ class _DetalhesDisciplinaScreenState extends State<DetalhesDisciplinaScreen> {
           if (snapshot.hasData) {
             return FloatingActionButton(
               onPressed: () => _navegarParaFormulario(snapshot.data!),
-              child: Icon(Icons.edit),
               tooltip: 'Editar Disciplina',
+              child: Icon(Icons.edit),
             );
           }
           return Container();

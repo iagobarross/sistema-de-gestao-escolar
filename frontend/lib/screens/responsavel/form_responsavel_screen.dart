@@ -5,7 +5,7 @@ import '../../services/responsavel_service.dart';
 class FormResponsavelScreen extends StatefulWidget {
   final Responsavel? responsavelParaEditar;
 
-  FormResponsavelScreen({this.responsavelParaEditar});
+  const FormResponsavelScreen({super.key, this.responsavelParaEditar});
 
   @override
   _FormResponsavelScreenState createState() => _FormResponsavelScreenState();
@@ -148,8 +148,9 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Campo obrigatório';
+                      }
                       if (!value.contains('@')) return 'Email inválido';
                       return null;
                     },
@@ -167,10 +168,14 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
                     ),
                     obscureText: true,
                     validator: (value) {
-                      if (!_isEditando && (value == null || value.isEmpty))
+                      if (!_isEditando && (value == null || value.isEmpty)) {
                         return 'Campo obrigatório';
-                      if (value != null && value.isNotEmpty && value.length < 6)
+                      }
+                      if (value != null &&
+                          value.isNotEmpty &&
+                          value.length < 6) {
                         return 'Senha deve ter no mínimo 6 caracteres';
+                      }
                       return null;
                     },
                   ),
@@ -184,8 +189,9 @@ class _FormResponsavelScreenState extends State<FormResponsavelScreen> {
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Campo obrigatório';
+                      }
                       if (value.length != 11) return 'CPF deve ter 11 dígitos';
                       return null;
                     },

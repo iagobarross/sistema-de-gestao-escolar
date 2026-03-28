@@ -5,6 +5,8 @@ import '../../services/responsavel_service.dart';
 import 'form_responsavel_screen.dart';
 
 class ListaResponsavelScreen extends StatefulWidget {
+  const ListaResponsavelScreen({super.key});
+
   @override
   _ListaResponsavelScreenState createState() => _ListaResponsavelScreenState();
 }
@@ -150,8 +152,8 @@ class _ListaResponsavelScreenState extends State<ListaResponsavelScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),
-        child: Icon(Icons.add),
         tooltip: 'Novo Responsável',
+        child: Icon(Icons.add),
       ),
     );
   }
