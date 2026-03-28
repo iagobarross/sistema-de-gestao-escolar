@@ -6,8 +6,7 @@ import '../../services/turma_service.dart';
 class GerenciarAlunosTurmaScreen extends StatefulWidget {
   final int turmaId;
 
-  const GerenciarAlunosTurmaScreen({Key? key, required this.turmaId})
-    : super(key: key);
+  const GerenciarAlunosTurmaScreen({super.key, required this.turmaId});
 
   @override
   _GerenciarAlunosTurmaScreenState createState() =>

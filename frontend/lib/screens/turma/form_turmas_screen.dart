@@ -5,7 +5,7 @@ import '../../services/turma_service.dart';
 class FormTurmaScreen extends StatefulWidget {
   final Turma? turmaParaEditar;
 
-  FormTurmaScreen({this.turmaParaEditar});
+  const FormTurmaScreen({super.key, this.turmaParaEditar});
 
   @override
   _FormTurmaScreenState createState() => _FormTurmaScreenState();

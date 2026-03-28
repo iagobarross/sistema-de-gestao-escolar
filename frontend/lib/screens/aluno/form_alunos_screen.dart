@@ -5,7 +5,7 @@ import '../../services/aluno_service.dart';
 class FormAlunoScreen extends StatefulWidget {
   final Aluno? alunoParaEditar;
 
-  FormAlunoScreen({this.alunoParaEditar});
+  const FormAlunoScreen({super.key, this.alunoParaEditar});
 
   @override
   _FormAlunoScreenState createState() => _FormAlunoScreenState();

@@ -10,6 +10,8 @@ import '../login_screen.dart';
 class AdminDashboard extends StatelessWidget {
   final AuthService _authService = AuthService();
 
+  AdminDashboard({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -7,7 +7,7 @@ import 'form_turmas_screen.dart';
 
 class DetalhesTurmasScreen extends StatefulWidget {
   final int turmaId;
-  DetalhesTurmasScreen({required this.turmaId});
+  const DetalhesTurmasScreen({super.key, required this.turmaId});
 
   @override
   _DetalhesTurmaScreenState createState() => _DetalhesTurmaScreenState();
@@ -206,9 +206,9 @@ class _DetalhesTurmaScreenState extends State<DetalhesTurmasScreen> {
               children: [
                 FloatingActionButton(
                   onPressed: () => _navegarParaFormulario(snapshot.data!),
-                  child: Icon(Icons.edit),
                   tooltip: 'Editar Turma',
                   heroTag: 'editarTurma',
+                  child: Icon(Icons.edit),
                 ),
                 SizedBox(height: 16),
 
@@ -216,10 +216,10 @@ class _DetalhesTurmaScreenState extends State<DetalhesTurmasScreen> {
                   onPressed: () {
                     _navegarParaGerenciarAlunos(snapshot.data!.id);
                   },
-                  child: Icon(Icons.person_add),
                   tooltip: 'Gerenciar Alunos',
                   heroTag: 'adicionarAluno',
                   backgroundColor: Colors.blue,
+                  child: Icon(Icons.person_add),
                 ),
               ],
             );

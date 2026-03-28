@@ -5,7 +5,7 @@ import '../../models/escola.dart';
 class FormEscolaScreen extends StatefulWidget {
   final Escola? escolaParaEditar;
 
-  FormEscolaScreen({this.escolaParaEditar});
+  const FormEscolaScreen({super.key, this.escolaParaEditar});
 
   @override
   _FormEscolaScreenState createState() => _FormEscolaScreenState();

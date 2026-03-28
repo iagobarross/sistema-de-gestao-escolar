@@ -6,8 +6,7 @@ import 'form_escola_screen.dart';
 class DetalhesEscolaScreen extends StatefulWidget {
   final int escolaId;
 
-  const DetalhesEscolaScreen({Key? key, required this.escolaId})
-    : super(key: key);
+  const DetalhesEscolaScreen({super.key, required this.escolaId});
 
   @override
   _DetalhesEscolaScreenState createState() => _DetalhesEscolaScreenState();
@@ -109,8 +108,8 @@ class _DetalhesEscolaScreenState extends State<DetalhesEscolaScreen> {
                 onPressed: () {
                   _navegarParaEdicao(snapshot.data!);
                 },
-                child: Icon(Icons.edit),
                 tooltip: 'Editar Escola',
+                child: Icon(Icons.edit),
               );
             }
             return Container();

@@ -5,6 +5,8 @@ import '../../services/turma_service.dart';
 import 'form_turmas_screen.dart';
 
 class ListaTurmaScreen extends StatefulWidget {
+  const ListaTurmaScreen({super.key});
+
   @override
   _ListaTurmaScreenState createState() => _ListaTurmaScreenState();
 }
@@ -146,8 +148,8 @@ class _ListaTurmaScreenState extends State<ListaTurmaScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),
-        child: Icon(Icons.add),
         tooltip: 'Nova Turma',
+        child: Icon(Icons.add),
       ),
     );
   }

@@ -5,7 +5,7 @@ import '../../models/disciplina.dart';
 class FormDisciplinaScreen extends StatefulWidget {
   final Disciplina? disciplinaParaEditar;
 
-  FormDisciplinaScreen({this.disciplinaParaEditar});
+  const FormDisciplinaScreen({super.key, this.disciplinaParaEditar});
 
   @override
   _FormDisciplinaScreenState createState() => _FormDisciplinaScreenState();

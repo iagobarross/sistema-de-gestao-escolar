@@ -6,6 +6,8 @@ import '../../services/disciplina_service.dart';
 import 'form_disciplina_screen.dart';
 
 class ListaDisciplinaScreen extends StatefulWidget {
+  const ListaDisciplinaScreen({super.key});
+
   @override
   _ListaDisciplinasScreenState createState() => _ListaDisciplinasScreenState();
 }
@@ -134,7 +136,7 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
                     final disciplina = disciplinas[index];
                     return ListTile(
                       title: Text(disciplina.nome),
-                      subtitle: Text("${disciplina.descricao}"),
+                      subtitle: Text(disciplina.descricao),
                       trailing: IconButton(
                         icon: Icon(Icons.delete_outline, color: Colors.red),
                         onPressed: () => _deletarDisciplina(disciplina.id),
@@ -152,8 +154,8 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navegarParaFormulario(),
-        child: Icon(Icons.add),
         tooltip: 'Nova disciplina',
+        child: Icon(Icons.add),
       ),
     );
   }
