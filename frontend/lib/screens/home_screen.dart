@@ -4,6 +4,7 @@ import 'disciplina/lista_disciplina_screen.dart';
 import 'aluno/lista_alunos_screen.dart';
 import 'turma/lista_turmas_screen.dart';
 import 'responsavel/lista_responsavel_screen.dart';
+import 'chat/lista_conversas_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -44,6 +45,23 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: Text('Gestão Escolar', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.red,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+            tooltip: 'Mural de Mensagens',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ListaConversasScreen(), 
+                  // Ou se quiser testar o Mural diretamente, pode usar:
+                  // builder: (context) => ConversaScreen(conversaId: 1, titulo: 'Mural Público', subtitulo: 'Geral', meuId: 1),
+                ),
+              );
+            },
+          ),
+        ],
+        // ---------------------------------------------------
       ),
       drawer: ListView(
         padding: EdgeInsets.zero,

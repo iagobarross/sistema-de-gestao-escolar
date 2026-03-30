@@ -4,6 +4,7 @@ import 'package:gestao_escolar_app/screens/professor/minhas_turmas_screen.dart';
 import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
 import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:gestao_escolar_app/screens/login_screen.dart';
+import '../chat/lista_conversas_screen.dart';
 
 class ProfessorDashboard extends StatefulWidget {
   const ProfessorDashboard({super.key});
