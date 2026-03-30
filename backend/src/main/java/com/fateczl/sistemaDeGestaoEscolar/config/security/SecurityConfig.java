@@ -35,6 +35,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             // Público
             .requestMatchers("/api/v1/auth/**").permitAll()
             .requestMatchers("/h2-console/**").permitAll()
+            .requestMatchers("/ws-chat/**").permitAll()
             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
 
             // Somente Admin da Prefeitura
@@ -77,9 +78,12 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("*"));
+        //substiuida temp. para teste web Socket
+        // configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

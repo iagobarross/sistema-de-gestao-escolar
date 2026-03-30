@@ -8,6 +8,7 @@ import 'package:gestao_escolar_app/services/api_client.dart';
 import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:gestao_escolar_app/screens/login_screen.dart';
 import 'package:http/http.dart' as http;
+import '../chat/lista_conversas_screen.dart';
 
 class CoordenadorDashboard extends StatefulWidget {
   const CoordenadorDashboard({super.key});

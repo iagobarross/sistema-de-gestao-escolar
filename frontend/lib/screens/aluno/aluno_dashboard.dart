@@ -4,6 +4,7 @@ import 'package:gestao_escolar_app/screens/responsavel/boletim_screen.dart';
 import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
 import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:gestao_escolar_app/screens/login_screen.dart';
+import '../chat/lista_conversas_screen.dart';
 
 class AlunoDashboard extends StatefulWidget {
   const AlunoDashboard({super.key});

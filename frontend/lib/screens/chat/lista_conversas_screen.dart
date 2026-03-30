@@ -37,9 +37,11 @@ class _ListaConversasScreenState extends State<ListaConversasScreen> {
   }
 
   void _carregar() {
-    setState(() => _futureConversas = _buscarConversas());
+    setState(() {
+      _futureConversas = _buscarConversas();
+    });
   }
-
+  
   Future<List<Map<String, dynamic>>> _buscarConversas() async {
     final res = await http.get(
       Uri.parse('$_base/conversas'),

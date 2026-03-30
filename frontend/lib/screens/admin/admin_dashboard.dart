@@ -6,6 +6,7 @@ import '../turma/lista_turmas_screen.dart';
 import '../aluno/lista_alunos_screen.dart';
 import '../../services/auth_service.dart';
 import '../login_screen.dart';
+import '../chat/lista_conversas_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   final AuthService _authService = AuthService();
@@ -60,6 +61,27 @@ class AdminDashboard extends StatelessWidget {
                   Colors.green,
                   ListaEscolaScreen(),
                 ),
+//
+                _buildCard(
+                  context,
+                  'Mensagens',
+                  Icons.chat_bubble,
+                  Colors.teal,
+                  const ListaConversasScreen(),
+                ),
+                
+                //_buildCard(
+                //  context,
+                //  'Mural Público',
+                //  Icons.forum, // Mudei o ícone para fazer mais sentido
+                //  Colors.teal,
+                //  const ConversaScreen(
+                //    conversaId: 1, // ID fictício para o teste
+                //    titulo: 'Mural da Escola',
+                //    subtitulo: 'Canal Público',
+                //    meuId: 0,
+                //  ),
+                //),
 
                 _buildCard(
                   context,

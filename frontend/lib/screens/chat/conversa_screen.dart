@@ -1,8 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/services/api_client.dart';
+import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:gestao_escolar_app/services/chat_service.dart';
 
 class ConversaScreen extends StatefulWidget {
   final int conversaId;
@@ -23,37 +24,30 @@ class ConversaScreen extends StatefulWidget {
 }
 
 class _ConversaScreenState extends State<ConversaScreen> {
-  final String _base = '${ApiClient.baseDomain}/chat';
   final TextEditingController _ctrl = TextEditingController();
   final ScrollController _scroll = ScrollController();
   final List<Map<String, dynamic>> _mensagens = [];
-  Timer? _pollingTimer;
   bool _enviando = false;
-  bool _carregandoInicial = true;
+  bool _carregandoInicial = true; // Adicionado para mostrar o loading do histórico
+  
+  late ChatService _chatService;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    _carregarMensagens();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 8), (_) {
-      if (mounted && _mensagens.isNotEmpty) _verificarNovas();
-    });
+    _carregarHistorico(); // 1º Puxa as mensagens antigas
+    _iniciarConexaoWebSocket(); // 2º Liga o WebSocket para escutar novas
   }
 
-  @override
-  void dispose() {
-    _pollingTimer?.cancel();
-    _ctrl.dispose();
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  Future<void> _carregarMensagens() async {
+  // NOVO: Método para buscar o histórico na nossa API REST
+  Future<void> _carregarHistorico() async {
     try {
       final res = await http.get(
-        Uri.parse('$_base/conversas/${widget.conversaId}/mensagens'),
+        Uri.parse('${ApiClient.baseDomain}/chat/conversas/${widget.conversaId}/mensagens'),
         headers: await ApiClient.getHeaders(),
       );
+
       if (res.statusCode == 200 && mounted) {
         final lista = List<Map<String, dynamic>>.from(
           jsonDecode(utf8.decode(res.bodyBytes)),
@@ -62,36 +56,41 @@ class _ConversaScreenState extends State<ConversaScreen> {
           _mensagens.addAll(lista);
           _carregandoInicial = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        _scrollToBottom();
       }
-    } catch (_) {
+    } catch (e) {
+      print('Erro ao carregar histórico: $e');
       if (mounted) setState(() => _carregandoInicial = false);
     }
   }
 
-  Future<void> _verificarNovas() async {
-    if (_mensagens.isEmpty) return;
-    try {
-      final desde = _mensagens.last['enviadaEm'] as String;
-      final res = await http.get(
-        Uri.parse(
-          '$_base/conversas/${widget.conversaId}/mensagens/novas?desde=$desde',
-        ),
-        headers: await ApiClient.getHeaders(),
-      );
-      if (res.statusCode == 200 && mounted) {
-        final novas = List<Map<String, dynamic>>.from(
-          jsonDecode(utf8.decode(res.bodyBytes)),
-        );
-        if (novas.isNotEmpty) {
-          setState(() => _mensagens.addAll(novas));
+  Future<void> _iniciarConexaoWebSocket() async {
+    _chatService = ChatService(
+      onMensagemRecebida: (mensagemJson) {
+        if (mounted) {
+          setState(() {
+            _mensagens.add(mensagemJson);
+          });
           _scrollToBottom();
         }
-      }
-    } catch (_) {}
+      },
+    );
+
+    String? token = await _authService.getToken();
+    if (token != null) {
+      _chatService.conectar(token);
+    }
   }
 
-  Future<void> _enviar() async {
+  @override
+  void dispose() {
+    _chatService.desconectar();
+    _ctrl.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _enviar() {
     final texto = _ctrl.text.trim();
     if (texto.isEmpty || _enviando) return;
 
@@ -99,27 +98,18 @@ class _ConversaScreenState extends State<ConversaScreen> {
     _ctrl.clear();
 
     try {
-      final res = await http.post(
-        Uri.parse('$_base/conversas/${widget.conversaId}/mensagens'),
-        headers: await ApiClient.getHeaders(),
-        body: jsonEncode({'texto': texto}),
-      );
-      if (res.statusCode == 201 && mounted) {
-        final nova = Map<String, dynamic>.from(
-          jsonDecode(utf8.decode(res.bodyBytes)),
-        );
-        setState(() => _mensagens.add(nova));
-        _scrollToBottom();
+      // Lógica Simples: Se o conversaId for 1, é o Mural Público.
+      // Se for diferente de 1, assumimos que é o ID do destinatário (Mensagem Privada)
+      if (widget.conversaId == 1) {
+        _chatService.enviarMensagemPublica(texto);
+      } else {
+        _chatService.enviarMensagemPrivada(texto, widget.conversaId);
       }
     } catch (e) {
       if (mounted) {
-        // Devolve o texto para o campo se falhou
-        _ctrl.text = texto;
+        _ctrl.text = texto; 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao enviar: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Erro ao enviar: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -128,13 +118,15 @@ class _ConversaScreenState extends State<ConversaScreen> {
   }
 
   void _scrollToBottom() {
-    if (_scroll.hasClients) {
-      _scroll.animateTo(
-        _scroll.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    }
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -161,9 +153,7 @@ class _ConversaScreenState extends State<ConversaScreen> {
         children: [
           // Lista de mensagens
           Expanded(
-            child: _carregandoInicial
-                ? const Center(child: CircularProgressIndicator())
-                : _mensagens.isEmpty
+            child: _mensagens.isEmpty
                 ? Center(
                     child: Text(
                       'Nenhuma mensagem ainda.\nSeja o primeiro a escrever!',
@@ -249,10 +239,19 @@ class _ConversaScreenState extends State<ConversaScreen> {
   }
 
   Widget _buildMensagem(Map<String, dynamic> msg) {
-    final minha = (msg['autorId'] as int) == widget.meuId;
-    final texto = msg['texto'] as String? ?? '';
-    final nomeAutor = msg['nomeAutor'] as String? ?? '';
-    final enviadaEm = msg['enviadaEm'] as String? ?? '';
+    // Como os dados chegam diretamente do backend, precisamos garantir que 
+    // mapeamos os nomes dos campos corretamente conforme a classe 'Mensagem' do Java
+    
+    // Supondo que o backend retorna um ID do remetente
+    final remetenteId = msg['remetente'] != null ? msg['remetente']['id'] : -1;
+    final minha = remetenteId == widget.meuId;
+    
+    final texto = msg['conteudo'] as String? ?? '';
+    
+    // Tenta pegar o nome se vier aninhado, senão usa um padrão
+    final nomeAutor = msg['remetente'] != null ? msg['remetente']['nome'] : 'Usuário';
+    
+    final enviadaEm = msg['dataEnvio'] as String? ?? '';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -267,7 +266,7 @@ class _ConversaScreenState extends State<ConversaScreen> {
               radius: 14,
               backgroundColor: Colors.purple.shade100,
               child: Text(
-                nomeAutor.isNotEmpty ? nomeAutor[0].toUpperCase() : '?',
+                nomeAutor.toString().isNotEmpty ? nomeAutor.toString()[0].toUpperCase() : '?',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.purple.shade800,
@@ -312,13 +311,14 @@ class _ConversaScreenState extends State<ConversaScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    _formatarHora(enviadaEm),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: minha ? Colors.white70 : Colors.grey.shade500,
+                  if (enviadaEm.isNotEmpty)
+                    Text(
+                      _formatarHora(enviadaEm),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: minha ? Colors.white70 : Colors.grey.shade500,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
