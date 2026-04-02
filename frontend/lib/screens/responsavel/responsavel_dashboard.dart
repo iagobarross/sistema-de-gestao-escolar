@@ -3,12 +3,42 @@ import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
 import 'package:gestao_escolar_app/screens/responsavel/boletim_screen.dart';
 import 'package:gestao_escolar_app/screens/responsavel/comunicados_screen.dart';
 import 'package:gestao_escolar_app/screens/responsavel/frequencia_aluno_screen.dart';
-import 'package:gestao_escolar_app/services/auth_service.dart';
-import 'package:gestao_escolar_app/screens/login_screen.dart';
+import 'package:gestao_escolar_app/widgets/main_shell.dart';
 
 class ResponsavelDashboard extends StatelessWidget {
   const ResponsavelDashboard({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    return const MainShell(
+      titulo: 'Acompanhamento Escolar',
+      role: 'RESPONSAVEL',
+      items: [
+        NavItem(
+          label: 'Boletim',
+          icon: Icons.assignment_outlined,
+          page: BoletimScreen(),
+        ),
+        NavItem(
+          label: 'Frequência',
+          icon: Icons.calendar_today_outlined,
+          page: FrequenciaAlunoScreen(),
+        ),
+        NavItem(
+          label: 'Mensagens',
+          icon: Icons.chat_bubble_outline,
+          page: ListaConversasScreen(),
+        ),
+        NavItem(
+          label: 'Comunicados',
+          icon: Icons.notifications_outlined,
+          page: ComunicadosScreen(),
+        ),
+      ],
+    );
+  }
+
+  /*
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,5 +129,5 @@ class ResponsavelDashboard extends StatelessWidget {
         );
       }
     },
-  );
+  );*/
 }

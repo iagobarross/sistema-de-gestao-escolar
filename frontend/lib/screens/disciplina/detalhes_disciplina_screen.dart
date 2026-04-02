@@ -1,82 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/models/disciplina.dart';
+import 'package:gestao_escolar_app/screens/disciplina/form_disciplina_screen.dart';
 import 'package:gestao_escolar_app/services/disciplina_service.dart';
-import 'form_disciplina_screen.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class DetalhesDisciplinaScreen extends StatefulWidget {
   final int disciplinaId;
   const DetalhesDisciplinaScreen({super.key, required this.disciplinaId});
 
   @override
-  _DetalhesDisciplinaScreenState createState() =>
+  State<DetalhesDisciplinaScreen> createState() =>
       _DetalhesDisciplinaScreenState();
 }
 
 class _DetalhesDisciplinaScreenState extends State<DetalhesDisciplinaScreen> {
-  final DisciplinaService _service = DisciplinaService();
-  late Future<Disciplina> _futureDisciplina;
+  Disciplina? _disciplina;
+  bool _carregando = true;
 
   @override
   void initState() {
     super.initState();
-    _carregarDisciplina();
+    _carregar();
   }
 
-  void _carregarDisciplina() {
+  void _carregar() {
     setState(() {
-      _futureDisciplina = _service.getDisciplinaById(widget.disciplinaId);
+      _carregando = true;
+      DisciplinaService()
+          .getDisciplinaById(widget.disciplinaId)
+          .then((d) {
+            if (mounted)
+              setState(() {
+                _disciplina = d;
+                _carregando = false;
+              });
+          })
+          .catchError((_) {
+            if (mounted) setState(() => _carregando = false);
+          });
     });
   }
 
-  Future<void> _navegarParaFormulario(Disciplina disciplina) async {
-    final bool? resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            FormDisciplinaScreen(disciplinaParaEditar: disciplina),
+  Future<void> _deletar() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir disciplina'),
+        content: const Text(
+          'Atenção: só é possível excluir disciplinas que não estejam vinculadas a nenhuma turma.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
       ),
     );
-    if (resultado == true) {
-      _carregarDisciplina();
-      Navigator.of(context).pop(true);
-    }
-  }
-
-  Future<void> _deletarDisciplina(int id) async {
-    bool confirmou =
-        await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Confirmar Exclusão'),
-              content: Text('Deseja realmente excluir esta disciplina?'),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Cancelar'),
-                  onPressed: () => Navigator.of(context).pop(false),
-                ),
-                TextButton(
-                  child: Text('Excluir'),
-                  onPressed: () => Navigator.of(context).pop(true),
-                ),
-              ],
-            );
-          },
-        ) ??
-        false;
-
-    if (confirmou) {
-      if (!mounted) return;
-      try {
-        await _service.deleteDisciplina(id);
+    if (ok != true || !mounted) return;
+    try {
+      await DisciplinaService().deleteDisciplina(widget.disciplinaId);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Disciplina excluída com sucesso!')),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
-        Navigator.of(context).pop(true);
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -84,76 +78,214 @@ class _DetalhesDisciplinaScreenState extends State<DetalhesDisciplinaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Detalhes da Disciplina"),
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.delete_outline),
-            onPressed: () => _deletarDisciplina(widget.disciplinaId),
-          ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 1000),
-          child: FutureBuilder<Disciplina>(
-            future: _futureDisciplina,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text("Erro: ${snapshot.error}"));
-              } else if (snapshot.hasData) {
-                final disciplina = snapshot.data!;
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ListView(
-                    children: [
-                      ListTile(
-                        title: Text(disciplina.nome),
-                        subtitle: Text("Nome"),
+      body: _carregando
+          ? const Center(child: CircularProgressIndicator())
+          : _disciplina == null
+          ? const Center(child: Text('Disciplina não encontrada.'))
+          : CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 140,
+                  pinned: true,
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () async {
+                        final ok = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FormDisciplinaScreen(
+                              disciplinaParaEditar: _disciplina,
+                            ),
+                          ),
+                        );
+                        if (ok == true) _carregar();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: _deletar,
+                    ),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF4527A0), Color(0xFF7B1FA2)],
+                        ),
                       ),
-                      ListTile(
-                        title: Text(disciplina.codigo),
-                        subtitle: Text("Código"),
+                      child: SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _disciplina!.codigo.length > 3
+                                        ? _disciplina!.codigo.substring(0, 3)
+                                        : _disciplina!.codigo,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _disciplina!.nome,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Código: ${_disciplina!.codigo}',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      ListTile(
-                        title: Text(disciplina.descricao),
-                        subtitle: Text("Descrição"),
-                      ),
-                      ListTile(
-                        title: Text(disciplina.notaMinima.toString()),
-                        subtitle: Text("Nota Mínima"),
-                      ),
-                      ListTile(
-                        title: Text(disciplina.cargaHoraria.toString()),
-                        subtitle: Text("Carga Horária (h)"),
-                      ),
-                    ],
+                    ),
                   ),
-                );
-              } else {
-                return Center(child: Text("Disciplina não encontrada."));
-              }
-            },
-          ),
-        ),
-      ),
-      floatingActionButton: FutureBuilder<Disciplina>(
-        future: _futureDisciplina,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return FloatingActionButton(
-              onPressed: () => _navegarParaFormulario(snapshot.data!),
-              tooltip: 'Editar Disciplina',
-              child: Icon(Icons.edit),
-            );
-          }
-          return Container();
-        },
-      ),
+                ),
+
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      // Descrição
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'DESCRIÇÃO',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.primary,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const Divider(height: 16),
+                              Text(
+                                _disciplina!.descricao,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Parâmetros acadêmicos
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.school_outlined,
+                                      color: Colors.deepPurple,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _disciplina!.notaMinima.toStringAsFixed(
+                                        1,
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.deepPurple,
+                                      ),
+                                    ),
+                                    const Text(
+                                      'Nota mínima',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time_outlined,
+                                      color: Colors.teal,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${_disciplina!.cargaHoraria}h',
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                    const Text(
+                                      'Carga horária',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ]),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -2,13 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/screens/professor/chamada_hoje_screen.dart';
 import 'package:gestao_escolar_app/screens/professor/minhas_turmas_screen.dart';
 import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
-import 'package:gestao_escolar_app/services/auth_service.dart';
-import 'package:gestao_escolar_app/screens/login_screen.dart';
-import '../chat/lista_conversas_screen.dart';
+import 'package:gestao_escolar_app/widgets/main_shell.dart';
 
-class ProfessorDashboard extends StatefulWidget {
+class ProfessorDashboard extends StatelessWidget {
   const ProfessorDashboard({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    return const MainShell(
+      titulo: 'Portal do Professor',
+      role: 'PROFESSOR',
+      items: [
+        NavItem(
+          label: 'Chamada de Hoje',
+          icon: Icons.checklist_outlined,
+          page: ChamadaHojeScreen(),
+        ),
+        NavItem(
+          label: 'Minhas Turmas',
+          icon: Icons.groups_outlined,
+          page: MinhasTurmasScreen(),
+        ),
+        NavItem(
+          label: 'Mensagens',
+          icon: Icons.chat_bubble_outline,
+          page: ListaConversasScreen(),
+        ),
+      ],
+    );
+  }
+
+  /*
   @override
   State<ProfessorDashboard> createState() => _ProfessorDashboardState();
 }
@@ -123,5 +147,5 @@ class _ProfessorDashboardState extends State<ProfessorDashboard> {
         );
       }
     },
-  );
+  );*/
 }

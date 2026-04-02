@@ -5,6 +5,7 @@ import 'package:gestao_escolar_app/screens/diretor/diretor_dashboard.dart';
 import 'package:gestao_escolar_app/screens/professor/professor_dashboard.dart';
 import 'package:gestao_escolar_app/screens/responsavel/responsavel_dashboard.dart';
 import 'package:gestao_escolar_app/screens/secretaria/secretaria_dashboard.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 import '../services/auth_service.dart';
 import 'admin/admin_dashboard.dart';
 
@@ -12,7 +13,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -20,28 +21,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final _senhaController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
+  bool _mostrarSenha = false;
+  String? _erro;
 
-  void _handleLogin() async {
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _senhaController.dispose();
+    super.dispose();
+  }
 
-    bool success = await _authService.login(
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _erro = null;
+    });
+
+    final ok = await _authService.login(
       _emailController.text.trim(),
       _senhaController.text,
     );
 
-    if (!success) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('E-mail ou senha incorretos!')),
-        );
-      }
+    if (!ok) {
+      setState(() {
+        _isLoading = false;
+        _erro = 'E-mail ou senha incorretos.';
+      });
       return;
     }
 
-    final String? role = await _authService.getRole();
+    final role = await _authService.getRole();
     setState(() => _isLoading = false);
-
     if (!mounted) return;
 
     Widget destino;
@@ -69,79 +79,149 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
       default:
         await _authService.logout();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Role não reconhecida — acesso negado.'),
-          ),
-        );
+        setState(() => _erro = 'Perfil de acesso não reconhecido.');
         return;
     }
 
-    Navigator.pushReplacement(
+    Navigator.of(
       context,
-      MaterialPageRoute(builder: (_) => destino),
-    );
-  }
-
-  void _mostrarErro(String mensagem) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensagem)));
+    ).pushReplacement(MaterialPageRoute(builder: (_) => destino));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 600),
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.school, size: 80, color: Colors.red.shade900),
-                const SizedBox(height: 20),
-                Text(
-                  'Gestão Escolar',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade900,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'E-mail',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.school_rounded,
+                      size: 52,
+                      color: Colors.white,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _senhaController,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 24),
+                  Text(
+                    'SIGA',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                      letterSpacing: 2,
                     ),
                   ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 30),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _handleLogin,
-                          child: const Text('ENTRAR'),
+                  Text(
+                    'Sistema de Gestão Escolar',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'E-mail',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _senhaController,
+                    obscureText: !_mostrarSenha,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleLogin(),
+                    decoration: InputDecoration(
+                      labelText: 'Senha',
+                      prefixIcon: const Icon(Icons.lock_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _mostrarSenha
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
+                        onPressed: () =>
+                            setState(() => _mostrarSenha = !_mostrarSenha),
                       ),
-              ],
+                    ),
+                  ),
+
+                  if (_erro != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 16,
+                            color: Colors.red.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _erro!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.red.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('ENTRAR'),
+                  ),
+
+                  const SizedBox(height: 40),
+                  Text(
+                    '© 2025 SIGA — Fatec Zona Leste',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

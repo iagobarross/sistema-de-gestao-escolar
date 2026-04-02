@@ -1,97 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/models/disciplina.dart';
+import 'package:gestao_escolar_app/services/disciplina_service.dart';
+import 'package:gestao_escolar_app/screens/disciplina/form_disciplina_screen.dart';
 import 'package:gestao_escolar_app/screens/disciplina/detalhes_disciplina_screen.dart';
-import '../../models/disciplina.dart';
-import '../../services/disciplina_service.dart';
-
-import 'form_disciplina_screen.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class ListaDisciplinaScreen extends StatefulWidget {
-  const ListaDisciplinaScreen({super.key});
+  /// Quando false, oculta o FAB de criação. Coordenador e Diretor só leem.
+  final bool podeCadastrar;
+
+  const ListaDisciplinaScreen({this.podeCadastrar = true, super.key});
 
   @override
-  _ListaDisciplinasScreenState createState() => _ListaDisciplinasScreenState();
+  State<ListaDisciplinaScreen> createState() => _ListaDisciplinaScreenState();
 }
 
-class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
-  final DisciplinaService _disciplinaService = DisciplinaService();
+class _ListaDisciplinaScreenState extends State<ListaDisciplinaScreen> {
+  final DisciplinaService _service = DisciplinaService();
   late Future<List<Disciplina>> _futureDisciplinas;
+  final _searchController = TextEditingController();
+  List<Disciplina> _todas = [];
+  List<Disciplina> _filtradas = [];
 
   @override
   void initState() {
     super.initState();
-    _carregarDisciplinas();
+    _carregar();
   }
 
-  void _carregarDisciplinas() {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _carregar() {
+    // FIX: separamos a atribuição da Future do setState para evitar
+    // que o callback retorne Future — causa do warning original.
+    final future = _service.getDisciplinas();
+    future.then((lista) {
+      if (mounted) {
+        setState(() {
+          _todas = lista;
+          _filtrar(_searchController.text);
+        });
+      }
+    });
+    // Este setState apenas registra a Future para o FutureBuilder;
+    // o callback retorna void porque a expressão é uma atribuição simples
+    // a uma variável do tipo Future (não await, não async).
     setState(() {
-      _futureDisciplinas = _disciplinaService.getDisciplinas();
+      _futureDisciplinas = future;
     });
   }
 
-  Future<void> _navegarParaDetalhes(int disciplinaId) async {
-    final bool? resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            DetalhesDisciplinaScreen(disciplinaId: disciplinaId),
-      ),
-    );
-    if (resultado == true) {
-      _carregarDisciplinas();
-    }
+  void _filtrar(String termo) {
+    setState(() {
+      _filtradas = termo.isEmpty
+          ? List.from(_todas)
+          : _todas
+                .where(
+                  (d) =>
+                      d.nome.toLowerCase().contains(termo.toLowerCase()) ||
+                      d.codigo.toLowerCase().contains(termo.toLowerCase()),
+                )
+                .toList();
+    });
   }
 
-  Future<void> _navegarParaFormulario({Disciplina? disciplina}) async {
-    final bool? resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            FormDisciplinaScreen(disciplinaParaEditar: disciplina),
+  Future<void> _deletar(int id, String nome) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir disciplina'),
+        content: Text('Deseja excluir "$nome"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
       ),
     );
-    if (resultado == true) {
-      _carregarDisciplinas();
-    }
-  }
-
-  Future<void> _deletarDisciplina(int id) async {
-    bool confirmou =
-        await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Confimar Exclusão'),
-              content: Text('Deseja realmente excluir esta disciplina?'),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Cancelar'),
-                  onPressed: () {
-                    Navigator.of(context).pop(false);
-                  },
-                ),
-                TextButton(
-                  child: Text('Excluir'),
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                  },
-                ),
-              ],
-            );
-          },
-        ) ??
-        false;
-
-    if (confirmou) {
-      try {
-        await _disciplinaService.deleteDisciplina(id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Disciplina excluída com sucesso!')),
-        );
-        _carregarDisciplinas();
-      } catch (e) {
+    if (ok != true) return;
+    try {
+      await _service.deleteDisciplina(id);
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ).showSnackBar(const SnackBar(content: Text('Disciplina excluída')));
+        _carregar();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -99,64 +108,198 @@ class _ListaDisciplinasScreenState extends State<ListaDisciplinaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Disciplinas"),
-        backgroundColor: Colors.red.shade900,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _carregarDisciplinas,
-          ),
-        ],
+      body: FutureBuilder<List<Disciplina>>(
+        future: _futureDisciplinas,
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting &&
+              _todas.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snap.hasError && _todas.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppTheme.textSecondary,
+                  ),
+                  const SizedBox(height: 12),
+                  Text('${snap.error}', textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _carregar,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por nome ou código...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              _filtrar('');
+                            },
+                          )
+                        : null,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 0,
+                      horizontal: 16,
+                    ),
+                  ),
+                  onChanged: _filtrar,
+                ),
+              ),
+              Expanded(
+                child: _filtradas.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Nenhuma disciplina encontrada.',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async => _carregar(),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: _filtradas.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 6),
+                          itemBuilder: (_, i) {
+                            final d = _filtradas[i];
+                            return Card(
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 4,
+                                ),
+                                leading: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.deepPurple.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      d.codigo.length > 3
+                                          ? d.codigo.substring(0, 3)
+                                          : d.codigo,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.deepPurple,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                title: Text(
+                                  d.nome,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: Row(
+                                  children: [
+                                    Text(
+                                      'Nota mín.: ${d.notaMinima.toStringAsFixed(1)}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      '${d.cargaHoraria}h',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                trailing: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert),
+                                  onSelected: (v) async {
+                                    if (v == 'ver') {
+                                      final ok = await Navigator.push<bool>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              DetalhesDisciplinaScreen(
+                                                disciplinaId: d.id,
+                                              ),
+                                        ),
+                                      );
+                                      if (ok == true) _carregar();
+                                    } else if (v == 'del') {
+                                      _deletar(d.id, d.nome);
+                                    }
+                                  },
+                                  itemBuilder: (_) => [
+                                    const PopupMenuItem(
+                                      value: 'ver',
+                                      child: Text('Ver detalhes'),
+                                    ),
+                                    if (widget.podeCadastrar)
+                                      const PopupMenuItem(
+                                        value: 'del',
+                                        child: Text(
+                                          'Excluir',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                onTap: () async {
+                                  final ok = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DetalhesDisciplinaScreen(
+                                        disciplinaId: d.id,
+                                      ),
+                                    ),
+                                  );
+                                  if (ok == true) _carregar();
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          );
+        },
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 1000),
-          child: FutureBuilder<List<Disciplina>>(
-            future: _futureDisciplinas,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text("Erro: ${snapshot.error}"),
+      floatingActionButton: widget.podeCadastrar
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final ok = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const FormDisciplinaScreen(),
                   ),
                 );
-              } else if (snapshot.hasData) {
-                final disciplinas = snapshot.data!;
-                if (disciplinas.isEmpty) {
-                  return Center(child: Text("Nenhuma disciplina cadastrada."));
-                }
-                return ListView.builder(
-                  itemCount: disciplinas.length,
-                  itemBuilder: (context, index) {
-                    final disciplina = disciplinas[index];
-                    return ListTile(
-                      title: Text(disciplina.nome),
-                      subtitle: Text(disciplina.descricao),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () => _deletarDisciplina(disciplina.id),
-                      ),
-                      onTap: () => _navegarParaDetalhes(disciplina.id),
-                    );
-                  },
-                );
-              } else {
-                return Center(child: Text("Nenhuma disciplina encontrada."));
-              }
-            },
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navegarParaFormulario(),
-        tooltip: 'Nova disciplina',
-        child: Icon(Icons.add),
-      ),
+                if (ok == true) _carregar();
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Nova disciplina'),
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            )
+          : null,
     );
   }
 }

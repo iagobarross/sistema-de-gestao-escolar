@@ -27,7 +27,7 @@ public class AulaController {
 
     private final AulaService service;
     private final AulaMapper mapper;
-    private CurrentUser currentUser;
+    private final CurrentUser currentUser;
 
     @GetMapping("/hoje")
     @PreAuthorize("hasRole('PROFESSOR')")
