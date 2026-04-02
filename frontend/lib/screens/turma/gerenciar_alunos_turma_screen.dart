@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../models/aluno.dart'; // Ajuste o import conforme sua estrutura
-import '../../services/aluno_service.dart';
-import '../../services/turma_service.dart';
+import 'package:gestao_escolar_app/models/aluno.dart';
+import 'package:gestao_escolar_app/services/aluno_service.dart';
+import 'package:gestao_escolar_app/services/turma_service.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class GerenciarAlunosTurmaScreen extends StatefulWidget {
   final int turmaId;
-
   const GerenciarAlunosTurmaScreen({super.key, required this.turmaId});
 
   @override
-  _GerenciarAlunosTurmaScreenState createState() =>
+  State<GerenciarAlunosTurmaScreen> createState() =>
       _GerenciarAlunosTurmaScreenState();
 }
 
@@ -18,8 +18,8 @@ class _GerenciarAlunosTurmaScreenState
   final TurmaService _turmaService = TurmaService();
   final AlunoService _alunoService = AlunoService();
 
-  bool _isLoading = true;
-  String? _errorMessage;
+  bool _carregando = true;
+  String? _erro;
   List<Aluno> _alunosNaTurma = [];
   List<Aluno> _alunosDisponiveis = [];
   bool _hasChanges = false;
@@ -31,255 +31,230 @@ class _GerenciarAlunosTurmaScreenState
   }
 
   Future<void> _carregarDados() async {
+    // FIX: setState apenas com bool, nunca com Future.
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _carregando = true;
+      _erro = null;
     });
 
     try {
-      final results = await Future.wait([
-        // 0: Alunos JÁ na turma
-        _turmaService.getAlunosByTurma(widget.turmaId),
-        // 1: Todos os alunos (paginado) - Trazemos 100 para tentar pegar todos
-        _alunoService.getAlunos(page: 0, size: 100),
-      ]);
+      final alunosNaTurma = await _turmaService.getAlunosByTurma(
+        widget.turmaId,
+      );
 
-      // --- CORREÇÃO DE CASTING AQUI ---
-      // O Future.wait retorna List<dynamic>, então precisamos fazer o cast seguro
-      final List<Aluno> alunosNaTurma = (results[0] as List)
-          .cast<Aluno>()
+      final alunosMap = await _alunoService.getAlunos(page: 0, size: 200);
+      final listaJson = (alunosMap['content'] as List<dynamic>);
+      final todosAlunos = listaJson
+          .map((json) => Aluno.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      // Tratamento da paginação do AlunoService
-      final alunosMap = results[1] as Map<String, dynamic>;
-      final List<dynamic> listaJson = alunosMap['content'];
-
-      // Converte JSON para Objetos Aluno
-      final List<Aluno> todosAlunos = listaJson
-          .map((json) => Aluno.fromJson(json))
-          .toList();
-
-      // Lógica para filtrar: Disponíveis = Todos - (Aqueles que já estão na turma)
-      final Set<int> idsNaTurma = alunosNaTurma.map((a) => a.id).toSet();
-
-      final List<Aluno> alunosDisponiveis = todosAlunos
-          .where((aluno) => !idsNaTurma.contains(aluno.id))
+      final idsNaTurma = alunosNaTurma.map((a) => a.id).toSet();
+      final disponiveis = todosAlunos
+          .where((a) => !idsNaTurma.contains(a.id))
           .toList();
 
       setState(() {
         _alunosNaTurma = alunosNaTurma;
-        _alunosDisponiveis = alunosDisponiveis;
-        _isLoading = false;
+        _alunosDisponiveis = disponiveis;
+        _carregando = false;
       });
     } catch (e) {
-      print("Erro ao carregar dados: $e"); // Log para debug
       setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
+        _carregando = false;
+        _erro = e.toString();
       });
     }
   }
 
-  Future<void> _adicionarAluno(int alunoId) async {
-    // Feedback visual imediato (Opcional: optimistic UI)
-    setState(() => _isLoading = true);
-
+  Future<void> _adicionar(int alunoId) async {
     try {
       await _turmaService.adicionarAlunoNaTurma(widget.turmaId, alunoId);
-
-      setState(() {
-        _hasChanges =
-            true; // Marca que houve alteração para atualizar a tela anterior
-      });
-
-      // Recarrega as listas para atualizar a UI
+      setState(() => _hasChanges = true);
       await _carregarDados();
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Aluno adicionado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao adicionar: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  Future<void> _removerAluno(int alunoId) async {
-    setState(() => _isLoading = true);
-
+  Future<void> _remover(int alunoId) async {
     try {
       await _turmaService.removerAlunoDaTurma(widget.turmaId, alunoId);
-
-      setState(() {
-        _hasChanges = true;
-      });
-
+      setState(() => _hasChanges = true);
       await _carregarDados();
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Aluno removido da turma.'),
-            backgroundColor: Colors.orange,
-          ),
+          const SnackBar(content: Text('Aluno removido da turma.')),
         );
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao remover: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
         );
       }
     }
-  }
-
-  // --- Helpers de Construção de UI ---
-
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Container(
-      width: double.infinity,
-      color: Colors.grey[200],
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[700]),
-          SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.of(context).pop(_hasChanges);
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) Navigator.of(context).pop(_hasChanges);
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Gerenciar Alunos da Turma"),
-          backgroundColor: Colors.red.shade900,
+          backgroundColor: AppTheme.primary,
           foregroundColor: Colors.white,
+          title: const Text('Gerenciar alunos'),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(_hasChanges),
           ),
         ),
-        body: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : _errorMessage != null
-            ? Center(child: Text("Erro: $_errorMessage"))
+        body: _carregando
+            ? const Center(child: CircularProgressIndicator())
+            : _erro != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppTheme.textSecondary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _erro!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _carregarDados,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              )
             : Column(
                 children: [
-                  // --- METADE SUPERIOR: ALUNOS NA TURMA ---
-                  _buildSectionTitle(
-                    "Alunos Matriculados (${_alunosNaTurma.length})",
+                  // ── Matriculados ─────────────────────────────────
+                  _cabecalhoSecao(
+                    'Matriculados (${_alunosNaTurma.length})',
                     Icons.check_circle_outline,
+                    Colors.green,
                   ),
                   Expanded(
-                    flex: 1, // Ocupa metade da tela
+                    flex: 1,
                     child: _alunosNaTurma.isEmpty
-                        ? Center(
+                        ? const Center(
                             child: Text(
-                              "Nenhum aluno nesta turma.",
-                              style: TextStyle(color: Colors.grey),
+                              'Nenhum aluno nesta turma.',
+                              style: TextStyle(color: AppTheme.textSecondary),
                             ),
                           )
                         : ListView.separated(
                             itemCount: _alunosNaTurma.length,
-                            separatorBuilder: (_, __) => Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final aluno = _alunosNaTurma[index];
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (_, i) {
+                              final a = _alunosNaTurma[i];
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: Colors.red.shade100,
+                                  radius: 18,
+                                  backgroundColor: Colors.green.withOpacity(
+                                    0.1,
+                                  ),
                                   child: Text(
-                                    aluno.nome[0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: Colors.red.shade900,
+                                    a.nome[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                                title: Text(aluno.nome),
-                                subtitle: Text("Matrícula: ${aluno.matricula}"),
+                                title: Text(a.nome),
+                                subtitle: Text(
+                                  'RA: ${a.matricula}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
                                 trailing: IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.remove_circle_outline,
                                     color: Colors.red,
                                   ),
-                                  tooltip: "Remover da turma",
-                                  onPressed: () => _removerAluno(aluno.id),
+                                  tooltip: 'Remover da turma',
+                                  onPressed: () => _remover(a.id),
                                 ),
                               );
                             },
                           ),
                   ),
 
-                  Divider(height: 2, thickness: 2),
+                  const Divider(height: 1, thickness: 2),
 
-                  // --- METADE INFERIOR: ALUNOS DISPONÍVEIS ---
-                  _buildSectionTitle(
-                    "Alunos Disponíveis (${_alunosDisponiveis.length})",
+                  // ── Disponíveis ──────────────────────────────────
+                  _cabecalhoSecao(
+                    'Disponíveis (${_alunosDisponiveis.length})',
                     Icons.person_add_alt,
+                    AppTheme.primary,
                   ),
                   Expanded(
-                    flex: 1, // Ocupa a outra metade
+                    flex: 1,
                     child: _alunosDisponiveis.isEmpty
-                        ? Center(
+                        ? const Center(
                             child: Text(
-                              "Todos os alunos já estão nesta turma.",
-                              style: TextStyle(color: Colors.grey),
+                              'Todos os alunos já estão nesta turma.',
+                              style: TextStyle(color: AppTheme.textSecondary),
                             ),
                           )
                         : ListView.separated(
                             itemCount: _alunosDisponiveis.length,
-                            separatorBuilder: (_, __) => Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final aluno = _alunosDisponiveis[index];
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (_, i) {
+                              final a = _alunosDisponiveis[i];
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: Colors.green.shade100,
+                                  radius: 18,
+                                  backgroundColor: AppTheme.primary.withOpacity(
+                                    0.1,
+                                  ),
                                   child: Text(
-                                    aluno.nome[0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: Colors.green.shade800,
+                                    a.nome[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                                title: Text(aluno.nome),
-                                subtitle: Text("Matrícula: ${aluno.matricula}"),
+                                title: Text(a.nome),
+                                subtitle: Text(
+                                  'RA: ${a.matricula}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
                                 trailing: IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.add_circle_outline,
-                                    color: Colors.green[700],
+                                    color: AppTheme.primary,
                                   ),
-                                  tooltip: "Adicionar à turma",
-                                  onPressed: () => _adicionarAluno(aluno.id),
+                                  tooltip: 'Adicionar à turma',
+                                  onPressed: () => _adicionar(a.id),
                                 ),
                               );
                             },
@@ -287,6 +262,28 @@ class _GerenciarAlunosTurmaScreenState
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _cabecalhoSecao(String titulo, IconData icon, Color cor) {
+    return Container(
+      width: double.infinity,
+      color: Colors.grey.shade100,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: cor),
+          const SizedBox(width: 8),
+          Text(
+            titulo,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: cor,
+            ),
+          ),
+        ],
       ),
     );
   }

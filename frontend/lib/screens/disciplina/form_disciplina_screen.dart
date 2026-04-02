@@ -1,132 +1,94 @@
 import 'package:flutter/material.dart';
-import '../../services/disciplina_service.dart';
-import '../../models/disciplina.dart';
+import 'package:gestao_escolar_app/models/disciplina.dart';
+import 'package:gestao_escolar_app/services/disciplina_service.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class FormDisciplinaScreen extends StatefulWidget {
   final Disciplina? disciplinaParaEditar;
-
   const FormDisciplinaScreen({super.key, this.disciplinaParaEditar});
 
   @override
-  _FormDisciplinaScreenState createState() => _FormDisciplinaScreenState();
+  State<FormDisciplinaScreen> createState() => _FormDisciplinaScreenState();
 }
 
 class _FormDisciplinaScreenState extends State<FormDisciplinaScreen> {
   final _formKey = GlobalKey<FormState>();
-  final DisciplinaService _disciplinaService = DisciplinaService();
+  final DisciplinaService _service = DisciplinaService();
 
-  late TextEditingController _nomeController;
-  late TextEditingController _codigoController;
-  late TextEditingController _descricaoController;
-  late TextEditingController _notaMinimaController;
-  late TextEditingController _cargaHorariaController;
+  late final TextEditingController _nomeCtrl;
+  late final TextEditingController _codigoCtrl;
+  late final TextEditingController _descricaoCtrl;
+  late final TextEditingController _notaMinimaCtrl;
+  late final TextEditingController _cargaHorariaCtrl;
 
   bool _isEditando = false;
-  bool _isLoading = false;
+  bool _salvando = false;
 
   @override
   void initState() {
     super.initState();
     _isEditando = widget.disciplinaParaEditar != null;
-
-    _nomeController = TextEditingController(
-      text: _isEditando ? widget.disciplinaParaEditar!.nome : '',
+    final d = widget.disciplinaParaEditar;
+    _nomeCtrl = TextEditingController(text: d?.nome ?? '');
+    _codigoCtrl = TextEditingController(text: d?.codigo ?? '');
+    _descricaoCtrl = TextEditingController(text: d?.descricao ?? '');
+    _notaMinimaCtrl = TextEditingController(
+      text: d != null ? d.notaMinima.toStringAsFixed(1) : '5.0',
     );
-    _codigoController = TextEditingController(
-      text: _isEditando ? widget.disciplinaParaEditar!.codigo : '',
-    );
-    _descricaoController = TextEditingController(
-      text: _isEditando ? widget.disciplinaParaEditar!.descricao : '',
-    );
-    _notaMinimaController = TextEditingController(
-      text: _isEditando
-          ? widget.disciplinaParaEditar!.notaMinima.toString()
-          : '',
-    );
-    _cargaHorariaController = TextEditingController(
-      text: _isEditando
-          ? widget.disciplinaParaEditar!.cargaHoraria.toString()
-          : '',
+    _cargaHorariaCtrl = TextEditingController(
+      text: d?.cargaHoraria.toString() ?? '',
     );
   }
 
   @override
   void dispose() {
-    _nomeController.dispose();
-    _codigoController.dispose();
-    _descricaoController.dispose();
-    _notaMinimaController.dispose();
-    _cargaHorariaController.dispose();
+    for (final c in [
+      _nomeCtrl,
+      _codigoCtrl,
+      _descricaoCtrl,
+      _notaMinimaCtrl,
+      _cargaHorariaCtrl,
+    ])
+      c.dispose();
     super.dispose();
   }
 
-  Future<void> _salvarDisciplina() async {
-    if (_formKey.currentState!.validate()) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = true;
-      });
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _salvando = true);
+    try {
+      final notaMinima = double.parse(
+        _notaMinimaCtrl.text.trim().replaceAll(',', '.'),
+      );
+      final cargaHoraria = int.parse(_cargaHorariaCtrl.text.trim());
 
-      String? errorMessage;
-
-      try {
-        final double? notaMinima = double.tryParse(_notaMinimaController.text);
-        final int? cargaHoraria = int.tryParse(_cargaHorariaController.text);
-        if (notaMinima == null) {
-          throw Exception(
-            "Valor inválido. Use ponto (.) como separador decimal.",
-          );
-        }
-        if (cargaHoraria == null) {
-          throw Exception("Valor inválido.");
-        }
-
-        if (_isEditando) {
-          await _disciplinaService.updateDisciplina(
-            widget.disciplinaParaEditar!.id,
-            _codigoController.text,
-            _descricaoController.text,
-            _nomeController.text,
-            notaMinima,
-            cargaHoraria,
-          );
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Disciplina atualizada com sucesso!')),
-            );
-            Navigator.of(context).pop(true);
-          }
-        } else {
-          await _disciplinaService.createDisciplina(
-            _descricaoController.text,
-            _codigoController.text,
-            _nomeController.text,
-            notaMinima,
-            cargaHoraria,
-          );
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Disciplina criada com sucesso')),
-            );
-            Navigator.of(context).pop(true);
-          }
-        }
-      } catch (e) {
-        errorMessage = e.toString();
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          if (errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Erro ao salvar disciplina: $errorMessage'),
-              ),
-            );
-          }
-        }
+      if (_isEditando) {
+        await _service.updateDisciplina(
+          widget.disciplinaParaEditar!.id,
+          _nomeCtrl.text.trim(),
+          _codigoCtrl.text.trim(),
+          _descricaoCtrl.text.trim(),
+          notaMinima,
+          cargaHoraria,
+        );
+      } else {
+        await _service.createDisciplina(
+          _nomeCtrl.text.trim(),
+          _codigoCtrl.text.trim(),
+          _descricaoCtrl.text.trim(),
+          notaMinima,
+          cargaHoraria,
+        );
       }
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _salvando = false);
     }
   }
 
@@ -134,112 +96,98 @@ class _FormDisciplinaScreenState extends State<FormDisciplinaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditando ? 'Editar Disciplina' : 'Nova Disciplina'),
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.primary,
+        title: Text(_isEditando ? 'Editar disciplina' : 'Nova disciplina'),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                children: <Widget>[
-                  TextFormField(
-                    controller: _nomeController,
-                    decoration: InputDecoration(
-                      labelText: 'Nome',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira o nome';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _codigoController,
-                    decoration: InputDecoration(
-                      labelText: 'Código',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira o código';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _descricaoController,
-                    decoration: InputDecoration(
-                      labelText: 'Descrição',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira a descrição';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: _notaMinimaController,
-                    decoration: InputDecoration(
-                      labelText: 'Nota Mínima',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira a nota mínima';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 30),
-                  TextFormField(
-                    controller: _cargaHorariaController,
-                    decoration: InputDecoration(
-                      labelText: 'Carga Horária',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, insira a carga horária';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _salvarDisciplina,
-                    child: _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text(_isEditando ? 'Atualizar' : 'Salvar'),
-                  ),
-                ],
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            TextFormField(
+              controller: _nomeCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Nome da disciplina *',
               ),
+              textCapitalization: TextCapitalization.words,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null,
             ),
-          ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _codigoCtrl,
+                    decoration: const InputDecoration(labelText: 'Código *'),
+                    textCapitalization: TextCapitalization.characters,
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Obrigatório' : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _notaMinimaCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Nota mínima *',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Obrigatório';
+                      final n = double.tryParse(v.replaceAll(',', '.'));
+                      if (n == null || n < 0 || n > 10) {
+                        return 'Entre 0 e 10';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _cargaHorariaCtrl,
+                    decoration: const InputDecoration(labelText: 'Carga (h) *'),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Obrigatório';
+                      if (int.tryParse(v) == null) return 'Inválido';
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _descricaoCtrl,
+              decoration: const InputDecoration(labelText: 'Descrição *'),
+              maxLines: 3,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _salvando ? null : _salvar,
+              child: _salvando
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      _isEditando ? 'Salvar alterações' : 'Criar disciplina',
+                    ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,14 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/screens/responsavel/boletim_screen.dart';
-import 'package:gestao_escolar_app/screens/responsavel/boletim_screen.dart';
 import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
-import 'package:gestao_escolar_app/services/auth_service.dart';
-import 'package:gestao_escolar_app/screens/login_screen.dart';
-import '../chat/lista_conversas_screen.dart';
+import 'package:gestao_escolar_app/screens/responsavel/frequencia_aluno_screen.dart';
+import 'package:gestao_escolar_app/widgets/main_shell.dart';
 
-class AlunoDashboard extends StatefulWidget {
+class AlunoDashboard extends StatelessWidget {
   const AlunoDashboard({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    return const MainShell(
+      titulo: 'Portal do Aluno',
+      role: 'ALUNO',
+      items: [
+        NavItem(
+          label: 'Meu Boletim',
+          icon: Icons.assignment_outlined,
+          page: BoletimScreen(),
+        ),
+        NavItem(
+          label: 'Minha Frequência',
+          icon: Icons.calendar_today_outlined,
+          page: FrequenciaAlunoScreen(),
+        ),
+        NavItem(
+          label: 'Mensagens',
+          icon: Icons.chat_bubble_outline,
+          page: ListaConversasScreen(),
+        ),
+      ],
+    );
+  }
+
+  /*
   @override
   State<AlunoDashboard> createState() => _AlunoDashboardState();
 }
@@ -128,5 +152,5 @@ class _AlunoDashboardState extends State<AlunoDashboard> {
         );
       }
     },
-  );
+  );*/
 }

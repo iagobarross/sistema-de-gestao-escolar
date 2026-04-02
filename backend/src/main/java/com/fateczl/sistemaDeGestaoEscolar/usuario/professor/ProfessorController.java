@@ -18,14 +18,14 @@ public class ProfessorController {
     private ProfessorMapper professorMapper;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA', 'PROFESSOR')")
     public ResponseEntity<List<ProfessorResponseDTO>> listarTodos() {
         List<Professor> professores = professorService.findAll();
         return ResponseEntity.ok(professorMapper.toResponseDTOList(professores));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA', 'PROFESSOR')")
     public ResponseEntity<ProfessorResponseDTO> buscarPorId(@PathVariable Long id) {
         Professor professor = professorService.findById(id);
         return ResponseEntity.ok(professorMapper.toResponseDTO(professor));

@@ -1,294 +1,327 @@
 import 'package:flutter/material.dart';
-import '../../models/aluno.dart';
-import '../../services/aluno_service.dart';
+import 'package:gestao_escolar_app/models/aluno.dart';
+import 'package:gestao_escolar_app/models/escola.dart';
+import 'package:gestao_escolar_app/models/responsavel.dart';
+import 'package:gestao_escolar_app/services/aluno_service.dart';
+import 'package:gestao_escolar_app/services/escola_service.dart';
+import 'package:gestao_escolar_app/services/responsavel_service.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class FormAlunoScreen extends StatefulWidget {
   final Aluno? alunoParaEditar;
 
-  const FormAlunoScreen({super.key, this.alunoParaEditar});
+  /// Quando fornecido (ex: pelo contexto da Secretaria), a escola já vem
+  /// pré-selecionada e o dropdown de escola fica desabilitado.
+  final int? escolaIdPreSelecionada;
+
+  const FormAlunoScreen({
+    super.key,
+    this.alunoParaEditar,
+    this.escolaIdPreSelecionada,
+  });
 
   @override
-  _FormAlunoScreenState createState() => _FormAlunoScreenState();
+  State<FormAlunoScreen> createState() => _FormAlunoScreenState();
 }
 
 class _FormAlunoScreenState extends State<FormAlunoScreen> {
   final _formKey = GlobalKey<FormState>();
   final AlunoService _service = AlunoService();
 
-  late TextEditingController _nomeController;
-  late TextEditingController _emailController;
-  late TextEditingController _senhaController;
-  late TextEditingController _matriculaController;
-  late TextEditingController _dataNascimentoController;
-  late TextEditingController _escolaIdController;
-  late TextEditingController _responsavelIdController;
+  late final TextEditingController _nomeCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _senhaCtrl;
+  late final TextEditingController _matriculaCtrl;
 
-  DateTime? _dataSelecionada;
+  DateTime? _dataNascimento;
+  Escola? _escolaSelecionada;
+  Responsavel? _responsavelSelecionado;
 
+  List<Escola> _escolas = [];
+  List<Responsavel> _responsaveis = [];
   bool _isEditando = false;
-  bool _isLoading = false;
+  bool _salvando = false;
+  bool _carregandoDados = true;
 
   @override
   void initState() {
     super.initState();
     _isEditando = widget.alunoParaEditar != null;
+    final a = widget.alunoParaEditar;
+    _nomeCtrl = TextEditingController(text: a?.nome ?? '');
+    _emailCtrl = TextEditingController(text: a?.email ?? '');
+    _senhaCtrl = TextEditingController();
+    _matriculaCtrl = TextEditingController(text: a?.matricula ?? '');
+    if (a != null) _dataNascimento = a.dataNascimento;
+    _carregarDados();
+  }
 
-    _nomeController = TextEditingController(
-      text: _isEditando ? widget.alunoParaEditar!.nome : '',
-    );
-    _emailController = TextEditingController(
-      text: _isEditando ? widget.alunoParaEditar!.email : '',
-    );
-    _senhaController = TextEditingController();
-    _matriculaController = TextEditingController(
-      text: _isEditando ? widget.alunoParaEditar!.matricula : '',
-    );
-    if (_isEditando) {
-      _dataSelecionada = widget.alunoParaEditar!.dataNascimento;
-      String dia = _dataSelecionada!.day.toString().padLeft(2, '0');
-      String mes = _dataSelecionada!.month.toString().padLeft(2, '0');
-      String ano = _dataSelecionada!.year.toString();
-      _dataNascimentoController = TextEditingController(text: "$dia/$mes/$ano");
-    } else {
-      _dataNascimentoController = TextEditingController();
+  Future<void> _carregarDados() async {
+    try {
+      final futures = await Future.wait([
+        EscolaService().getEscolas(),
+        ResponsavelService().getResponsaveis(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _escolas = futures[0] as List<Escola>;
+        _responsaveis = futures[1] as List<Responsavel>;
+
+        if (_isEditando) {
+          final a = widget.alunoParaEditar!;
+          _escolaSelecionada = _escolas
+              .where((e) => e.id == a.escolaId)
+              .firstOrNull;
+          _responsavelSelecionado = _responsaveis
+              .where((r) => r.id == a.responsavelId)
+              .firstOrNull;
+        } else if (widget.escolaIdPreSelecionada != null) {
+          // Quando a Secretaria abre o formulário a partir de um contexto
+          // já filtrado pela escola, pré-selecionamos automaticamente.
+          _escolaSelecionada = _escolas
+              .where((e) => e.id == widget.escolaIdPreSelecionada)
+              .firstOrNull;
+        }
+        _carregandoDados = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _carregandoDados = false);
     }
-    _escolaIdController = TextEditingController(
-      text: _isEditando ? widget.alunoParaEditar!.escolaId.toString() : '',
-    );
-    _responsavelIdController = TextEditingController(
-      text: _isEditando ? widget.alunoParaEditar!.responsavelId.toString() : '',
-    );
   }
 
   @override
   void dispose() {
-    _nomeController.dispose();
-    _emailController.dispose();
-    _senhaController.dispose();
-    _matriculaController.dispose();
-    _dataNascimentoController.dispose();
-    _escolaIdController.dispose();
-    _responsavelIdController.dispose();
+    _nomeCtrl.dispose();
+    _emailCtrl.dispose();
+    _senhaCtrl.dispose();
+    _matriculaCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _selecionarData(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selecionarData() async {
+    final picked = await showDatePicker(
       context: context,
-      initialDate: _dataSelecionada ?? DateTime.now(),
-      firstDate: DateTime(1900),
+      initialDate: _dataNascimento ?? DateTime(2010),
+      firstDate: DateTime(1990),
       lastDate: DateTime.now(),
     );
-
-    if (picked != null && picked != _dataSelecionada) {
-      setState(() {
-        _dataSelecionada = picked;
-        String dia = _dataSelecionada!.day.toString().padLeft(2, '0');
-        String mes = _dataSelecionada!.month.toString().padLeft(2, '0');
-        String ano = _dataSelecionada!.year.toString();
-        _dataNascimentoController.text = "$dia/$mes/$ano";
-      });
-    }
+    if (picked != null) setState(() => _dataNascimento = picked);
   }
 
-  Future<void> _salvarAluno() async {
-    if (_formKey.currentState!.validate()) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = true;
-      });
-      String? errorMessage;
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_dataNascimento == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione a data de nascimento')),
+      );
+      return;
+    }
+    setState(() => _salvando = true);
+    try {
+      final dto = AlunoRequestDTO(
+        nome: _nomeCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        senha: _senhaCtrl.text,
+        escolaId: _escolaSelecionada!.id,
+        matricula: _matriculaCtrl.text.trim(),
+        dataNascimento:
+            '${_dataNascimento!.year}-${_dataNascimento!.month.toString().padLeft(2, '0')}-${_dataNascimento!.day.toString().padLeft(2, '0')}',
+        responsavelId: _responsavelSelecionado!.id,
+      );
 
-      try {
-        // Validação e conversão de IDs
-        final int? escolaId = int.tryParse(_escolaIdController.text);
-        final int? responsavelId = int.tryParse(_responsavelIdController.text);
-
-        if (escolaId == null || responsavelId == null) {
-          throw Exception(
-            "IDs de Escola e Responsável devem ser números válidos.",
-          );
-        }
-
-        if (_dataSelecionada == null) {
-          throw Exception("Data de nascimento inválida.");
-        }
-
-        String dataFormatadaParaBackend =
-            "${_dataSelecionada!.year}-${_dataSelecionada!.month.toString().padLeft(2, '0')}-${_dataSelecionada!.day.toString().padLeft(2, '0')}";
-
-        AlunoRequestDTO dto = AlunoRequestDTO(
-          nome: _nomeController.text,
-          email: _emailController.text,
-          senha: _senhaController.text, // (Vazio na edição se não for alterado)
-          escolaId: escolaId,
-          matricula: _matriculaController.text,
-          dataNascimento: dataFormatadaParaBackend, // "YYYY-MM-DD"
-          responsavelId: responsavelId,
-        );
-
-        if (_isEditando) {
-          // No update, se a senha estiver vazia, o service NÃO deve atualizá-la
-          // (Nosso AlunoServiceImpl já trata isso)
-          await _service.updateAluno(widget.alunoParaEditar!.id, dto);
-        } else {
-          if (dto.senha.isEmpty) {
-            // Senha obrigatória na criação
-            throw Exception("Senha é obrigatória para criar um novo aluno.");
-          }
-          await _service.createAluno(dto);
-        }
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Aluno salvo com sucesso!')));
-        Navigator.of(context).pop(true);
-      } catch (e) {
-        errorMessage = e.toString();
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          if (errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
+      if (_isEditando) {
+        await _service.updateAluno(widget.alunoParaEditar!.id, dto);
+      } else {
+        await _service.createAluno(dto);
       }
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _salvando = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditando ? 'Editar Aluno' : 'Novo Aluno')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
+      appBar: AppBar(
+        backgroundColor: AppTheme.primary,
+        title: Text(_isEditando ? 'Editar aluno' : 'Novo aluno'),
+      ),
+      body: _carregandoDados
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
               key: _formKey,
               child: ListView(
-                // Usar ListView para evitar overflow
-                children: <Widget>[
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // ── Dados pessoais ────────────────────────────────────
+                  _secao('Dados pessoais'),
+                  const SizedBox(height: 12),
                   TextFormField(
-                    controller: _nomeController,
-                    decoration: InputDecoration(
-                      labelText: 'Nome',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    controller: _nomeCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Nome completo *',
                     ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) =>
-                        (v == null || v.isEmpty || !v.contains('@'))
-                        ? 'Email inválido'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _senhaController,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      hintText: _isEditando
-                          ? 'Deixe em branco para manter'
-                          : '',
-                    ),
-                    obscureText: true,
-                    validator: (v) => (!_isEditando && (v == null || v.isEmpty))
+                    textCapitalization: TextCapitalization.words,
+                    validator: (v) => (v == null || v.trim().isEmpty)
                         ? 'Campo obrigatório'
                         : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextFormField(
-                    controller: _matriculaController,
-                    decoration: InputDecoration(
-                      labelText: 'Matrícula (RA)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    controller: _emailCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'E-mail *',
+                      prefixIcon: Icon(Icons.email_outlined),
                     ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Campo obrigatório';
+                      if (!v.contains('@')) return 'E-mail inválido';
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextFormField(
-                    controller: _dataNascimentoController,
+                    controller: _senhaCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Data Nascimento',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      hintText: 'DD/MM/AAAA',
-                      suffixIcon: Icon(Icons.calendar_today),
+                      labelText: _isEditando
+                          ? 'Nova senha (deixe em branco para manter)'
+                          : 'Senha *',
+                      prefixIcon: const Icon(Icons.lock_outlined),
                     ),
-                    readOnly: true,
-                    onTap: () => _selecionarData(context),
-                    validator: (v) =>
-                        (_dataSelecionada == null) ? 'Campo obrigatório' : null,
+                    obscureText: true,
+                    validator: (v) {
+                      if (!_isEditando && (v == null || v.isEmpty)) {
+                        return 'Campo obrigatório';
+                      }
+                      if (v != null && v.isNotEmpty && v.length < 6) {
+                        return 'Mínimo 6 caracteres';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _escolaIdController,
-                    decoration: InputDecoration(
-                      labelText: 'ID da Escola',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _matriculaCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Matrícula (RA) *',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Campo obrigatório'
+                              : null,
+                        ),
                       ),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _responsavelIdController,
-                    decoration: InputDecoration(
-                      labelText: 'ID do Responsável',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _selecionarData,
+                          icon: const Icon(Icons.calendar_today, size: 18),
+                          label: Text(
+                            _dataNascimento == null
+                                ? 'Nascimento *'
+                                : '${_dataNascimento!.day.toString().padLeft(2, '0')}/${_dataNascimento!.month.toString().padLeft(2, '0')}/${_dataNascimento!.year}',
+                            style: TextStyle(
+                              color: _dataNascimento == null
+                                  ? AppTheme.textSecondary
+                                  : AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(height: 20),
+
+                  // ── Vínculos ──────────────────────────────────────────
+                  const SizedBox(height: 24),
+                  _secao('Vínculos'),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<Escola>(
+                    value: _escolaSelecionada,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Escola *',
+                      prefixIcon: Icon(Icons.school_outlined),
+                    ),
+                    items: _escolas
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(
+                              e.nome,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _escolaSelecionada = v),
+                    validator: (v) => v == null ? 'Selecione uma escola' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<Responsavel>(
+                    value: _responsavelSelecionado,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Responsável *',
+                      prefixIcon: Icon(Icons.family_restroom_outlined),
+                    ),
+                    items: _responsaveis
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(
+                              r.nome,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _responsavelSelecionado = v),
+                    validator: (v) =>
+                        v == null ? 'Selecione um responsável' : null,
+                  ),
+
+                  const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _salvarAluno,
-                    child: _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text('Salvar'),
+                    onPressed: _salvando ? null : _salvar,
+                    child: _salvando
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            _isEditando
+                                ? 'Salvar alterações'
+                                : 'Cadastrar aluno',
+                          ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
+
+  Widget _secao(String titulo) => Text(
+    titulo,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: AppTheme.primary,
+    ),
+  );
 }

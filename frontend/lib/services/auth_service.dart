@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:gestao_escolar_app/services/api_client.dart';
+import 'package:gestao_escolar_app/services/profile_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -7,7 +8,6 @@ import '../models/auth_models.dart';
 
 class AuthService {
   final storage = const FlutterSecureStorage();
-
   final String baseUrl = ApiClient.baseDomain;
 
   Future<bool> login(String email, String senha) async {
@@ -33,8 +33,10 @@ class AuthService {
     return await storage.read(key: 'jwt_token');
   }
 
+  /// Faz logout: remove o token e limpa o cache do ProfileService.
   Future<void> logout() async {
     await storage.delete(key: 'jwt_token');
+    ProfileService.instance.clear();
   }
 
   Future<String?> getRole() async {

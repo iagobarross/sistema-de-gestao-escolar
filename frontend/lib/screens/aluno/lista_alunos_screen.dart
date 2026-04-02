@@ -1,63 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/models/escola.dart';
-import '../../models/aluno.dart';
-import '../../services/aluno_service.dart';
-import '../../services/escola_service.dart';
-import 'form_alunos_screen.dart';
-import 'detalhes_alunos_screen.dart';
+import 'package:gestao_escolar_app/services/aluno_service.dart';
+import 'package:gestao_escolar_app/services/escola_service.dart';
+import 'package:gestao_escolar_app/screens/aluno/form_alunos_screen.dart';
+import 'package:gestao_escolar_app/screens/aluno/detalhes_alunos_screen.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class ListaAlunoScreen extends StatefulWidget {
-  const ListaAlunoScreen({super.key});
+  final int? escolaIdFiltro;
+
+  final bool podeCadastrar;
+
+  const ListaAlunoScreen({
+    this.escolaIdFiltro,
+    this.podeCadastrar = true,
+    super.key,
+  });
 
   @override
-  _ListaAlunoScreenState createState() => _ListaAlunoScreenState();
+  State<ListaAlunoScreen> createState() => _ListaAlunoScreenState();
 }
 
 class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
   final AlunoService _alunoService = AlunoService();
   final EscolaService _escolaService = EscolaService();
-
-  Future<Map<String, dynamic>>? _futureAlunos;
-
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _matriculaController = TextEditingController();
 
+  Future<Map<String, dynamic>>? _futureAlunos;
   List<Escola> _listaEscolas = [];
-  Escola? _escola;
-  bool _isLoadingEscolas = false;
-
+  Escola? _escolaFiltro;
   int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _carregarEscolas();
-    _carregarAlunos();
-  }
-
-  Future<void> _carregarEscolas() async {
-    setState(() => _isLoadingEscolas = true);
-    try {
-      final escolas = await _escolaService.getEscolas();
-      setState(() {
-        _listaEscolas = escolas;
-        _isLoadingEscolas = false;
+    if (widget.escolaIdFiltro == null) {
+      _escolaService.getEscolas().then((e) {
+        if (mounted)
+          setState(() {
+            _listaEscolas = e;
+          });
       });
-    } catch (e) {
-      print("Erro o carregar escolas: $e");
-      setState(() => _isLoadingEscolas = false);
     }
+    _carregar();
   }
 
-  void _carregarAlunos({int page = 0}) {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _matriculaController.dispose();
+    super.dispose();
+  }
+
+  void _carregar({int page = 0}) {
     setState(() {
       _currentPage = page;
       _futureAlunos = _alunoService.getAlunos(
         page: page,
-        size: 10,
-        nome: _searchController.text,
-        matricula: _matriculaController.text,
-        escolaId: _escola?.id,
+        size: 15,
+        nome: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
+        matricula: _matriculaController.text.trim().isEmpty
+            ? null
+            : _matriculaController.text.trim(),
+        escolaId: widget.escolaIdFiltro ?? _escolaFiltro?.id,
       );
     });
   }
@@ -66,330 +74,419 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Filtrar Resultados",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          left: 16,
+          right: 16,
+          top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filtros',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _matriculaController,
+              decoration: const InputDecoration(
+                labelText: 'Matrícula (RA)',
+                prefixIcon: Icon(Icons.badge_outlined),
               ),
-              SizedBox(height: 16),
-
-              TextField(
-                controller: _matriculaController,
-                decoration: InputDecoration(
-                  labelText: 'Matricula(RA)',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-
+            ),
+            if (widget.escolaIdFiltro == null) ...[
+              const SizedBox(height: 12),
               DropdownButtonFormField<Escola>(
-                initialValue: _escola,
+                value: _escolaFiltro,
                 isExpanded: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Escola',
                   prefixIcon: Icon(Icons.school_outlined),
-                  border: OutlineInputBorder(),
                 ),
-                items: _listaEscolas.map((escola) {
-                  return DropdownMenuItem(
-                    value: escola,
-                    child: Text(escola.nome, overflow: TextOverflow.ellipsis),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  setState(() => _escola = val);
-                },
-                hint: _isLoadingEscolas
-                    ? Text("Carregando escolas...")
-                    : Text("Selecione uma escola"),
-              ),
-              SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      _matriculaController.clear();
-                      setState(() => _escola = null);
-                      Navigator.pop(context);
-                      _carregarAlunos(page: 0);
-                    },
-                    child: Text("Limpar Filtros"),
-                  ),
-                  SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    icon: Icon(Icons.check),
-                    label: Text("Aplicar"),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _carregarAlunos(page: 0);
-                    },
-                  ),
-                ],
+                hint: const Text('Todas as escolas'),
+                items: _listaEscolas
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e.nome, overflow: TextOverflow.ellipsis),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _escolaFiltro = v),
               ),
             ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _navegarParaDetalhes(int alunoId) async {
-    final bool? resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DetalhesAlunoScreen(alunoId: alunoId),
-      ),
-    );
-
-    if (resultado == true) {
-      _carregarAlunos();
-    }
-  }
-
-  Future<void> _navegarParaFormulario({Aluno? aluno}) async {
-    final bool? resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FormAlunoScreen(alunoParaEditar: aluno),
-      ),
-    );
-    if (resultado == true) {
-      _carregarAlunos();
-    }
-  }
-
-  Future<void> _deletarAluno(int id) async {
-    bool confirmou =
-        await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Confirmar Exclusão'),
-              content: Text('Deseja realmente excluir este aluno?'),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Cancelar'),
-                  onPressed: () => Navigator.of(context).pop(false),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      _matriculaController.clear();
+                      setState(() => _escolaFiltro = null);
+                      Navigator.pop(context);
+                      _carregar();
+                    },
+                    child: const Text('Limpar'),
+                  ),
                 ),
-                TextButton(
-                  child: Text('Excluir'),
-                  onPressed: () => Navigator.of(context).pop(true),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _carregar();
+                    },
+                    child: const Text('Aplicar'),
+                  ),
                 ),
               ],
-            );
-          },
-        ) ??
-        false;
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    if (confirmou) {
-      if (!mounted) return;
-      try {
-        await _alunoService.deleteAluno(id);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Aluno excluído com sucesso!')));
-        _carregarAlunos();
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+  Future<void> _deletar(int id) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir aluno'),
+        content: const Text(
+          'Esta ação não pode ser desfeita. Deseja continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await _alunoService.deleteAluno(id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aluno excluído'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _carregar();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final temFiltroAtivo =
+        _matriculaController.text.isNotEmpty || _escolaFiltro != null;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Alunos"),
-        backgroundColor: Colors.red.shade900,
-        foregroundColor: Colors.white,
-        actions: [
-          // Mantive seu botão de refresh
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () => _carregarAlunos(page: 0),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por nome...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                _carregar();
+                              },
+                            )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 0,
+                        horizontal: 16,
+                      ),
+                    ),
+                    onSubmitted: (_) => _carregar(),
+                    onChanged: (v) {
+                      if (v.isEmpty) _carregar();
+                      setState(() {});
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Badge(
+                  isLabelVisible: temFiltroAtivo,
+                  child: IconButton.outlined(
+                    icon: const Icon(Icons.tune),
+                    tooltip: 'Filtros',
+                    onPressed: _abrirFiltros,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: FutureBuilder<Map<String, dynamic>>(
+              future: _futureAlunos,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return _erro('${snap.error}');
+                }
+                if (!snap.hasData) return const SizedBox();
+
+                final content = snap.data!['content'] as List<dynamic>;
+                final totalPages = snap.data!['totalPages'] as int;
+                final isFirst = snap.data!['first'] as bool;
+                final isLast = snap.data!['last'] as bool;
+                final totalElements = snap.data!['totalElements'] as int;
+
+                if (content.isEmpty) {
+                  return _vazio('Nenhum aluno encontrado');
+                }
+
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '$totalElements resultado${totalElements != 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async => _carregar(page: _currentPage),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: content.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 4),
+                          itemBuilder: (_, i) {
+                            final a = content[i] as Map<String, dynamic>;
+                            final turmas =
+                                (a['turmas'] as List<dynamic>?) ?? [];
+                            return Card(
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 6,
+                                ),
+                                leading: CircleAvatar(
+                                  backgroundColor: AppTheme.primary.withOpacity(
+                                    0.12,
+                                  ),
+                                  child: Text(
+                                    (a['nome'] as String)[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(
+                                  a['nome'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('RA: ${a['matricula']}'),
+                                    if (turmas.isNotEmpty)
+                                      Text(
+                                        turmas.join(' · '),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                trailing: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert),
+                                  onSelected: (v) async {
+                                    if (v == 'ver') {
+                                      final ok = await Navigator.push<bool>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => DetalhesAlunoScreen(
+                                            alunoId: a['id'],
+                                          ),
+                                        ),
+                                      );
+                                      if (ok == true) _carregar();
+                                    } else if (v == 'del') {
+                                      _deletar(a['id']);
+                                    }
+                                  },
+                                  itemBuilder: (_) => [
+                                    const PopupMenuItem(
+                                      value: 'ver',
+                                      child: Text('Ver detalhes'),
+                                    ),
+                                    if (widget.podeCadastrar)
+                                      const PopupMenuItem(
+                                        value: 'del',
+                                        child: Text(
+                                          'Excluir',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                onTap: () async {
+                                  final ok = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          DetalhesAlunoScreen(alunoId: a['id']),
+                                    ),
+                                  );
+                                  if (ok == true) _carregar();
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    if (totalPages > 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: AppTheme.divider),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: isFirst
+                                  ? null
+                                  : () => _carregar(page: _currentPage - 1),
+                            ),
+                            Text(
+                              '${_currentPage + 1} / $totalPages',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed: isLast
+                                  ? null
+                                  : () => _carregar(page: _currentPage + 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Column(
-            children: [
-              // --- 1. BARRA DE PESQUISA E FILTROS (NOVO) ---
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Pesquisar por nome...',
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _carregarAlunos(page: 0);
-                                  },
-                                )
-                              : null,
-                        ),
-                        onSubmitted: (_) => _carregarAlunos(page: 0),
-                      ),
+      floatingActionButton: widget.podeCadastrar
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final ok = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FormAlunoScreen(
+                      escolaIdPreSelecionada: widget.escolaIdFiltro,
                     ),
-                    SizedBox(width: 8),
-                    IconButton.filledTonal(
-                      icon: Icon(Icons.filter_list),
-                      // Muda a cor se tiver filtro ativo
-                      style:
-                          (_matriculaController.text.isNotEmpty ||
-                              _escola != null)
-                          ? IconButton.styleFrom(
-                              backgroundColor: Colors.red.shade100,
-                            )
-                          : null,
-                      onPressed: _abrirFiltros,
-                    ),
-                  ],
-                ),
-              ),
-
-              // --- 2. LISTA DE ALUNOS (ADAPTADO) ---
-              Expanded(
-                child: FutureBuilder<Map<String, dynamic>>(
-                  // Mudou para Map
-                  future: _futureAlunos,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text("Erro: ${snapshot.error}"),
-                        ),
-                      );
-                    } else if (snapshot.hasData) {
-                      // Extrai a lista de dentro do objeto de paginação
-                      final List<dynamic> alunos = snapshot.data!['content'];
-                      final int totalPages = snapshot.data!['totalPages'];
-                      final bool isFirst = snapshot.data!['first'];
-                      final bool isLast = snapshot.data!['last'];
-
-                      if (alunos.isEmpty) {
-                        return Center(child: Text("Nenhum aluno encontrado."));
-                      }
-
-                      return Column(
-                        children: [
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: alunos.length,
-                              itemBuilder: (context, index) {
-                                final aluno =
-                                    alunos[index]; // aluno agora é um Map
-
-                                // Tratamento para lista de turmas no JSON
-                                String turmasTexto = "Sem turmas";
-                                if (aluno['turmas'] != null &&
-                                    (aluno['turmas'] as List).isNotEmpty) {
-                                  turmasTexto = (aluno['turmas'] as List).join(
-                                    ', ',
-                                  );
-                                }
-
-                                return ListTile(
-                                  title: Text(
-                                    aluno['nome'],
-                                  ), // Acesso via chave ['nome']
-                                  subtitle: Text(
-                                    "RA: ${aluno['matricula']} | Turmas: $turmasTexto\nEscola: ${aluno['nomeEscola'] ?? 'Não informada'}",
-                                  ),
-                                  isThreeLine: true,
-                                  trailing: IconButton(
-                                    icon: Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: () => _deletarAluno(aluno['id']),
-                                  ),
-                                  onTap: () =>
-                                      _navegarParaDetalhes(aluno['id']),
-                                );
-                              },
-                            ),
-                          ),
-
-                          // --- 3. CONTROLES DE PAGINAÇÃO (NOVO) ---
-                          if (totalPages > 1)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              color: Colors.grey[50],
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.chevron_left),
-                                    onPressed: isFirst
-                                        ? null
-                                        : () => _carregarAlunos(
-                                            page: _currentPage - 1,
-                                          ),
-                                  ),
-                                  Text(
-                                    "Página ${_currentPage + 1} de $totalPages",
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.chevron_right),
-                                    onPressed: isLast
-                                        ? null
-                                        : () => _carregarAlunos(
-                                            page: _currentPage + 1,
-                                          ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      );
-                    } else {
-                      return Center(child: Text("Nenhum aluno encontrado."));
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navegarParaFormulario(),
-        tooltip: 'Novo Aluno',
-        backgroundColor:
-            Colors.red.shade900, // Ajuste para combinar com o AppBar
-        foregroundColor: Colors.white,
-        child: Icon(Icons.add),
-      ),
+                  ),
+                );
+                if (ok == true) _carregar();
+              },
+              icon: const Icon(Icons.person_add_outlined),
+              label: const Text('Novo aluno'),
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            )
+          : null,
     );
   }
+
+  Widget _erro(String msg) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: AppTheme.textSecondary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            msg,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _carregar,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Tentar novamente'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _vazio(String msg) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.person_off_outlined,
+          size: 56,
+          color: AppTheme.textSecondary,
+        ),
+        const SizedBox(height: 12),
+        Text(msg, style: const TextStyle(color: AppTheme.textSecondary)),
+      ],
+    ),
+  );
 }
