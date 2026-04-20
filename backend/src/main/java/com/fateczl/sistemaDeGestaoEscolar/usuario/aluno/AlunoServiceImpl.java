@@ -1,6 +1,5 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -16,7 +15,7 @@ import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.ResponsavelRepository;
 
 @Service
-public class AlunoServiceImpl implements AlunoService{
+public class AlunoServiceImpl implements AlunoService {
     @Autowired
     private AlunoRepository alunoRepository;
 
@@ -30,8 +29,9 @@ public class AlunoServiceImpl implements AlunoService{
     private PasswordEncoder passwordEncoder; // Injeção necessária
 
     @Override
-    public Page<Aluno> findAll(Pageable pageable, String nome, String matricula, Long escolaId){
-        return alunoRepository.findAll(AlunoSpecification.comFiltros(nome, matricula, escolaId), pageable);
+    public Page<Aluno> findAll(Pageable pageable, String nome, String matricula, Long escolaId, Long responsavelId) {
+        return alunoRepository.findAll(AlunoSpecification.comFiltros(nome, matricula, escolaId, responsavelId),
+                pageable);
     }
 
     @Override
@@ -49,8 +49,9 @@ public class AlunoServiceImpl implements AlunoService{
         if (alunoRepository.existsByMatricula(alunoMapeado.getMatricula())) {
             throw new BusinessException("Matrícula já cadastrada.");
         }
-        if (alunoMapeado.getSenha() == null || alunoMapeado.getSenha().isEmpty() || alunoMapeado.getSenha().length() < 6 ) {
-        	throw new BusinessException("A senha é obrigatória e deve ter no mínimo 6 caracteres.");
+        if (alunoMapeado.getSenha() == null || alunoMapeado.getSenha().isEmpty()
+                || alunoMapeado.getSenha().length() < 6) {
+            throw new BusinessException("A senha é obrigatória e deve ter no mínimo 6 caracteres.");
         }
 
         // 2. Buscar entidades relacionadas

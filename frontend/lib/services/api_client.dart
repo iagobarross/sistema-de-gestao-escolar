@@ -6,7 +6,7 @@ class ApiClient {
 
   static String get baseDomain {
     if (kIsWeb) return 'http://localhost:8081/api/v1';
-    return 'http://10.0.2.2:8081/api/v1';
+    return 'http://192.168.0.150:8081/api/v1';
   }
 
   static Future<Map<String, String>> getHeaders() async {

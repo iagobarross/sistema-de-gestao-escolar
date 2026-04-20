@@ -4,7 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class AlunoSpecification {
 
-    public static Specification<Aluno> comFiltros(String nome, String matricula, Long escolaId) {
+    public static Specification<Aluno> comFiltros(String nome, String matricula, Long escolaId, Long responsavelId) {
         return (root, query, builder) -> {
             var predicates = builder.conjunction();
 
@@ -21,6 +21,12 @@ public class AlunoSpecification {
             if (escolaId != null) {
                 predicates = builder.and(predicates,
                         builder.equal(root.get("escola").get("id"), escolaId));
+            }
+
+            if (responsavelId != null) {
+                predicates = builder.and(predicates,
+                        builder.equal(root.get("responsavel").get("id"), responsavelId));
+
             }
 
             return predicates;
