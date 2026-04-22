@@ -1,6 +1,7 @@
 // Pacote: com.fateczl.sistemaDeGestaoEscolar.turma
 package com.fateczl.sistemaDeGestaoEscolar.turma;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface TurmaRepository extends JpaRepository<Turma, Long> {
+
+    List<Turma> findByIdOrderByAnoAscSerieAscTurnoAsc (Long escolaId);
 
     boolean existsByAnoAndSerieAndTurno(int ano, String serie, String turno);
 
