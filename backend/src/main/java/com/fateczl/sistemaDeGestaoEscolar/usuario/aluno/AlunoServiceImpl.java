@@ -1,9 +1,12 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -11,10 +14,16 @@ import com.fateczl.sistemaDeGestaoEscolar.config.exception.BusinessException;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundException;
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario.Funcionario;
+import com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario.FuncionarioRepository;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.Responsavel;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel.ResponsavelRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AlunoServiceImpl implements AlunoService {
     @Autowired
     private AlunoRepository alunoRepository;
@@ -28,10 +37,21 @@ public class AlunoServiceImpl implements AlunoService {
     @Autowired
     private PasswordEncoder passwordEncoder; // Injeção necessária
 
+    private final FuncionarioRepository funcionarioRepository;
+
     @Override
     public Page<Aluno> findAll(Pageable pageable, String nome, String matricula, Long escolaId, Long responsavelId) {
-        return alunoRepository.findAll(AlunoSpecification.comFiltros(nome, matricula, escolaId, responsavelId),
-                pageable);
+        String emailUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+        Funcionario funcionarioLogado = funcionarioRepository.findByEmail(emailUsuario).orElse(null);
+
+        
+        if (funcionarioLogado != null && funcionarioLogado.getRole() != Role.ADMIN) {
+            if (funcionarioLogado.getEscola() != null) {
+                escolaId = funcionarioLogado.getEscola().getId(); 
+            }
+        }
+
+        return alunoRepository.findAll(AlunoSpecification.comFiltros(nome, matricula, escolaId, responsavelId), pageable);
     }
 
     @Override

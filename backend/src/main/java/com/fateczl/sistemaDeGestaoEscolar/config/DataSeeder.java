@@ -57,6 +57,7 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         if (escolaRepository.count() == 0)
             seedEscolas();
@@ -96,7 +97,9 @@ public class DataSeeder implements CommandLineRunner {
         Funcionario professor = criarFunc("Vitoria Barbosa Alves", "professor@viver.com.br", Role.PROFESSOR,
                 Funcionario.Cargo.PROFESSOR, esc);
 
+        
         // --- 6º Ano A- Manhã ---
+        
         Responsavel r00000000001 = criarResp("Guilherme Ribeiro Almeida", "00000000001");
         Aluno aRA01000 = criarAluno("Lucas Pereira Almeida", "RA01000", r00000000001, esc);
         Responsavel r00000000002 = criarResp("Thiago Cruz Gomes", "00000000002");
@@ -138,7 +141,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000020 = criarResp("Camila Souza Oliveira", "00000000020");
         Aluno aRA01019 = criarAluno("Beatriz Souza Soares", "RA01019", r00000000020, esc);
 
-        Turma turma6A = criarTurma(esc, "6º Ano", "Manhã", 2025,
+        Turma turma6A = criarTurma(esc, "6º Ano","A", "Manhã", 2026,
                 List.of(aRA01000, aRA01001, aRA01002, aRA01003, aRA01004, aRA01005, aRA01006, aRA01007, aRA01008,
                         aRA01009, aRA01010, aRA01011, aRA01012, aRA01013, aRA01014, aRA01015, aRA01016, aRA01017,
                         aRA01018, aRA01019));
@@ -185,7 +188,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000040 = criarResp("Mariana Lima Pereira", "00000000040");
         Aluno aRA01039 = criarAluno("Helena Vieira Gomes", "RA01039", r00000000040, esc);
 
-        Turma turma6B = criarTurma(esc, "6º Ano", "Tarde", 2025,
+        Turma turma6B = criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA01020, aRA01021, aRA01022, aRA01023, aRA01024, aRA01025, aRA01026, aRA01027, aRA01028,
                         aRA01029, aRA01030, aRA01031, aRA01032, aRA01033, aRA01034, aRA01035, aRA01036, aRA01037,
                         aRA01038, aRA01039));
@@ -232,7 +235,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000060 = criarResp("Olivia Cruz Santos", "00000000060");
         Aluno aRA01059 = criarAluno("Ana Souza Ferreira", "RA01059", r00000000060, esc);
 
-        Turma turma7A = criarTurma(esc, "7º Ano", "Manhã", 2025,
+        Turma turma7A = criarTurma(esc, "7º Ano","A", "Manhã", 2026,
                 List.of(aRA01040, aRA01041, aRA01042, aRA01043, aRA01044, aRA01045, aRA01046, aRA01047, aRA01048,
                         aRA01049, aRA01050, aRA01051, aRA01052, aRA01053, aRA01054, aRA01055, aRA01056, aRA01057,
                         aRA01058, aRA01059));
@@ -279,7 +282,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000080 = criarResp("Pedro Souza Costa", "00000000080");
         Aluno aRA01079 = criarAluno("Gabriel Martins Souza", "RA01079", r00000000080, esc);
 
-        Turma turma7B = criarTurma(esc, "7º Ano", "Tarde", 2025,
+        Turma turma7B = criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA01060, aRA01061, aRA01062, aRA01063, aRA01064, aRA01065, aRA01066, aRA01067, aRA01068,
                         aRA01069, aRA01070, aRA01071, aRA01072, aRA01073, aRA01074, aRA01075, aRA01076, aRA01077,
                         aRA01078, aRA01079));
@@ -326,7 +329,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000100 = criarResp("Maria Gomes Vieira", "00000000100");
         Aluno aRA01099 = criarAluno("Inês Ferreira Cruz", "RA01099", r00000000100, esc);
 
-        Turma turma8A = criarTurma(esc, "8º Ano", "Manhã", 2025,
+        Turma turma8A = criarTurma(esc, "8º Ano","A", "Manhã", 2026,
                 List.of(aRA01080, aRA01081, aRA01082, aRA01083, aRA01084, aRA01085, aRA01086, aRA01087, aRA01088,
                         aRA01089, aRA01090, aRA01091, aRA01092, aRA01093, aRA01094, aRA01095, aRA01096, aRA01097,
                         aRA01098, aRA01099));
@@ -373,7 +376,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000120 = criarResp("Diogo Lima Mendes", "00000000120");
         Aluno aRA01119 = criarAluno("Olivia Martins Vieira", "RA01119", r00000000120, esc);
 
-        Turma turma8B = criarTurma(esc, "8º Ano", "Tarde", 2025,
+        Turma turma8B = criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA01100, aRA01101, aRA01102, aRA01103, aRA01104, aRA01105, aRA01106, aRA01107, aRA01108,
                         aRA01109, aRA01110, aRA01111, aRA01112, aRA01113, aRA01114, aRA01115, aRA01116, aRA01117,
                         aRA01118, aRA01119));
@@ -420,7 +423,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000140 = criarResp("Vitoria Lopes Silva", "00000000140");
         Aluno aRA01139 = criarAluno("Yuri Cruz Oliveira", "RA01139", r00000000140, esc);
 
-        Turma turma9A = criarTurma(esc, "9º Ano", "Manhã", 2025,
+        Turma turma9A = criarTurma(esc, "9º Ano","A", "Manhã", 2026,
                 List.of(aRA01120, aRA01121, aRA01122, aRA01123, aRA01124, aRA01125, aRA01126, aRA01127, aRA01128,
                         aRA01129, aRA01130, aRA01131, aRA01132, aRA01133, aRA01134, aRA01135, aRA01136, aRA01137,
                         aRA01138, aRA01139));
@@ -467,7 +470,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000160 = criarResp("Daniela Gomes Oliveira", "00000000160");
         Aluno aRA01159 = criarAluno("Vitoria Lima Oliveira", "RA01159", r00000000160, esc);
 
-        Turma turma9B = criarTurma(esc, "9º Ano", "Tarde", 2025,
+        Turma turma9B = criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA01140, aRA01141, aRA01142, aRA01143, aRA01144, aRA01145, aRA01146, aRA01147, aRA01148,
                         aRA01149, aRA01150, aRA01151, aRA01152, aRA01153, aRA01154, aRA01155, aRA01156, aRA01157,
                         aRA01158, aRA01159));
@@ -485,6 +488,7 @@ public class DataSeeder implements CommandLineRunner {
                 Funcionario.Cargo.COORDENADOR, esc);
         criarFunc("Bruno Pereira Silva", "professor@aprender.com.br", Role.PROFESSOR, Funcionario.Cargo.PROFESSOR, esc);
 
+       
         // --- 6º Ano - Manhã ---
         Responsavel r00000000161 = criarResp("Maria Ferreira Soares", "00000000161");
         Aluno aRA01160 = criarAluno("Inês Lopes Lima", "RA01160", r00000000161, esc);
@@ -527,7 +531,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000180 = criarResp("Julia Silva Rodrigues", "00000000180");
         Aluno aRA01179 = criarAluno("Guilherme Pereira Gomes", "RA01179", r00000000180, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano","A", "Manhã",  2026,
                 List.of(aRA01160, aRA01161, aRA01162, aRA01163, aRA01164, aRA01165, aRA01166, aRA01167, aRA01168,
                         aRA01169, aRA01170, aRA01171, aRA01172, aRA01173, aRA01174, aRA01175, aRA01176, aRA01177,
                         aRA01178, aRA01179));
@@ -574,7 +578,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000200 = criarResp("Nicolas Soares Rodrigues", "00000000200");
         Aluno aRA01199 = criarAluno("Vitoria Almeida Martins", "RA01199", r00000000200, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde",  2026,
                 List.of(aRA01180, aRA01181, aRA01182, aRA01183, aRA01184, aRA01185, aRA01186, aRA01187, aRA01188,
                         aRA01189, aRA01190, aRA01191, aRA01192, aRA01193, aRA01194, aRA01195, aRA01196, aRA01197,
                         aRA01198, aRA01199));
@@ -621,7 +625,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000220 = criarResp("Olivia Silva Almeida", "00000000220");
         Aluno aRA01219 = criarAluno("Maria Costa Ribeiro", "RA01219", r00000000220, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano","A", "Manhã", 2026,
                 List.of(aRA01200, aRA01201, aRA01202, aRA01203, aRA01204, aRA01205, aRA01206, aRA01207, aRA01208,
                         aRA01209, aRA01210, aRA01211, aRA01212, aRA01213, aRA01214, aRA01215, aRA01216, aRA01217,
                         aRA01218, aRA01219));
@@ -668,7 +672,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000240 = criarResp("Lucas Souza Rodrigues", "00000000240");
         Aluno aRA01239 = criarAluno("Nicolas Gomes Barbosa", "RA01239", r00000000240, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA01220, aRA01221, aRA01222, aRA01223, aRA01224, aRA01225, aRA01226, aRA01227, aRA01228,
                         aRA01229, aRA01230, aRA01231, aRA01232, aRA01233, aRA01234, aRA01235, aRA01236, aRA01237,
                         aRA01238, aRA01239));
@@ -715,7 +719,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000260 = criarResp("Pedro Oliveira Souza", "00000000260");
         Aluno aRA01259 = criarAluno("Tiago Silva Lopes", "RA01259", r00000000260, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano","A", "Manhã", 2026,
                 List.of(aRA01240, aRA01241, aRA01242, aRA01243, aRA01244, aRA01245, aRA01246, aRA01247, aRA01248,
                         aRA01249, aRA01250, aRA01251, aRA01252, aRA01253, aRA01254, aRA01255, aRA01256, aRA01257,
                         aRA01258, aRA01259));
@@ -762,7 +766,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000280 = criarResp("Yuri Barbosa Silva", "00000000280");
         Aluno aRA01279 = criarAluno("Thiago Gomes Vieira", "RA01279", r00000000280, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA01260, aRA01261, aRA01262, aRA01263, aRA01264, aRA01265, aRA01266, aRA01267, aRA01268,
                         aRA01269, aRA01270, aRA01271, aRA01272, aRA01273, aRA01274, aRA01275, aRA01276, aRA01277,
                         aRA01278, aRA01279));
@@ -809,7 +813,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000300 = criarResp("Eduardo Costa Gomes", "00000000300");
         Aluno aRA01299 = criarAluno("Ana Ferreira Cruz", "RA01299", r00000000300, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano","A", "Manhã", 2026,
                 List.of(aRA01280, aRA01281, aRA01282, aRA01283, aRA01284, aRA01285, aRA01286, aRA01287, aRA01288,
                         aRA01289, aRA01290, aRA01291, aRA01292, aRA01293, aRA01294, aRA01295, aRA01296, aRA01297,
                         aRA01298, aRA01299));
@@ -856,7 +860,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000320 = criarResp("Bruno Fernandes Lopes", "00000000320");
         Aluno aRA01319 = criarAluno("Mariana Soares Lopes", "RA01319", r00000000320, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA01300, aRA01301, aRA01302, aRA01303, aRA01304, aRA01305, aRA01306, aRA01307, aRA01308,
                         aRA01309, aRA01310, aRA01311, aRA01312, aRA01313, aRA01314, aRA01315, aRA01316, aRA01317,
                         aRA01318, aRA01319));
@@ -915,7 +919,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000340 = criarResp("Beatriz Rodrigues Mendes", "00000000340");
         Aluno aRA01339 = criarAluno("Olivia Oliveira Soares", "RA01339", r00000000340, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano","A", "Manhã", 2026,
                 List.of(aRA01320, aRA01321, aRA01322, aRA01323, aRA01324, aRA01325, aRA01326, aRA01327, aRA01328,
                         aRA01329, aRA01330, aRA01331, aRA01332, aRA01333, aRA01334, aRA01335, aRA01336, aRA01337,
                         aRA01338, aRA01339));
@@ -962,7 +966,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000360 = criarResp("Nicolas Oliveira Ferreira", "00000000360");
         Aluno aRA01359 = criarAluno("Daniela Martins Santos", "RA01359", r00000000360, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA01340, aRA01341, aRA01342, aRA01343, aRA01344, aRA01345, aRA01346, aRA01347, aRA01348,
                         aRA01349, aRA01350, aRA01351, aRA01352, aRA01353, aRA01354, aRA01355, aRA01356, aRA01357,
                         aRA01358, aRA01359));
@@ -1009,7 +1013,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000380 = criarResp("Larissa Gomes Costa", "00000000380");
         Aluno aRA01379 = criarAluno("Mariana Oliveira Gomes", "RA01379", r00000000380, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA01360, aRA01361, aRA01362, aRA01363, aRA01364, aRA01365, aRA01366, aRA01367, aRA01368,
                         aRA01369, aRA01370, aRA01371, aRA01372, aRA01373, aRA01374, aRA01375, aRA01376, aRA01377,
                         aRA01378, aRA01379));
@@ -1056,7 +1060,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000400 = criarResp("Mariana Barbosa Cruz", "00000000400");
         Aluno aRA01399 = criarAluno("Thiago Santos Rodrigues", "RA01399", r00000000400, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA01380, aRA01381, aRA01382, aRA01383, aRA01384, aRA01385, aRA01386, aRA01387, aRA01388,
                         aRA01389, aRA01390, aRA01391, aRA01392, aRA01393, aRA01394, aRA01395, aRA01396, aRA01397,
                         aRA01398, aRA01399));
@@ -1103,7 +1107,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000420 = criarResp("Eduardo Silva Martins", "00000000420");
         Aluno aRA01419 = criarAluno("Olivia Pereira Souza", "RA01419", r00000000420, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA01400, aRA01401, aRA01402, aRA01403, aRA01404, aRA01405, aRA01406, aRA01407, aRA01408,
                         aRA01409, aRA01410, aRA01411, aRA01412, aRA01413, aRA01414, aRA01415, aRA01416, aRA01417,
                         aRA01418, aRA01419));
@@ -1150,7 +1154,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000440 = criarResp("Vitoria Vieira Fernandes", "00000000440");
         Aluno aRA01439 = criarAluno("Eduardo Ribeiro Ferreira", "RA01439", r00000000440, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA01420, aRA01421, aRA01422, aRA01423, aRA01424, aRA01425, aRA01426, aRA01427, aRA01428,
                         aRA01429, aRA01430, aRA01431, aRA01432, aRA01433, aRA01434, aRA01435, aRA01436, aRA01437,
                         aRA01438, aRA01439));
@@ -1197,7 +1201,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000460 = criarResp("Igor Souza Ferreira", "00000000460");
         Aluno aRA01459 = criarAluno("Camila Barbosa Carvalho", "RA01459", r00000000460, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA01440, aRA01441, aRA01442, aRA01443, aRA01444, aRA01445, aRA01446, aRA01447, aRA01448,
                         aRA01449, aRA01450, aRA01451, aRA01452, aRA01453, aRA01454, aRA01455, aRA01456, aRA01457,
                         aRA01458, aRA01459));
@@ -1244,7 +1248,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000480 = criarResp("Mariana Alves Fernandes", "00000000480");
         Aluno aRA01479 = criarAluno("Margarida Gomes Santos", "RA01479", r00000000480, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA01460, aRA01461, aRA01462, aRA01463, aRA01464, aRA01465, aRA01466, aRA01467, aRA01468,
                         aRA01469, aRA01470, aRA01471, aRA01472, aRA01473, aRA01474, aRA01475, aRA01476, aRA01477,
                         aRA01478, aRA01479));
@@ -1306,7 +1310,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000500 = criarResp("Maria Alves Souza", "00000000500");
         Aluno aRA01499 = criarAluno("Nicolas Ferreira Ribeiro", "RA01499", r00000000500, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA01480, aRA01481, aRA01482, aRA01483, aRA01484, aRA01485, aRA01486, aRA01487, aRA01488,
                         aRA01489, aRA01490, aRA01491, aRA01492, aRA01493, aRA01494, aRA01495, aRA01496, aRA01497,
                         aRA01498, aRA01499));
@@ -1353,7 +1357,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000520 = criarResp("Ana Cruz Santos", "00000000520");
         Aluno aRA01519 = criarAluno("Thiago Santos Costa", "RA01519", r00000000520, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA01500, aRA01501, aRA01502, aRA01503, aRA01504, aRA01505, aRA01506, aRA01507, aRA01508,
                         aRA01509, aRA01510, aRA01511, aRA01512, aRA01513, aRA01514, aRA01515, aRA01516, aRA01517,
                         aRA01518, aRA01519));
@@ -1400,7 +1404,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000540 = criarResp("Daniela Barbosa Oliveira", "00000000540");
         Aluno aRA01539 = criarAluno("Camila Silva Cruz", "RA01539", r00000000540, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA01520, aRA01521, aRA01522, aRA01523, aRA01524, aRA01525, aRA01526, aRA01527, aRA01528,
                         aRA01529, aRA01530, aRA01531, aRA01532, aRA01533, aRA01534, aRA01535, aRA01536, aRA01537,
                         aRA01538, aRA01539));
@@ -1447,7 +1451,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000560 = criarResp("Daniela Cruz Ferreira", "00000000560");
         Aluno aRA01559 = criarAluno("Ana Gomes Souza", "RA01559", r00000000560, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA01540, aRA01541, aRA01542, aRA01543, aRA01544, aRA01545, aRA01546, aRA01547, aRA01548,
                         aRA01549, aRA01550, aRA01551, aRA01552, aRA01553, aRA01554, aRA01555, aRA01556, aRA01557,
                         aRA01558, aRA01559));
@@ -1494,7 +1498,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000580 = criarResp("Inês Gomes Ribeiro", "00000000580");
         Aluno aRA01579 = criarAluno("Vitoria Rodrigues Lima", "RA01579", r00000000580, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA01560, aRA01561, aRA01562, aRA01563, aRA01564, aRA01565, aRA01566, aRA01567, aRA01568,
                         aRA01569, aRA01570, aRA01571, aRA01572, aRA01573, aRA01574, aRA01575, aRA01576, aRA01577,
                         aRA01578, aRA01579));
@@ -1541,7 +1545,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000600 = criarResp("Vitoria Rodrigues Martins", "00000000600");
         Aluno aRA01599 = criarAluno("Vitoria Almeida Gomes", "RA01599", r00000000600, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA01580, aRA01581, aRA01582, aRA01583, aRA01584, aRA01585, aRA01586, aRA01587, aRA01588,
                         aRA01589, aRA01590, aRA01591, aRA01592, aRA01593, aRA01594, aRA01595, aRA01596, aRA01597,
                         aRA01598, aRA01599));
@@ -1588,7 +1592,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000620 = criarResp("Lucas Alves Lima", "00000000620");
         Aluno aRA01619 = criarAluno("Tiago Lopes Costa", "RA01619", r00000000620, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA01600, aRA01601, aRA01602, aRA01603, aRA01604, aRA01605, aRA01606, aRA01607, aRA01608,
                         aRA01609, aRA01610, aRA01611, aRA01612, aRA01613, aRA01614, aRA01615, aRA01616, aRA01617,
                         aRA01618, aRA01619));
@@ -1635,7 +1639,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000640 = criarResp("Beatriz Oliveira Ribeiro", "00000000640");
         Aluno aRA01639 = criarAluno("Vitoria Almeida Martins", "RA01639", r00000000640, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA01620, aRA01621, aRA01622, aRA01623, aRA01624, aRA01625, aRA01626, aRA01627, aRA01628,
                         aRA01629, aRA01630, aRA01631, aRA01632, aRA01633, aRA01634, aRA01635, aRA01636, aRA01637,
                         aRA01638, aRA01639));
@@ -1696,7 +1700,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000660 = criarResp("Mariana Gomes Souza", "00000000660");
         Aluno aRA01659 = criarAluno("Daniela Lima Santos", "RA01659", r00000000660, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA01640, aRA01641, aRA01642, aRA01643, aRA01644, aRA01645, aRA01646, aRA01647, aRA01648,
                         aRA01649, aRA01650, aRA01651, aRA01652, aRA01653, aRA01654, aRA01655, aRA01656, aRA01657,
                         aRA01658, aRA01659));
@@ -1743,7 +1747,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000680 = criarResp("Vitoria Mendes Alves", "00000000680");
         Aluno aRA01679 = criarAluno("Inês Silva Lopes", "RA01679", r00000000680, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA01660, aRA01661, aRA01662, aRA01663, aRA01664, aRA01665, aRA01666, aRA01667, aRA01668,
                         aRA01669, aRA01670, aRA01671, aRA01672, aRA01673, aRA01674, aRA01675, aRA01676, aRA01677,
                         aRA01678, aRA01679));
@@ -1790,7 +1794,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000700 = criarResp("João Vieira Silva", "00000000700");
         Aluno aRA01699 = criarAluno("João Vieira Martins", "RA01699", r00000000700, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA01680, aRA01681, aRA01682, aRA01683, aRA01684, aRA01685, aRA01686, aRA01687, aRA01688,
                         aRA01689, aRA01690, aRA01691, aRA01692, aRA01693, aRA01694, aRA01695, aRA01696, aRA01697,
                         aRA01698, aRA01699));
@@ -1837,7 +1841,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000720 = criarResp("Guilherme Almeida Gomes", "00000000720");
         Aluno aRA01719 = criarAluno("João Gomes Lima", "RA01719", r00000000720, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA01700, aRA01701, aRA01702, aRA01703, aRA01704, aRA01705, aRA01706, aRA01707, aRA01708,
                         aRA01709, aRA01710, aRA01711, aRA01712, aRA01713, aRA01714, aRA01715, aRA01716, aRA01717,
                         aRA01718, aRA01719));
@@ -1884,7 +1888,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000740 = criarResp("Pedro Santos Rodrigues", "00000000740");
         Aluno aRA01739 = criarAluno("Maria Lima Almeida", "RA01739", r00000000740, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA01720, aRA01721, aRA01722, aRA01723, aRA01724, aRA01725, aRA01726, aRA01727, aRA01728,
                         aRA01729, aRA01730, aRA01731, aRA01732, aRA01733, aRA01734, aRA01735, aRA01736, aRA01737,
                         aRA01738, aRA01739));
@@ -1931,7 +1935,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000760 = criarResp("Lucas Lopes Mendes", "00000000760");
         Aluno aRA01759 = criarAluno("Lucas Souza Oliveira", "RA01759", r00000000760, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA01740, aRA01741, aRA01742, aRA01743, aRA01744, aRA01745, aRA01746, aRA01747, aRA01748,
                         aRA01749, aRA01750, aRA01751, aRA01752, aRA01753, aRA01754, aRA01755, aRA01756, aRA01757,
                         aRA01758, aRA01759));
@@ -1978,7 +1982,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000780 = criarResp("Fernanda Carvalho Vieira", "00000000780");
         Aluno aRA01779 = criarAluno("Inês Oliveira Soares", "RA01779", r00000000780, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA01760, aRA01761, aRA01762, aRA01763, aRA01764, aRA01765, aRA01766, aRA01767, aRA01768,
                         aRA01769, aRA01770, aRA01771, aRA01772, aRA01773, aRA01774, aRA01775, aRA01776, aRA01777,
                         aRA01778, aRA01779));
@@ -2025,7 +2029,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000800 = criarResp("Larissa Alves Carvalho", "00000000800");
         Aluno aRA01799 = criarAluno("Gabriel Ferreira Almeida", "RA01799", r00000000800, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA01780, aRA01781, aRA01782, aRA01783, aRA01784, aRA01785, aRA01786, aRA01787, aRA01788,
                         aRA01789, aRA01790, aRA01791, aRA01792, aRA01793, aRA01794, aRA01795, aRA01796, aRA01797,
                         aRA01798, aRA01799));
@@ -2086,7 +2090,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000820 = criarResp("Larissa Silva Carvalho", "00000000820");
         Aluno aRA01819 = criarAluno("Fernanda Cruz Carvalho", "RA01819", r00000000820, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA01800, aRA01801, aRA01802, aRA01803, aRA01804, aRA01805, aRA01806, aRA01807, aRA01808,
                         aRA01809, aRA01810, aRA01811, aRA01812, aRA01813, aRA01814, aRA01815, aRA01816, aRA01817,
                         aRA01818, aRA01819));
@@ -2133,7 +2137,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000840 = criarResp("Carlos Pereira Santos", "00000000840");
         Aluno aRA01839 = criarAluno("João Barbosa Soares", "RA01839", r00000000840, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA01820, aRA01821, aRA01822, aRA01823, aRA01824, aRA01825, aRA01826, aRA01827, aRA01828,
                         aRA01829, aRA01830, aRA01831, aRA01832, aRA01833, aRA01834, aRA01835, aRA01836, aRA01837,
                         aRA01838, aRA01839));
@@ -2180,7 +2184,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000860 = criarResp("Beatriz Mendes Martins", "00000000860");
         Aluno aRA01859 = criarAluno("Sophia Silva Oliveira", "RA01859", r00000000860, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA01840, aRA01841, aRA01842, aRA01843, aRA01844, aRA01845, aRA01846, aRA01847, aRA01848,
                         aRA01849, aRA01850, aRA01851, aRA01852, aRA01853, aRA01854, aRA01855, aRA01856, aRA01857,
                         aRA01858, aRA01859));
@@ -2227,7 +2231,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000880 = criarResp("Tiago Cruz Martins", "00000000880");
         Aluno aRA01879 = criarAluno("Nicolas Soares Alves", "RA01879", r00000000880, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA01860, aRA01861, aRA01862, aRA01863, aRA01864, aRA01865, aRA01866, aRA01867, aRA01868,
                         aRA01869, aRA01870, aRA01871, aRA01872, aRA01873, aRA01874, aRA01875, aRA01876, aRA01877,
                         aRA01878, aRA01879));
@@ -2274,7 +2278,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000900 = criarResp("Maria Cruz Ferreira", "00000000900");
         Aluno aRA01899 = criarAluno("Sophia Ferreira Silva", "RA01899", r00000000900, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA01880, aRA01881, aRA01882, aRA01883, aRA01884, aRA01885, aRA01886, aRA01887, aRA01888,
                         aRA01889, aRA01890, aRA01891, aRA01892, aRA01893, aRA01894, aRA01895, aRA01896, aRA01897,
                         aRA01898, aRA01899));
@@ -2321,7 +2325,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000920 = criarResp("Inês Soares Gomes", "00000000920");
         Aluno aRA01919 = criarAluno("Margarida Gomes Silva", "RA01919", r00000000920, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA01900, aRA01901, aRA01902, aRA01903, aRA01904, aRA01905, aRA01906, aRA01907, aRA01908,
                         aRA01909, aRA01910, aRA01911, aRA01912, aRA01913, aRA01914, aRA01915, aRA01916, aRA01917,
                         aRA01918, aRA01919));
@@ -2368,7 +2372,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000940 = criarResp("Nicolas Barbosa Lima", "00000000940");
         Aluno aRA01939 = criarAluno("Pedro Lima Costa", "RA01939", r00000000940, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA01920, aRA01921, aRA01922, aRA01923, aRA01924, aRA01925, aRA01926, aRA01927, aRA01928,
                         aRA01929, aRA01930, aRA01931, aRA01932, aRA01933, aRA01934, aRA01935, aRA01936, aRA01937,
                         aRA01938, aRA01939));
@@ -2415,7 +2419,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000960 = criarResp("Bruno Oliveira Ferreira", "00000000960");
         Aluno aRA01959 = criarAluno("Pedro Gomes Martins", "RA01959", r00000000960, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA01940, aRA01941, aRA01942, aRA01943, aRA01944, aRA01945, aRA01946, aRA01947, aRA01948,
                         aRA01949, aRA01950, aRA01951, aRA01952, aRA01953, aRA01954, aRA01955, aRA01956, aRA01957,
                         aRA01958, aRA01959));
@@ -2476,7 +2480,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000000980 = criarResp("Maria Cruz Alves", "00000000980");
         Aluno aRA01979 = criarAluno("Camila Souza Ferreira", "RA01979", r00000000980, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA01960, aRA01961, aRA01962, aRA01963, aRA01964, aRA01965, aRA01966, aRA01967, aRA01968,
                         aRA01969, aRA01970, aRA01971, aRA01972, aRA01973, aRA01974, aRA01975, aRA01976, aRA01977,
                         aRA01978, aRA01979));
@@ -2523,7 +2527,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001000 = criarResp("Guilherme Mendes Almeida", "00000001000");
         Aluno aRA01999 = criarAluno("Inês Ribeiro Ferreira", "RA01999", r00000001000, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA01980, aRA01981, aRA01982, aRA01983, aRA01984, aRA01985, aRA01986, aRA01987, aRA01988,
                         aRA01989, aRA01990, aRA01991, aRA01992, aRA01993, aRA01994, aRA01995, aRA01996, aRA01997,
                         aRA01998, aRA01999));
@@ -2570,7 +2574,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001020 = criarResp("Olivia Silva Lima", "00000001020");
         Aluno aRA02019 = criarAluno("Daniela Gomes Lima", "RA02019", r00000001020, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA02000, aRA02001, aRA02002, aRA02003, aRA02004, aRA02005, aRA02006, aRA02007, aRA02008,
                         aRA02009, aRA02010, aRA02011, aRA02012, aRA02013, aRA02014, aRA02015, aRA02016, aRA02017,
                         aRA02018, aRA02019));
@@ -2617,7 +2621,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001040 = criarResp("Yuri Barbosa Costa", "00000001040");
         Aluno aRA02039 = criarAluno("Bruno Ferreira Lima", "RA02039", r00000001040, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA02020, aRA02021, aRA02022, aRA02023, aRA02024, aRA02025, aRA02026, aRA02027, aRA02028,
                         aRA02029, aRA02030, aRA02031, aRA02032, aRA02033, aRA02034, aRA02035, aRA02036, aRA02037,
                         aRA02038, aRA02039));
@@ -2664,7 +2668,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001060 = criarResp("Olivia Mendes Ferreira", "00000001060");
         Aluno aRA02059 = criarAluno("Sophia Rodrigues Silva", "RA02059", r00000001060, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA02040, aRA02041, aRA02042, aRA02043, aRA02044, aRA02045, aRA02046, aRA02047, aRA02048,
                         aRA02049, aRA02050, aRA02051, aRA02052, aRA02053, aRA02054, aRA02055, aRA02056, aRA02057,
                         aRA02058, aRA02059));
@@ -2711,7 +2715,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001080 = criarResp("Beatriz Oliveira Almeida", "00000001080");
         Aluno aRA02079 = criarAluno("Larissa Martins Cruz", "RA02079", r00000001080, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA02060, aRA02061, aRA02062, aRA02063, aRA02064, aRA02065, aRA02066, aRA02067, aRA02068,
                         aRA02069, aRA02070, aRA02071, aRA02072, aRA02073, aRA02074, aRA02075, aRA02076, aRA02077,
                         aRA02078, aRA02079));
@@ -2758,7 +2762,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001100 = criarResp("Maria Lopes Martins", "00000001100");
         Aluno aRA02099 = criarAluno("Helena Martins Lopes", "RA02099", r00000001100, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA02080, aRA02081, aRA02082, aRA02083, aRA02084, aRA02085, aRA02086, aRA02087, aRA02088,
                         aRA02089, aRA02090, aRA02091, aRA02092, aRA02093, aRA02094, aRA02095, aRA02096, aRA02097,
                         aRA02098, aRA02099));
@@ -2805,7 +2809,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001120 = criarResp("João Pereira Ribeiro", "00000001120");
         Aluno aRA02119 = criarAluno("Matheus Soares Mendes", "RA02119", r00000001120, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA02100, aRA02101, aRA02102, aRA02103, aRA02104, aRA02105, aRA02106, aRA02107, aRA02108,
                         aRA02109, aRA02110, aRA02111, aRA02112, aRA02113, aRA02114, aRA02115, aRA02116, aRA02117,
                         aRA02118, aRA02119));
@@ -2866,7 +2870,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001140 = criarResp("Olivia Fernandes Soares", "00000001140");
         Aluno aRA02139 = criarAluno("Inês Almeida Gomes", "RA02139", r00000001140, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA02120, aRA02121, aRA02122, aRA02123, aRA02124, aRA02125, aRA02126, aRA02127, aRA02128,
                         aRA02129, aRA02130, aRA02131, aRA02132, aRA02133, aRA02134, aRA02135, aRA02136, aRA02137,
                         aRA02138, aRA02139));
@@ -2913,7 +2917,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001160 = criarResp("Julia Gomes Fernandes", "00000001160");
         Aluno aRA02159 = criarAluno("Diogo Ferreira Alves", "RA02159", r00000001160, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA02140, aRA02141, aRA02142, aRA02143, aRA02144, aRA02145, aRA02146, aRA02147, aRA02148,
                         aRA02149, aRA02150, aRA02151, aRA02152, aRA02153, aRA02154, aRA02155, aRA02156, aRA02157,
                         aRA02158, aRA02159));
@@ -2960,7 +2964,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001180 = criarResp("Nicolas Alves Pereira", "00000001180");
         Aluno aRA02179 = criarAluno("Camila Santos Ribeiro", "RA02179", r00000001180, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA02160, aRA02161, aRA02162, aRA02163, aRA02164, aRA02165, aRA02166, aRA02167, aRA02168,
                         aRA02169, aRA02170, aRA02171, aRA02172, aRA02173, aRA02174, aRA02175, aRA02176, aRA02177,
                         aRA02178, aRA02179));
@@ -3007,7 +3011,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001200 = criarResp("Eduardo Cruz Souza", "00000001200");
         Aluno aRA02199 = criarAluno("Tiago Alves Ferreira", "RA02199", r00000001200, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA02180, aRA02181, aRA02182, aRA02183, aRA02184, aRA02185, aRA02186, aRA02187, aRA02188,
                         aRA02189, aRA02190, aRA02191, aRA02192, aRA02193, aRA02194, aRA02195, aRA02196, aRA02197,
                         aRA02198, aRA02199));
@@ -3054,7 +3058,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001220 = criarResp("Thiago Soares Vieira", "00000001220");
         Aluno aRA02219 = criarAluno("Vitoria Ribeiro Cruz", "RA02219", r00000001220, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA02200, aRA02201, aRA02202, aRA02203, aRA02204, aRA02205, aRA02206, aRA02207, aRA02208,
                         aRA02209, aRA02210, aRA02211, aRA02212, aRA02213, aRA02214, aRA02215, aRA02216, aRA02217,
                         aRA02218, aRA02219));
@@ -3101,7 +3105,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001240 = criarResp("Yuri Fernandes Ribeiro", "00000001240");
         Aluno aRA02239 = criarAluno("Tiago Gomes Ferreira", "RA02239", r00000001240, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA02220, aRA02221, aRA02222, aRA02223, aRA02224, aRA02225, aRA02226, aRA02227, aRA02228,
                         aRA02229, aRA02230, aRA02231, aRA02232, aRA02233, aRA02234, aRA02235, aRA02236, aRA02237,
                         aRA02238, aRA02239));
@@ -3148,7 +3152,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001260 = criarResp("Eduardo Santos Souza", "00000001260");
         Aluno aRA02259 = criarAluno("Ana Almeida Lopes", "RA02259", r00000001260, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA02240, aRA02241, aRA02242, aRA02243, aRA02244, aRA02245, aRA02246, aRA02247, aRA02248,
                         aRA02249, aRA02250, aRA02251, aRA02252, aRA02253, aRA02254, aRA02255, aRA02256, aRA02257,
                         aRA02258, aRA02259));
@@ -3195,7 +3199,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001280 = criarResp("Pedro Santos Lopes", "00000001280");
         Aluno aRA02279 = criarAluno("Gabriel Vieira Ferreira", "RA02279", r00000001280, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA02260, aRA02261, aRA02262, aRA02263, aRA02264, aRA02265, aRA02266, aRA02267, aRA02268,
                         aRA02269, aRA02270, aRA02271, aRA02272, aRA02273, aRA02274, aRA02275, aRA02276, aRA02277,
                         aRA02278, aRA02279));
@@ -3256,7 +3260,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001300 = criarResp("Mariana Fernandes Souza", "00000001300");
         Aluno aRA02299 = criarAluno("Margarida Gomes Costa", "RA02299", r00000001300, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA02280, aRA02281, aRA02282, aRA02283, aRA02284, aRA02285, aRA02286, aRA02287, aRA02288,
                         aRA02289, aRA02290, aRA02291, aRA02292, aRA02293, aRA02294, aRA02295, aRA02296, aRA02297,
                         aRA02298, aRA02299));
@@ -3303,7 +3307,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001320 = criarResp("Margarida Ribeiro Gomes", "00000001320");
         Aluno aRA02319 = criarAluno("Fernanda Lopes Oliveira", "RA02319", r00000001320, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA02300, aRA02301, aRA02302, aRA02303, aRA02304, aRA02305, aRA02306, aRA02307, aRA02308,
                         aRA02309, aRA02310, aRA02311, aRA02312, aRA02313, aRA02314, aRA02315, aRA02316, aRA02317,
                         aRA02318, aRA02319));
@@ -3350,7 +3354,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001340 = criarResp("Maria Costa Carvalho", "00000001340");
         Aluno aRA02339 = criarAluno("Thiago Mendes Souza", "RA02339", r00000001340, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA02320, aRA02321, aRA02322, aRA02323, aRA02324, aRA02325, aRA02326, aRA02327, aRA02328,
                         aRA02329, aRA02330, aRA02331, aRA02332, aRA02333, aRA02334, aRA02335, aRA02336, aRA02337,
                         aRA02338, aRA02339));
@@ -3397,7 +3401,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001360 = criarResp("Margarida Lima Costa", "00000001360");
         Aluno aRA02359 = criarAluno("Carlos Cruz Mendes", "RA02359", r00000001360, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA02340, aRA02341, aRA02342, aRA02343, aRA02344, aRA02345, aRA02346, aRA02347, aRA02348,
                         aRA02349, aRA02350, aRA02351, aRA02352, aRA02353, aRA02354, aRA02355, aRA02356, aRA02357,
                         aRA02358, aRA02359));
@@ -3444,7 +3448,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001380 = criarResp("Inês Alves Souza", "00000001380");
         Aluno aRA02379 = criarAluno("Matheus Gomes Ferreira", "RA02379", r00000001380, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA02360, aRA02361, aRA02362, aRA02363, aRA02364, aRA02365, aRA02366, aRA02367, aRA02368,
                         aRA02369, aRA02370, aRA02371, aRA02372, aRA02373, aRA02374, aRA02375, aRA02376, aRA02377,
                         aRA02378, aRA02379));
@@ -3491,7 +3495,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001400 = criarResp("Margarida Soares Carvalho", "00000001400");
         Aluno aRA02399 = criarAluno("Carlos Lopes Fernandes", "RA02399", r00000001400, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA02380, aRA02381, aRA02382, aRA02383, aRA02384, aRA02385, aRA02386, aRA02387, aRA02388,
                         aRA02389, aRA02390, aRA02391, aRA02392, aRA02393, aRA02394, aRA02395, aRA02396, aRA02397,
                         aRA02398, aRA02399));
@@ -3538,7 +3542,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001420 = criarResp("Igor Gomes Martins", "00000001420");
         Aluno aRA02419 = criarAluno("Nicolas Ferreira Rodrigues", "RA02419", r00000001420, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA02400, aRA02401, aRA02402, aRA02403, aRA02404, aRA02405, aRA02406, aRA02407, aRA02408,
                         aRA02409, aRA02410, aRA02411, aRA02412, aRA02413, aRA02414, aRA02415, aRA02416, aRA02417,
                         aRA02418, aRA02419));
@@ -3585,7 +3589,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001440 = criarResp("Nicolas Vieira Pereira", "00000001440");
         Aluno aRA02439 = criarAluno("Bruno Gomes Lopes", "RA02439", r00000001440, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA02420, aRA02421, aRA02422, aRA02423, aRA02424, aRA02425, aRA02426, aRA02427, aRA02428,
                         aRA02429, aRA02430, aRA02431, aRA02432, aRA02433, aRA02434, aRA02435, aRA02436, aRA02437,
                         aRA02438, aRA02439));
@@ -3646,7 +3650,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001460 = criarResp("Carlos Cruz Pereira", "00000001460");
         Aluno aRA02459 = criarAluno("Fernanda Ribeiro Vieira", "RA02459", r00000001460, esc);
 
-        criarTurma(esc, "6º Ano", "Manhã", 2025,
+        criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
                 List.of(aRA02440, aRA02441, aRA02442, aRA02443, aRA02444, aRA02445, aRA02446, aRA02447, aRA02448,
                         aRA02449, aRA02450, aRA02451, aRA02452, aRA02453, aRA02454, aRA02455, aRA02456, aRA02457,
                         aRA02458, aRA02459));
@@ -3693,7 +3697,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001480 = criarResp("Daniela Barbosa Carvalho", "00000001480");
         Aluno aRA02479 = criarAluno("Thiago Vieira Pereira", "RA02479", r00000001480, esc);
 
-        criarTurma(esc, "6º Ano", "Tarde", 2025,
+        criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
                 List.of(aRA02460, aRA02461, aRA02462, aRA02463, aRA02464, aRA02465, aRA02466, aRA02467, aRA02468,
                         aRA02469, aRA02470, aRA02471, aRA02472, aRA02473, aRA02474, aRA02475, aRA02476, aRA02477,
                         aRA02478, aRA02479));
@@ -3740,7 +3744,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001500 = criarResp("Sophia Barbosa Mendes", "00000001500");
         Aluno aRA02499 = criarAluno("Camila Gomes Ribeiro", "RA02499", r00000001500, esc);
 
-        criarTurma(esc, "7º Ano", "Manhã", 2025,
+        criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
                 List.of(aRA02480, aRA02481, aRA02482, aRA02483, aRA02484, aRA02485, aRA02486, aRA02487, aRA02488,
                         aRA02489, aRA02490, aRA02491, aRA02492, aRA02493, aRA02494, aRA02495, aRA02496, aRA02497,
                         aRA02498, aRA02499));
@@ -3787,7 +3791,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001520 = criarResp("Maria Soares Almeida", "00000001520");
         Aluno aRA02519 = criarAluno("Thiago Carvalho Souza", "RA02519", r00000001520, esc);
 
-        criarTurma(esc, "7º Ano", "Tarde", 2025,
+        criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
                 List.of(aRA02500, aRA02501, aRA02502, aRA02503, aRA02504, aRA02505, aRA02506, aRA02507, aRA02508,
                         aRA02509, aRA02510, aRA02511, aRA02512, aRA02513, aRA02514, aRA02515, aRA02516, aRA02517,
                         aRA02518, aRA02519));
@@ -3834,7 +3838,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001540 = criarResp("Vitoria Almeida Lopes", "00000001540");
         Aluno aRA02539 = criarAluno("Eduardo Costa Cruz", "RA02539", r00000001540, esc);
 
-        criarTurma(esc, "8º Ano", "Manhã", 2025,
+        criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
                 List.of(aRA02520, aRA02521, aRA02522, aRA02523, aRA02524, aRA02525, aRA02526, aRA02527, aRA02528,
                         aRA02529, aRA02530, aRA02531, aRA02532, aRA02533, aRA02534, aRA02535, aRA02536, aRA02537,
                         aRA02538, aRA02539));
@@ -3881,7 +3885,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001560 = criarResp("João Mendes Cruz", "00000001560");
         Aluno aRA02559 = criarAluno("Matheus Cruz Mendes", "RA02559", r00000001560, esc);
 
-        criarTurma(esc, "8º Ano", "Tarde", 2025,
+        criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
                 List.of(aRA02540, aRA02541, aRA02542, aRA02543, aRA02544, aRA02545, aRA02546, aRA02547, aRA02548,
                         aRA02549, aRA02550, aRA02551, aRA02552, aRA02553, aRA02554, aRA02555, aRA02556, aRA02557,
                         aRA02558, aRA02559));
@@ -3928,7 +3932,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001580 = criarResp("Helena Gomes Lopes", "00000001580");
         Aluno aRA02579 = criarAluno("Lucas Barbosa Cruz", "RA02579", r00000001580, esc);
 
-        criarTurma(esc, "9º Ano", "Manhã", 2025,
+        criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
                 List.of(aRA02560, aRA02561, aRA02562, aRA02563, aRA02564, aRA02565, aRA02566, aRA02567, aRA02568,
                         aRA02569, aRA02570, aRA02571, aRA02572, aRA02573, aRA02574, aRA02575, aRA02576, aRA02577,
                         aRA02578, aRA02579));
@@ -3975,7 +3979,7 @@ public class DataSeeder implements CommandLineRunner {
         Responsavel r00000001600 = criarResp("Yuri Lima Silva", "00000001600");
         Aluno aRA02599 = criarAluno("Camila Almeida Oliveira", "RA02599", r00000001600, esc);
 
-        criarTurma(esc, "9º Ano", "Tarde", 2025,
+        criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
                 List.of(aRA02580, aRA02581, aRA02582, aRA02583, aRA02584, aRA02585, aRA02586, aRA02587, aRA02588,
                         aRA02589, aRA02590, aRA02591, aRA02592, aRA02593, aRA02594, aRA02595, aRA02596, aRA02597,
                         aRA02598, aRA02599));
@@ -4016,7 +4020,7 @@ public class DataSeeder implements CommandLineRunner {
         return alunoRepository.save(a);
     }
 
-    private Turma criarTurma(Escola escola, String serie, String turno, Integer ano, List<Aluno> alunos) {
+    private Turma criarTurma(Escola escola, String serie, String letra, String turno, Integer ano, List<Aluno> alunos) {
         String chave = escola.getId() + "-" + serie + "-" + ano;
 
         char letraAtual = controleLetrasTurma.getOrDefault(chave, 'A');
@@ -4078,7 +4082,7 @@ public class DataSeeder implements CommandLineRunner {
         disciplinaRepository.saveAll(disciplinas);
     }
 
-    @Transactional
+    
     protected void vincularMatrizesParaTodasAsTurmas() {
         if (matrizCurricularRepository.count() > 0) return;
 
@@ -4116,10 +4120,15 @@ public class DataSeeder implements CommandLineRunner {
             if (discMap.containsKey("CIE")) criarMatriz(turma, discMap.get("CIE"), professor, 100);
             if (discMap.containsKey("HIS")) criarMatriz(turma, discMap.get("HIS"), professor, 80);
             if (discMap.containsKey("GEO")) criarMatriz(turma, discMap.get("GEO"), professor, 80);
+            if (discMap.containsKey("EDF")) criarMatriz(turma, discMap.get("EDF"), professor, 40);
+            if (discMap.containsKey("ART")) criarMatriz(turma, discMap.get("ART"), professor, 40);
+            
 
             // --- Disciplinas Específicas (Exemplo de controle por nome da série) ---
             if (turma.getSerie().contains("7º Ano") || turma.getSerie().contains("8º Ano") || turma.getSerie().contains("9º Ano")) {
                 if (discMap.containsKey("ING")) criarMatriz(turma, discMap.get("ING"), professor, 60);
+                if (discMap.containsKey("FIL")) criarMatriz(turma, discMap.get("FIL"), professor, 60);
+                if (discMap.containsKey("SOC")) criarMatriz(turma, discMap.get("SOC"), professor, 60);
             }
         }
     }
