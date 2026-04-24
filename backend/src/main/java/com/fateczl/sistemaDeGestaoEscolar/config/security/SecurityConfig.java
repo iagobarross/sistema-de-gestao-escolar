@@ -27,50 +27,56 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            // Público
-            .requestMatchers("/api/v1/auth/**").permitAll()
-            .requestMatchers("/h2-console/**").permitAll()
-            .requestMatchers("/ws-chat/**").permitAll()
-            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        // Público
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/ws-chat/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
 
-            // Somente Admin da Prefeitura
-            .requestMatchers(HttpMethod.POST, "/api/v1/escola/com-diretor").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/escola/**").hasRole("ADMIN")
-            .requestMatchers("/api/v1/funcionario/**").hasAnyRole("ADMIN", "DIRETOR")
+                        // Somente Admin da Prefeitura
+                        .requestMatchers(HttpMethod.POST, "/api/v1/escola/com-diretor").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/escola/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/funcionario/**").hasAnyRole("ADMIN", "DIRETOR")
 
-            // Admin + Diretor podem criar/editar recursos da escola
-            .requestMatchers(HttpMethod.POST, "/api/v1/escola").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.PUT, "/api/v1/escola/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.POST, "/api/v1/turma").hasAnyRole("ADMIN","DIRETOR","SECRETARIA")
-            .requestMatchers(HttpMethod.PUT, "/api/v1/turma/**").hasAnyRole("ADMIN","DIRETOR","SECRETARIA")
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/turma/**").hasAnyRole("ADMIN","DIRETOR")
+                        // Admin + Diretor podem criar/editar recursos da escola
+                        .requestMatchers(HttpMethod.POST, "/api/v1/escola").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/escola/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/turma").hasAnyRole("ADMIN", "DIRETOR", "SECRETARIA")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/turma/**")
+                        .hasAnyRole("ADMIN", "DIRETOR", "SECRETARIA")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/turma/**").hasAnyRole("ADMIN", "DIRETOR")
 
-            // Alunos — SECRETARIA gerencia, demais leem
-            .requestMatchers(HttpMethod.POST, "/api/v1/aluno").hasAnyRole("ADMIN","SECRETARIA")
-            .requestMatchers(HttpMethod.PUT, "/api/v1/aluno/**").hasAnyRole("ADMIN","SECRETARIA")
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/aluno/**").hasAnyRole("ADMIN","SECRETARIA")
+                        // Alunos — SECRETARIA gerencia, demais leem
+                        .requestMatchers(HttpMethod.POST, "/api/v1/aluno").hasAnyRole("ADMIN", "SECRETARIA")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/aluno/**").hasAnyRole("ADMIN", "SECRETARIA")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/aluno/**").hasAnyRole("ADMIN", "SECRETARIA")
 
-            // Disciplinas — somente Admin gerencia
-            .requestMatchers(HttpMethod.POST, "/api/v1/disciplina").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.PUT, "/api/v1/disciplina/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/disciplina/**").hasRole("ADMIN")
+                        // Disciplinas — somente Admin gerencia
+                        .requestMatchers(HttpMethod.POST, "/api/v1/disciplina").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/disciplina/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/disciplina/**").hasRole("ADMIN")
 
-            // Tudo autenticado pode fazer GET
-            .anyRequest().authenticated()
-        )
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authenticationProvider(authenticationProvider)
-        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Notificações — coordenador analisa e encaminha
+                        .requestMatchers("/api/v1/notificacao/**").hasRole("COORDENADOR")
 
-    http.headers(h -> h.frameOptions(f -> f.disable()));
-    return http.build();
-}
+                        // Comunicados — responsável visualiza
+                        .requestMatchers("/api/v1/comunicado/**").hasRole("RESPONSAVEL")
+
+                        // Tudo autenticado pode fazer GET
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        http.headers(h -> h.frameOptions(f -> f.disable()));
+        return http.build();
+    }
 
     // 5. BEAN DE CONFIGURAÇÃO DO CORS
     // Este método define as regras de permissão
@@ -78,7 +84,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        //substiuida temp. para teste web Socket
+        // substiuida temp. para teste web Socket
         // configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/services/api_client.dart';
+import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 class ComunicadosScreen extends StatefulWidget {
@@ -20,10 +21,12 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
   }
 
   void _carregar() {
-    setState(() => _futureComunicados = _buscarComunicados());
+    setState(() {
+      _futureComunicados = _buscar();
+    });
   }
 
-  Future<List<Map<String, dynamic>>> _buscarComunicados() async {
+  Future<List<Map<String, dynamic>>> _buscar() async {
     final res = await http.get(
       Uri.parse('${ApiClient.baseDomain}/comunicado'),
       headers: await ApiClient.getHeaders(),
@@ -33,10 +36,15 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
         jsonDecode(utf8.decode(res.bodyBytes)),
       );
     }
-    // Se o endpoint ainda não existir, retorna lista vazia
-    // sem quebrar a tela
-    if (res.statusCode == 404) return [];
     throw Exception('Erro ao carregar comunicados: ${res.statusCode}');
+  }
+
+  Future<void> _marcarLido(int id) async {
+    await http.patch(
+      Uri.parse('${ApiClient.baseDomain}/comunicado/$id/ler'),
+      headers: await ApiClient.getHeaders(),
+    );
+    _carregar();
   }
 
   @override
@@ -67,11 +75,7 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
                     color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    '${snap.error}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
+                  Text('${snap.error}', textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: _carregar,
@@ -83,9 +87,8 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
             );
           }
 
-          final comunicados = snap.data ?? [];
-
-          if (comunicados.isEmpty) {
+          final lista = snap.data ?? [];
+          if (lista.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -97,7 +100,7 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Nenhum comunicado no momento.',
+                    'Nenhum comunicado recebido.',
                     style: TextStyle(color: Colors.grey.shade500),
                   ),
                 ],
@@ -109,9 +112,18 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
             onRefresh: () async => _carregar(),
             child: ListView.separated(
               padding: const EdgeInsets.all(12),
-              itemCount: comunicados.length,
+              itemCount: lista.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) => _cartaoComunicado(ctx, comunicados[i]),
+              itemBuilder: (_, i) => _CartaoComunicado(
+                comunicado: lista[i],
+                onTap: () async {
+                  if (lista[i]['lido'] == false) {
+                    await _marcarLido(lista[i]['id']);
+                  }
+                  if (!mounted) return;
+                  _abrirDetalhe(context, lista[i]);
+                },
+              ),
             ),
           );
         },
@@ -119,12 +131,113 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
     );
   }
 
-  Widget _cartaoComunicado(BuildContext ctx, Map<String, dynamic> c) {
-    final lido = c['lido'] as bool? ?? false;
-    final titulo = c['titulo'] as String? ?? 'Sem título';
-    final corpo = c['corpo'] as String? ?? '';
-    final criadoEm = c['criadoEm'] as String?;
-    final nomeEscola = c['nomeEscola'] as String? ?? '';
+  void _abrirDetalhe(BuildContext context, Map<String, dynamic> c) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        maxChildSize: 0.95,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (_, sc) => SingleChildScrollView(
+          controller: sc,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                c['titulo'] ?? 'Comunicado',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(
+                    Icons.school_outlined,
+                    size: 14,
+                    color: Colors.grey.shade500,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    c['nomeEscola'] ?? '',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.person_outline,
+                    size: 14,
+                    color: Colors.grey.shade500,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    c['nomeAutor'] ?? '',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.psychology_outlined,
+                      size: 13,
+                      color: Colors.purple,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Análise gerada por IA · Coordenação Pedagógica',
+                      style: TextStyle(fontSize: 11, color: Colors.purple),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                c['corpo'] ?? '',
+                style: const TextStyle(fontSize: 14, height: 1.6),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CartaoComunicado extends StatelessWidget {
+  final Map<String, dynamic> comunicado;
+  final VoidCallback onTap;
+
+  const _CartaoComunicado({required this.comunicado, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final lido = comunicado['lido'] as bool? ?? false;
 
     return Card(
       elevation: 0,
@@ -137,200 +250,48 @@ class _ComunicadosScreenState extends State<ComunicadosScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _abrirComunicado(ctx, c),
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  if (!lido)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade700,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  Expanded(
-                    child: Text(
-                      titulo,
+              if (!lido)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      comunicado['titulo'] ?? '',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: lido ? FontWeight.w500 : FontWeight.bold,
                       ),
                     ),
-                  ),
-                  if (criadoEm != null)
+                    const SizedBox(height: 4),
                     Text(
-                      _formatarData(criadoEm),
+                      'De: ${comunicado['nomeAutor'] ?? ''} · ${comunicado['nomeEscola'] ?? ''}',
                       style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
-
-              if (nomeEscola.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  nomeEscola,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-              ],
-
-              if (corpo.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  corpo,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-                ),
-              ],
+              const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _abrirComunicado(BuildContext ctx, Map<String, dynamic> c) {
-    final titulo = c['titulo'] as String? ?? 'Comunicado';
-    final corpo = c['corpo'] as String? ?? '';
-    final criadoEm = c['criadoEm'] as String?;
-    final nomeEscola = c['nomeEscola'] as String? ?? '';
-    final nomeAutor = c['nomeAutor'] as String? ?? 'Escola';
-
-    showModalBottomSheet(
-      context: ctx,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (_, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
-              Text(
-                titulo,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-
-              Row(
-                children: [
-                  Icon(
-                    Icons.school_outlined,
-                    size: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    nomeEscola,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.person_outline,
-                    size: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    nomeAutor,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-
-              if (criadoEm != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _formatarDataCompleta(criadoEm),
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                ),
-              ],
-
-              const Divider(height: 28),
-
-              Text(corpo, style: const TextStyle(fontSize: 15, height: 1.6)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatarData(String iso) {
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-      final agora = DateTime.now();
-      if (dt.day == agora.day &&
-          dt.month == agora.month &&
-          dt.year == agora.year) {
-        return 'Hoje';
-      }
-      final diff = agora.difference(dt).inDays;
-      if (diff == 1) return 'Ontem';
-      if (diff < 7) return 'Há $diff dias';
-      return '${dt.day.toString().padLeft(2, '0')}/'
-          '${dt.month.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return '';
-    }
-  }
-
-  String _formatarDataCompleta(String iso) {
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-      const meses = [
-        '',
-        'jan',
-        'fev',
-        'mar',
-        'abr',
-        'mai',
-        'jun',
-        'jul',
-        'ago',
-        'set',
-        'out',
-        'nov',
-        'dez',
-      ];
-      return '${dt.day} de ${meses[dt.month]} de ${dt.year}'
-          ' às ${dt.hour.toString().padLeft(2, '0')}:'
-          '${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return iso;
-    }
   }
 }
