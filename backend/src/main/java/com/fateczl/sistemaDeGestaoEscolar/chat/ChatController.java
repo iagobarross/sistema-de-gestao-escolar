@@ -10,6 +10,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class ChatController {
@@ -23,10 +25,10 @@ public class ChatController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    // 1. MURAL PÚBLICO (Já tínhamos feito)
+    // 1. MURAL PÚBLICO
     @MessageMapping("/chat.enviarPublico")
     @SendTo("/topic/publico")
-    public Mensagem enviarMensagemPublica(@Payload MensagemRequestDTO mensagemDTO, Principal principal) {
+    public Map<String, Object> enviarMensagemPublica(@Payload MensagemRequestDTO mensagemDTO, Principal principal) {
         Usuario remetente = usuarioRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
 
@@ -36,10 +38,14 @@ public class ChatController {
                 // Destinatário nulo = Mensagem pública
                 .build();
 
-        return mensagemRepository.save(mensagem);
+        // 1. Guarda a mensagem no banco de dados
+        Mensagem mensagemSalva = mensagemRepository.save(mensagem);
+
+        // 2. Converte a mensagem para um Map seguro e devolve (para não dar erro de Lazy Loading)
+        return converterParaMap(mensagemSalva);
     }
 
-    // 2. MENSAGEM PRIVADA (NOVO)
+    // 2. MENSAGEM PRIVADA
     @MessageMapping("/chat.enviarPrivado")
     public void enviarMensagemPrivada(@Payload MensagemPrivadaDTO mensagemDTO, Principal principal) {
         // Quem está enviando?
@@ -58,19 +64,43 @@ public class ChatController {
 
         Mensagem mensagemSalva = mensagemRepository.save(mensagem);
 
+        // Converte a mensagem para um Map limpo e sem dependências do Hibernate
+        Map<String, Object> dtoSeguro = converterParaMap(mensagemSalva);
+
         // Envia a mensagem para a fila PESSOAL do destinatário
-        // O Flutter do destinatário deve escutar em: /user/queue/privado
         messagingTemplate.convertAndSendToUser(
                 destinatario.getEmail(), // Usa o e-mail como identificador da sessão
                 "/queue/privado",
-                mensagemSalva
+                dtoSeguro
         );
 
-        // Opcional: Enviar de volta para o remetente também ver a mensagem no ecrã dele
+        // Envia de volta para a fila do remetente (para aparecer na tela de quem enviou)
         messagingTemplate.convertAndSendToUser(
                 remetente.getEmail(),
                 "/queue/privado",
-                mensagemSalva
+                dtoSeguro
         );
+    }
+
+    // =========================================================================
+    // MÉTODO AUXILIAR: Transforma a Entidade num Map limpo para evitar erros de JSON
+    // =========================================================================
+    private Map<String, Object> converterParaMap(Mensagem m) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", m.getId());
+        dto.put("conteudo", m.getConteudo());
+
+        // Mapeamos apenas o ID e o Nome do remetente para o Flutter ler
+        Map<String, Object> remetenteMap = new HashMap<>();
+        if (m.getRemetente() != null) {
+            remetenteMap.put("id", m.getRemetente().getId());
+            remetenteMap.put("nome", m.getRemetente().getNome());
+        }
+        dto.put("remetente", remetenteMap);
+
+        // Formata a data de envio de forma segura
+        dto.put("dataEnvio", m.getDataEnvio() != null ? m.getDataEnvio().toString() : "");
+
+        return dto;
     }
 }

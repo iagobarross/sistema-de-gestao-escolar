@@ -67,6 +67,7 @@ class _ConversaScreenState extends State<ConversaScreen> {
   Future<void> _iniciarConexaoWebSocket() async {
     _chatService = ChatService(
       onMensagemRecebida: (mensagemJson) {
+      print("====== MENSAGEM RECEBIDA PELO WEBSOCKET: $mensagemJson ======");  
         if (mounted) {
           setState(() {
             _mensagens.add(mensagemJson);

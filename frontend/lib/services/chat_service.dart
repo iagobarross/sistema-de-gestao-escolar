@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import 'package:gestao_escolar_app/services/api_client.dart';
 
 class ChatService {
   StompClient? _stompClient;
@@ -9,7 +10,7 @@ class ChatService {
 
   void conectar(String tokenJwt) {
     // Porta 8081 que corrigimos anteriormente!
-    final String url = 'ws://10.0.2.2:8081/ws-chat/websocket';
+    final String url = ApiClient.wsDomain;
 
     _stompClient = StompClient(
       config: StompConfig(

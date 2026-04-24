@@ -138,6 +138,7 @@ class _ListaConversasScreenState extends State<ListaConversasScreen> {
       ),
       floatingActionButton: _podeIniciarConversa
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: () async {
                 await Navigator.push(
                   context,

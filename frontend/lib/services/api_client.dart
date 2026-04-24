@@ -6,9 +6,15 @@ class ApiClient {
 
   static String get baseDomain {
     if (kIsWeb) return 'http://localhost:8081/api/v1';
-    return 'http://192.168.0.150:8081/api/v1';
+    return 'http:// 172.20.10.2:8081/api/v1';
   }
 
+  static String get wsDomain {
+    if (kIsWeb) return 'ws://localhost:8081/ws-chat/websocket';
+    return 'ws:// 172.20.10.2:8081/ws-chat/websocket';
+  }
+
+  
   static Future<Map<String, String>> getHeaders() async {
     String? token = await _storage.read(key: 'jwt_token');
     return {
