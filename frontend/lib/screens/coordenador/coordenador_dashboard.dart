@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/coordenador/notificacoes_coordenador_screen.dart';
 import 'package:gestao_escolar_app/widgets/scoped_shell.dart';
 import 'package:gestao_escolar_app/widgets/main_shell.dart';
 import 'package:gestao_escolar_app/screens/aluno/lista_alunos_screen.dart';
@@ -32,6 +33,11 @@ class CoordenadorDashboard extends StatelessWidget {
           label: 'Disciplinas',
           icon: Icons.book_outlined,
           page: const ListaDisciplinaScreen(podeCadastrar: false),
+        ),
+        NavItem(
+          label: 'Notificações IA',
+          icon: Icons.psychology_outlined,
+          page: const NotificacoesCoordenadorScreen(),
         ),
         NavItem(
           label: 'Mensagens',
