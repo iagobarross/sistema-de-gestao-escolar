@@ -1,8 +1,13 @@
 package com.fateczl.sistemaDeGestaoEscolar.config;
 
+import com.fateczl.sistemaDeGestaoEscolar.academico.StatusMatriz;
+import com.fateczl.sistemaDeGestaoEscolar.academico.matriz.MatrizCurricular;
+import com.fateczl.sistemaDeGestaoEscolar.academico.matriz.MatrizCurricularRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario.Funcionario;
@@ -28,277 +33,4329 @@ import com.fateczl.sistemaDeGestaoEscolar.usuario.UsuarioRepository;
 @Configuration
 public class DataSeeder implements CommandLineRunner {
 
-    @Autowired private EscolaRepository escolaRepository;
-    @Autowired private DisciplinaRepository disciplinaRepository;
-    @Autowired private ResponsavelRepository responsavelRepository;
-    @Autowired private AlunoRepository alunoRepository;
-    @Autowired private TurmaRepository turmaRepository;
-    @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private FuncionarioRepository funcionarioRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
+        private final MatrizCurricularRepository matrizCurricularRepository;
+        @Autowired
+        private EscolaRepository escolaRepository;
+        @Autowired
+        private DisciplinaRepository disciplinaRepository;
+        @Autowired
+        private ResponsavelRepository responsavelRepository;
+        @Autowired
+        private AlunoRepository alunoRepository;
+        @Autowired
+        private TurmaRepository turmaRepository;
+        @Autowired
+        private UsuarioRepository usuarioRepository;
+        @Autowired
+        private FuncionarioRepository funcionarioRepository;
+        @Autowired
+        private PasswordEncoder passwordEncoder;
+        private final Map<String, Character> controleLetrasTurma = new HashMap<>();
 
-    @Override
-    @Transactional
-    public void run(String... args) throws Exception {
-        if (escolaRepository.count() == 0)
-            seedEscolas();
+        DataSeeder(MatrizCurricularRepository matrizCurricularRepository) {
+                this.matrizCurricularRepository = matrizCurricularRepository;
+        }
 
-        if (disciplinaRepository.count() == 0)
-            seedDisciplinas();
+        @Override
+        @Transactional
+        public void run(String... args) throws Exception {
 
-        if (responsavelRepository.count() == 0)
-            seedResponsaveis();
+                System.out.println("\n>>> [PASSO 1] Iniciando DataSeeder...");
 
-        if (alunoRepository.count() == 0)
-            seedAlunos();
+                if (escolaRepository.count() == 0){
+                        System.out.println(">>> [PASSO 2] Inserindo Escolas...");
+                        seedEscolas();
+                }
+                if (disciplinaRepository.count() == 0){
+                        System.out.println(">>> [PASSO 3] Inserindo Disciplinas...");
+                        seedDisciplinas();
+                }
 
-        if (turmaRepository.count() == 0)
-            seedTurmas();
+                if (funcionarioRepository.count() == 0) {
+                        System.out.println(">>> [PASSO 4] Criando Administrador Global...");
+                        criarFunc("Administrador Global", "admin@sistema.com", Role.ADMIN,
+                                        Funcionario.Cargo.ADMIN, null);
+                }
 
-        // Funcionários vêm depois das escolas — precisam do ID dela
-        if (funcionarioRepository.count() == 0)
-            seedFuncionarios();
-    }
+                if (alunoRepository.count() == 0) {
+                        System.out.println(">>> [PASSO 5] Populando alunos das escolas...");
+                        popularEscola1();
+                        System.out.println(">>> Escola 1 populada!");
+                        popularEscola2();
+                        System.out.println(">>> Escola 2 populada!");
+                        popularEscola3();
+                        System.out.println(">>> Escola 3 populada!");
+                        popularEscola4();
+                        System.out.println(">>> Escola 4 populada!");
+                        popularEscola5();
+                        System.out.println(">>> Escola 5 populada!");
+                        popularEscola6();
+                        System.out.println(">>> Escola 6 populada!");
+                        popularEscola7();
+                        System.out.println(">>> Escola 7 populada!");
+                        popularEscola8();
+                        System.out.println(">>> Escola 8 populada!");
+                        popularEscola9();
+                        System.out.println(">>> Escola 9 populada!");
+                        popularEscola10();
+                        System.out.println(">>> Escola 10 populada!");
+                }
 
-    // ── Métodos existentes (sem alteração) ──────────────────────────────────
+                System.out.println(">>> [PASSO 6] Vinculando Matrizes...");
+                vincularMatrizesParaTodasAsTurmas();
 
-    private void seedEscolas() {
-        List<Escola> escolas = List.of(
-            new Escola(null, "ESC001", "Colégio Viver",                  "11111111000101", "Rua das Flores, 123"),
-            new Escola(null, "ESC002", "Escola Aprender Mais",           "11111111000102", "Av. Principal, 456"),
-            new Escola(null, "ESC003", "Centro Educacional Saber",       "11111111000103", "Praça da Árvore, 789"),
-            new Escola(null, "ESC004", "Escola Municipal Pingo de Gente","11111111000104", "Rua do Meio, 101"),
-            new Escola(null, "ESC005", "Colégio Bandeirantes",           "11111111000105", "Av. das Nações, 202"),
-            new Escola(null, "ESC006", "Instituto de Ensino Raio de Luz","11111111000106", "Rua Sete, 303"),
-            new Escola(null, "ESC007", "Escola Estadual Sol Nascente",   "11111111000107", "Alameda dos Anjos, 404"),
-            new Escola(null, "ESC008", "Colégio Objetivo",               "11111111000108", "Rua Oito, 505"),
-            new Escola(null, "ESC009", "Escola Nova Geração",            "11111111000109", "Av. Brasil, 606"),
-            new Escola(null, "ESC010", "Centro Integrado de Educação",   "11111111000110", "Rua Dez, 707")
-        );
-        escolaRepository.saveAll(escolas);
-    }
+                System.out.println(">>> [SUCESSO] DataSeeder finalizado!\n");
 
-    private void seedDisciplinas() {
-        List<Disciplina> disciplinas = List.of(
-            new Disciplina(null, "POR", "Português",       "Leitura e gramática",               5.0, 100),
-            new Disciplina(null, "MAT", "Matemática",      "Álgebra e geometria",               5.0, 100),
-            new Disciplina(null, "HIS", "História",        "História do Brasil e Geral",        5.0,  80),
-            new Disciplina(null, "GEO", "Geografia",       "Geografia física e política",       5.0,  80),
-            new Disciplina(null, "CIE", "Ciências",        "Biologia, física e química",        6.0, 100),
-            new Disciplina(null, "ING", "Inglês",          "Leitura e conversação",             5.0,  60),
-            new Disciplina(null, "EDF", "Educação Física", "Prática de esportes",              5.0,  40),
-            new Disciplina(null, "ART", "Artes",           "História da arte e prática",        5.0,  40),
-            new Disciplina(null, "FIL", "Filosofia",       "Pensadores e correntes filosóficas",6.0,  60),
-            new Disciplina(null, "SOC", "Sociologia",      "Estudo da sociedade",               6.0,  60)
-        );
-        disciplinaRepository.saveAll(disciplinas);
-    }
+        }
 
-    private void seedResponsaveis() {
-        List<Responsavel> responsaveis = List.of(
-            new Responsavel(null, "Marcos Silva",     "marcos.silva@email.com",     passwordEncoder.encode("123456"), true, LocalDateTime.now(), "11122233344", "11988887777", null),
-            new Responsavel(null, "Ana Costa",        "ana.costa@email.com",        passwordEncoder.encode("123456"), true, LocalDateTime.now(), "22233344455", "11955554444", null),
-            new Responsavel(null, "Carlos Pereira",   "carlos.pereira@email.com",   passwordEncoder.encode("123456"), true, LocalDateTime.now(), "33344455566", "11944443333", null),
-            new Responsavel(null, "Fernanda Lima",    "fernanda.lima@email.com",    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "44455566677", "11977776666", null),
-            new Responsavel(null, "Bruno Rocha",      "bruno.rocha@email.com",      passwordEncoder.encode("123456"), true, LocalDateTime.now(), "55566677788", "11966665555", null),
-            new Responsavel(null, "Juliana Alves",    "juliana.alves@email.com",    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "66677788899", "11955556666", null),
-            new Responsavel(null, "Rafael Santos",    "rafael.santos@email.com",    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "77788899900", "11944447777", null),
-            new Responsavel(null, "Paula Mendes",     "paula.mendes@email.com",     passwordEncoder.encode("123456"), true, LocalDateTime.now(), "88899900011", "11933332222", null),
-            new Responsavel(null, "Eduardo Gomes",    "eduardo.gomes@email.com",    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "99900011122", "11922221111", null),
-            new Responsavel(null, "Camila Nunes",     "camila.nunes@email.com",     passwordEncoder.encode("123456"), true, LocalDateTime.now(), "00011122233", "11911110000", null),
-            new Responsavel(null, "Roberto Almeida",  "roberto.almeida@email.com",  passwordEncoder.encode("123456"), true, LocalDateTime.now(), "12312312312", "11912121212", null),
-            new Responsavel(null, "Patricia Souza",   "patricia.souza@email.com",   passwordEncoder.encode("123456"), true, LocalDateTime.now(), "23423423423", "11923232323", null),
-            new Responsavel(null, "Fernando Oliveira","fernando.oliveira@email.com", passwordEncoder.encode("123456"), true, LocalDateTime.now(), "34534534534", "11934343434", null),
-            new Responsavel(null, "Gabrielle Ferreira","gabrielle.ferreira@email.com",passwordEncoder.encode("123456"),true, LocalDateTime.now(), "45645645645", "11945454545", null),
-            new Responsavel(null, "Ricardo Martins",  "ricardo.martins@email.com",  passwordEncoder.encode("123456"), true, LocalDateTime.now(), "56756756756", "11956565656", null),
-            new Responsavel(null, "Larissa Silva",    "larissa.silva@email.com",    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "67867867867", "11967676767", null),
-            new Responsavel(null, "Marcelo Costa",    "marcelo.costa@email.com",    passwordEncoder.encode("123456"), true, LocalDateTime.now(), "78978978978", "11978787878", null),
-            new Responsavel(null, "Vanessa Santos",   "vanessa.santos@email.com",   passwordEncoder.encode("123456"), true, LocalDateTime.now(), "89089089089", "11989898989", null),
-            new Responsavel(null, "Andre Rodrigues",  "andre.rodrigues@email.com",  passwordEncoder.encode("123456"), true, LocalDateTime.now(), "90190190190", "11909090909", null),
-            new Responsavel(null, "Bianca Lima",      "bianca.lima@email.com",      passwordEncoder.encode("123456"), true, LocalDateTime.now(), "01201201201", "11901010101", null)
-        );
-        responsavelRepository.saveAll(responsaveis);
-    }
+        @Transactional
+        private void popularEscola1() {
+                Escola esc = escolaRepository.findById(1L).orElseThrow();
 
-    private void seedAlunos() {
-        List<Escola> escolas = escolaRepository.findAll();
-        List<Responsavel> responsaveis = responsavelRepository.findAll();
+                // --- Funcionários ---
+                criarFunc("Nicolas Mendes Rodrigues", "diretor@viver.com.br", Role.DIRETOR, Funcionario.Cargo.DIRETOR,
+                                esc);
+                criarFunc("Guilherme Fernandes Costa", "secretaria@viver.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA,
+                                esc);
+                criarFunc("Vitoria Alves Rodrigues", "coordenador@viver.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                Funcionario professor = criarFunc("Vitoria Barbosa Alves", "professor@viver.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR, esc);
 
-        List<Aluno> alunos = List.of(
-            new Aluno(null, "Lucas Silva",          "lucas.silva@aluno.com",    passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA001", LocalDate.of(2010,  5, 15), escolas.get(0), responsaveis.get(0),  null),
-            new Aluno(null, "Maria Costa",          "maria.costa@aluno.com",    passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA002", LocalDate.of(2011,  8, 20), escolas.get(0), responsaveis.get(1),  null),
-            new Aluno(null, "Pedro Pereira",        "pedro.pereira@aluno.com",  passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA003", LocalDate.of(2010,  3, 10), escolas.get(1), responsaveis.get(2),  null),
-            new Aluno(null, "Ana Lima",             "ana.lima@aluno.com",       passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA004", LocalDate.of(2011,  4, 18), escolas.get(1), responsaveis.get(3),  null),
-            new Aluno(null, "Bruno Rocha Jr",       "bruno.jr@aluno.com",       passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA005", LocalDate.of(2010,  6, 12), escolas.get(2), responsaveis.get(4),  null),
-            new Aluno(null, "Juliana Alves",        "juliana.alves@aluno.com",  passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA006", LocalDate.of(2011,  7, 22), escolas.get(2), responsaveis.get(5),  null),
-            new Aluno(null, "Rafael Santos Jr",     "rafael.jr@aluno.com",      passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA007", LocalDate.of(2010,  2,  5), escolas.get(3), responsaveis.get(6),  null),
-            new Aluno(null, "Paula Mendes",         "paula.mendes@aluno.com",   passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA008", LocalDate.of(2011,  9, 30), escolas.get(3), responsaveis.get(7),  null),
-            new Aluno(null, "Eduardo Gomes",        "eduardo.gomes@aluno.com",  passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA009", LocalDate.of(2010, 12, 10), escolas.get(4), responsaveis.get(8),  null),
-            new Aluno(null, "Camila Nunes",         "camila.nunes@aluno.com",   passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA010", LocalDate.of(2011,  1, 15), escolas.get(4), responsaveis.get(9),  null),
-            new Aluno(null, "Roberto Almeida Jr",   "roberto.jr@aluno.com",     passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA011", LocalDate.of(2012,  2, 20), escolas.get(5), responsaveis.get(10), null),
-            new Aluno(null, "Patricia Souza Jr",    "patricia.jr@aluno.com",    passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA012", LocalDate.of(2012,  3, 25), escolas.get(5), responsaveis.get(11), null),
-            new Aluno(null, "Fernando Oliveira Jr", "fernando.jr@aluno.com",    passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA013", LocalDate.of(2011, 11, 11), escolas.get(6), responsaveis.get(12), null),
-            new Aluno(null, "Gabrielle Ferreira Jr","gabrielle.jr@aluno.com",   passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA014", LocalDate.of(2011, 10, 10), escolas.get(6), responsaveis.get(13), null),
-            new Aluno(null, "Ricardo Martins Jr",   "ricardo.jr@aluno.com",     passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA015", LocalDate.of(2012,  5,  5), escolas.get(7), responsaveis.get(14), null),
-            new Aluno(null, "Larissa Silva Jr",     "larissa.jr@aluno.com",     passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA016", LocalDate.of(2012,  6,  6), escolas.get(7), responsaveis.get(15), null),
-            new Aluno(null, "Marcelo Costa Jr",     "marcelo.jr@aluno.com",     passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA017", LocalDate.of(2011, 12, 12), escolas.get(8), responsaveis.get(16), null),
-            new Aluno(null, "Vanessa Santos Jr",    "vanessa.jr@aluno.com",     passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA018", LocalDate.of(2011,  1, 30), escolas.get(8), responsaveis.get(17), null),
-            new Aluno(null, "Andre Rodrigues Jr",   "andre.jr@aluno.com",       passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA019", LocalDate.of(2010,  7,  7), escolas.get(9), responsaveis.get(18), null),
-            new Aluno(null, "Bianca Lima Jr",       "bianca.jr@aluno.com",      passwordEncoder.encode("aluno123"), true, LocalDateTime.now(), "RA020", LocalDate.of(2010,  8,  8), escolas.get(9), responsaveis.get(19), null)
-        );
-        alunoRepository.saveAll(alunos);
-    }
+                // --- 6º Ano A- Manhã ---
 
-    private void seedTurmas() {
-        List<Aluno> alunos = alunoRepository.findAll();
-        List<Turma> turmas = List.of(
-            new Turma(null, 2025, "6º Ano", "Manhã", List.of(alunos.get(0),  alunos.get(2))),
-            new Turma(null, 2025, "6º Ano", "Tarde", List.of(alunos.get(1),  alunos.get(3))),
-            new Turma(null, 2025, "5º Ano", "Manhã", List.of(alunos.get(4),  alunos.get(6))),
-            new Turma(null, 2025, "5º Ano", "Tarde", List.of(alunos.get(5),  alunos.get(7))),
-            new Turma(null, 2025, "4º Ano", "Manhã", List.of(alunos.get(8),  alunos.get(9))),
-            new Turma(null, 2025, "4º Ano", "Tarde", List.of(alunos.get(10), alunos.get(11))),
-            new Turma(null, 2025, "3º Ano", "Manhã", List.of(alunos.get(12), alunos.get(13))),
-            new Turma(null, 2025, "3º Ano", "Tarde", List.of(alunos.get(14), alunos.get(15))),
-            new Turma(null, 2025, "2º Ano", "Manhã", List.of(alunos.get(16), alunos.get(17))),
-            new Turma(null, 2025, "2º Ano", "Tarde", List.of(alunos.get(18), alunos.get(19)))
-        );
-        turmaRepository.saveAll(turmas);
-    }
+                Responsavel r00000000001 = criarResp("Guilherme Ribeiro Almeida", "00000000001");
+                Aluno aRA01000 = criarAluno("Lucas Pereira Almeida", "RA01000", r00000000001, esc);
+                Responsavel r00000000002 = criarResp("Thiago Cruz Gomes", "00000000002");
+                Aluno aRA01001 = criarAluno("Pedro Pereira Costa", "RA01001", r00000000002, esc);
+                Responsavel r00000000003 = criarResp("Yuri Costa Alves", "00000000003");
+                Aluno aRA01002 = criarAluno("Igor Mendes Silva", "RA01002", r00000000003, esc);
+                Responsavel r00000000004 = criarResp("Pedro Ribeiro Pereira", "00000000004");
+                Aluno aRA01003 = criarAluno("Bruno Carvalho Fernandes", "RA01003", r00000000004, esc);
+                Responsavel r00000000005 = criarResp("Eduardo Mendes Cruz", "00000000005");
+                Aluno aRA01004 = criarAluno("Inês Souza Almeida", "RA01004", r00000000005, esc);
+                Responsavel r00000000006 = criarResp("Pedro Almeida Fernandes", "00000000006");
+                Aluno aRA01005 = criarAluno("Igor Soares Alves", "RA01005", r00000000006, esc);
+                Responsavel r00000000007 = criarResp("Igor Alves Silva", "00000000007");
+                Aluno aRA01006 = criarAluno("Matheus Mendes Vieira", "RA01006", r00000000007, esc);
+                Responsavel r00000000008 = criarResp("Carlos Lima Vieira", "00000000008");
+                Aluno aRA01007 = criarAluno("Eduardo Cruz Santos", "RA01007", r00000000008, esc);
+                Responsavel r00000000009 = criarResp("Guilherme Ferreira Cruz", "00000000009");
+                Aluno aRA01008 = criarAluno("Rafael Costa Cruz", "RA01008", r00000000009, esc);
+                Responsavel r00000000010 = criarResp("Bruno Souza Ferreira", "00000000010");
+                Aluno aRA01009 = criarAluno("Nicolas Cruz Mendes", "RA01009", r00000000010, esc);
+                Responsavel r00000000011 = criarResp("Ana Lopes Silva", "00000000011");
+                Aluno aRA01010 = criarAluno("Inês Fernandes Vieira", "RA01010", r00000000011, esc);
+                Responsavel r00000000012 = criarResp("Vitoria Gomes Vieira", "00000000012");
+                Aluno aRA01011 = criarAluno("Mariana Costa Ferreira", "RA01011", r00000000012, esc);
+                Responsavel r00000000013 = criarResp("Sophia Oliveira Soares", "00000000013");
+                Aluno aRA01012 = criarAluno("Beatriz Rodrigues Cruz", "RA01012", r00000000013, esc);
+                Responsavel r00000000014 = criarResp("Matheus Alves Santos", "00000000014");
+                Aluno aRA01013 = criarAluno("Carlos Gomes Vieira", "RA01013", r00000000014, esc);
+                Responsavel r00000000015 = criarResp("Camila Barbosa Almeida", "00000000015");
+                Aluno aRA01014 = criarAluno("Thiago Soares Lima", "RA01014", r00000000015, esc);
+                Responsavel r00000000016 = criarResp("Helena Cruz Fernandes", "00000000016");
+                Aluno aRA01015 = criarAluno("Sophia Silva Vieira", "RA01015", r00000000016, esc);
+                Responsavel r00000000017 = criarResp("Maria Alves Mendes", "00000000017");
+                Aluno aRA01016 = criarAluno("Tiago Souza Pereira", "RA01016", r00000000017, esc);
+                Responsavel r00000000018 = criarResp("Ana Lopes Carvalho", "00000000018");
+                Aluno aRA01017 = criarAluno("Carlos Santos Rodrigues", "RA01017", r00000000018, esc);
+                Responsavel r00000000019 = criarResp("Carlos Almeida Mendes", "00000000019");
+                Aluno aRA01018 = criarAluno("João Fernandes Ribeiro", "RA01018", r00000000019, esc);
+                Responsavel r00000000020 = criarResp("Camila Souza Oliveira", "00000000020");
+                Aluno aRA01019 = criarAluno("Beatriz Souza Soares", "RA01019", r00000000020, esc);
 
-    // ── Novo método ─────────────────────────────────────────────────────────
+                Turma turma6A = criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01000, aRA01001, aRA01002, aRA01003, aRA01004, aRA01005, aRA01006, aRA01007,
+                                                aRA01008,
+                                                aRA01009, aRA01010, aRA01011, aRA01012, aRA01013, aRA01014, aRA01015,
+                                                aRA01016, aRA01017,
+                                                aRA01018, aRA01019));
 
-    private void seedFuncionarios() {
-        List<Escola> escolas = escolaRepository.findAll();
+                // --- 6º Ano B - Tarde ---
+                Responsavel r00000000021 = criarResp("Bruno Lopes Costa", "00000000021");
+                Aluno aRA01020 = criarAluno("Helena Fernandes Alves", "RA01020", r00000000021, esc);
+                Responsavel r00000000022 = criarResp("Mariana Soares Martins", "00000000022");
+                Aluno aRA01021 = criarAluno("Guilherme Soares Gomes", "RA01021", r00000000022, esc);
+                Responsavel r00000000023 = criarResp("Tiago Souza Barbosa", "00000000023");
+                Aluno aRA01022 = criarAluno("Eduardo Ribeiro Cruz", "RA01022", r00000000023, esc);
+                Responsavel r00000000024 = criarResp("Olivia Cruz Lima", "00000000024");
+                Aluno aRA01023 = criarAluno("Larissa Soares Ferreira", "RA01023", r00000000024, esc);
+                Responsavel r00000000025 = criarResp("Diogo Santos Ribeiro", "00000000025");
+                Aluno aRA01024 = criarAluno("Tiago Silva Almeida", "RA01024", r00000000025, esc);
+                Responsavel r00000000026 = criarResp("Camila Carvalho Martins", "00000000026");
+                Aluno aRA01025 = criarAluno("Helena Silva Soares", "RA01025", r00000000026, esc);
+                Responsavel r00000000027 = criarResp("Sophia Souza Carvalho", "00000000027");
+                Aluno aRA01026 = criarAluno("Thiago Mendes Gomes", "RA01026", r00000000027, esc);
+                Responsavel r00000000028 = criarResp("Julia Cruz Fernandes", "00000000028");
+                Aluno aRA01027 = criarAluno("Igor Fernandes Oliveira", "RA01027", r00000000028, esc);
+                Responsavel r00000000029 = criarResp("Fernanda Soares Almeida", "00000000029");
+                Aluno aRA01028 = criarAluno("Tiago Almeida Oliveira", "RA01028", r00000000029, esc);
+                Responsavel r00000000030 = criarResp("Margarida Carvalho Souza", "00000000030");
+                Aluno aRA01029 = criarAluno("Eduardo Alves Silva", "RA01029", r00000000030, esc);
+                Responsavel r00000000031 = criarResp("Thiago Oliveira Ferreira", "00000000031");
+                Aluno aRA01030 = criarAluno("Yuri Oliveira Ferreira", "RA01030", r00000000031, esc);
+                Responsavel r00000000032 = criarResp("Margarida Souza Oliveira", "00000000032");
+                Aluno aRA01031 = criarAluno("João Rodrigues Santos", "RA01031", r00000000032, esc);
+                Responsavel r00000000033 = criarResp("João Costa Pereira", "00000000033");
+                Aluno aRA01032 = criarAluno("Vitoria Mendes Souza", "RA01032", r00000000033, esc);
+                Responsavel r00000000034 = criarResp("Diogo Gomes Lopes", "00000000034");
+                Aluno aRA01033 = criarAluno("Pedro Rodrigues Vieira", "RA01033", r00000000034, esc);
+                Responsavel r00000000035 = criarResp("Beatriz Barbosa Pereira", "00000000035");
+                Aluno aRA01034 = criarAluno("Larissa Silva Lima", "RA01034", r00000000035, esc);
+                Responsavel r00000000036 = criarResp("Sophia Carvalho Silva", "00000000036");
+                Aluno aRA01035 = criarAluno("Daniela Pereira Santos", "RA01035", r00000000036, esc);
+                Responsavel r00000000037 = criarResp("Daniela Pereira Souza", "00000000037");
+                Aluno aRA01036 = criarAluno("Helena Vieira Mendes", "RA01036", r00000000037, esc);
+                Responsavel r00000000038 = criarResp("Pedro Soares Martins", "00000000038");
+                Aluno aRA01037 = criarAluno("Maria Carvalho Soares", "RA01037", r00000000038, esc);
+                Responsavel r00000000039 = criarResp("Tiago Lima Almeida", "00000000039");
+                Aluno aRA01038 = criarAluno("Helena Mendes Carvalho", "RA01038", r00000000039, esc);
+                Responsavel r00000000040 = criarResp("Mariana Lima Pereira", "00000000040");
+                Aluno aRA01039 = criarAluno("Helena Vieira Gomes", "RA01039", r00000000040, esc);
 
-        // Escola 0 — Colégio Viver: recebe um funcionário de cada role
-        Escola escolaPrincipal = escolas.get(0);
+                Turma turma6B = criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01020, aRA01021, aRA01022, aRA01023, aRA01024, aRA01025, aRA01026, aRA01027,
+                                                aRA01028,
+                                                aRA01029, aRA01030, aRA01031, aRA01032, aRA01033, aRA01034, aRA01035,
+                                                aRA01036, aRA01037,
+                                                aRA01038, aRA01039));
 
-        // ── ADMIN da Prefeitura (escola = null) ───────────────────────────
-        criarFuncionarioSeNaoExistir(
-            "Administrador Sistema",
-            "admin@email.com",
-            "123456",
-            Role.ADMIN,
-            Funcionario.Cargo.ADMIN,
-            null
-        );
+                // --- 7º Ano A - Manhã ---
+                Responsavel r00000000041 = criarResp("Thiago Cruz Mendes", "00000000041");
+                Aluno aRA01040 = criarAluno("Yuri Costa Alves", "RA01040", r00000000041, esc);
+                Responsavel r00000000042 = criarResp("Rafael Soares Carvalho", "00000000042");
+                Aluno aRA01041 = criarAluno("Carlos Oliveira Alves", "RA01041", r00000000042, esc);
+                Responsavel r00000000043 = criarResp("Sophia Lima Ferreira", "00000000043");
+                Aluno aRA01042 = criarAluno("Igor Lopes Fernandes", "RA01042", r00000000043, esc);
+                Responsavel r00000000044 = criarResp("Inês Lopes Fernandes", "00000000044");
+                Aluno aRA01043 = criarAluno("Julia Barbosa Santos", "RA01043", r00000000044, esc);
+                Responsavel r00000000045 = criarResp("Mariana Carvalho Pereira", "00000000045");
+                Aluno aRA01044 = criarAluno("Carlos Costa Rodrigues", "RA01044", r00000000045, esc);
+                Responsavel r00000000046 = criarResp("Ana Barbosa Soares", "00000000046");
+                Aluno aRA01045 = criarAluno("Nicolas Mendes Lima", "RA01045", r00000000046, esc);
+                Responsavel r00000000047 = criarResp("João Souza Vieira", "00000000047");
+                Aluno aRA01046 = criarAluno("Gabriel Martins Lopes", "RA01046", r00000000047, esc);
+                Responsavel r00000000048 = criarResp("Vitoria Lopes Martins", "00000000048");
+                Aluno aRA01047 = criarAluno("Inês Lopes Alves", "RA01047", r00000000048, esc);
+                Responsavel r00000000049 = criarResp("Maria Alves Vieira", "00000000049");
+                Aluno aRA01048 = criarAluno("Camila Rodrigues Cruz", "RA01048", r00000000049, esc);
+                Responsavel r00000000050 = criarResp("João Cruz Carvalho", "00000000050");
+                Aluno aRA01049 = criarAluno("Mariana Fernandes Silva", "RA01049", r00000000050, esc);
+                Responsavel r00000000051 = criarResp("Igor Vieira Barbosa", "00000000051");
+                Aluno aRA01050 = criarAluno("Guilherme Martins Santos", "RA01050", r00000000051, esc);
+                Responsavel r00000000052 = criarResp("Eduardo Soares Ribeiro", "00000000052");
+                Aluno aRA01051 = criarAluno("João Souza Lopes", "RA01051", r00000000052, esc);
+                Responsavel r00000000053 = criarResp("Beatriz Silva Cruz", "00000000053");
+                Aluno aRA01052 = criarAluno("Thiago Santos Barbosa", "RA01052", r00000000053, esc);
+                Responsavel r00000000054 = criarResp("Helena Carvalho Cruz", "00000000054");
+                Aluno aRA01053 = criarAluno("Thiago Fernandes Lopes", "RA01053", r00000000054, esc);
+                Responsavel r00000000055 = criarResp("Inês Gomes Lima", "00000000055");
+                Aluno aRA01054 = criarAluno("Camila Lopes Mendes", "RA01054", r00000000055, esc);
+                Responsavel r00000000056 = criarResp("Fernanda Lima Pereira", "00000000056");
+                Aluno aRA01055 = criarAluno("Gabriel Lopes Carvalho", "RA01055", r00000000056, esc);
+                Responsavel r00000000057 = criarResp("Carlos Souza Almeida", "00000000057");
+                Aluno aRA01056 = criarAluno("Lucas Gomes Pereira", "RA01056", r00000000057, esc);
+                Responsavel r00000000058 = criarResp("Yuri Fernandes Costa", "00000000058");
+                Aluno aRA01057 = criarAluno("Daniela Cruz Rodrigues", "RA01057", r00000000058, esc);
+                Responsavel r00000000059 = criarResp("Margarida Santos Rodrigues", "00000000059");
+                Aluno aRA01058 = criarAluno("Matheus Gomes Vieira", "RA01058", r00000000059, esc);
+                Responsavel r00000000060 = criarResp("Olivia Cruz Santos", "00000000060");
+                Aluno aRA01059 = criarAluno("Ana Souza Ferreira", "RA01059", r00000000060, esc);
 
-        // ── DIRETOR ───────────────────────────────────────────────────────
-        criarFuncionarioSeNaoExistir(
-            "João Carlos Diretor",
-            "diretor@colegio.com",
-            "123456",
-            Role.DIRETOR,
-            Funcionario.Cargo.DIRETOR,
-            escolaPrincipal
-        );
+                Turma turma7A = criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01040, aRA01041, aRA01042, aRA01043, aRA01044, aRA01045, aRA01046, aRA01047,
+                                                aRA01048,
+                                                aRA01049, aRA01050, aRA01051, aRA01052, aRA01053, aRA01054, aRA01055,
+                                                aRA01056, aRA01057,
+                                                aRA01058, aRA01059));
 
-        // ── SECRETARIA ────────────────────────────────────────────────────
-        criarFuncionarioSeNaoExistir(
-            "Carla Secretaria",
-            "secretaria@colegio.com",
-            "123456",
-            Role.SECRETARIA,
-            Funcionario.Cargo.SECRETARIA,
-            escolaPrincipal
-        );
+                // --- 7º Ano B - Tarde ---
+                Responsavel r00000000061 = criarResp("Lucas Silva Barbosa", "00000000061");
+                Aluno aRA01060 = criarAluno("Daniela Oliveira Mendes", "RA01060", r00000000061, esc);
+                Responsavel r00000000062 = criarResp("Tiago Fernandes Mendes", "00000000062");
+                Aluno aRA01061 = criarAluno("Inês Souza Rodrigues", "RA01061", r00000000062, esc);
+                Responsavel r00000000063 = criarResp("Eduardo Fernandes Lima", "00000000063");
+                Aluno aRA01062 = criarAluno("Nicolas Ribeiro Gomes", "RA01062", r00000000063, esc);
+                Responsavel r00000000064 = criarResp("Carlos Barbosa Almeida", "00000000064");
+                Aluno aRA01063 = criarAluno("Diogo Carvalho Soares", "RA01063", r00000000064, esc);
+                Responsavel r00000000065 = criarResp("Igor Oliveira Martins", "00000000065");
+                Aluno aRA01064 = criarAluno("Igor Rodrigues Soares", "RA01064", r00000000065, esc);
+                Responsavel r00000000066 = criarResp("Olivia Souza Alves", "00000000066");
+                Aluno aRA01065 = criarAluno("Thiago Costa Mendes", "RA01065", r00000000066, esc);
+                Responsavel r00000000067 = criarResp("Tiago Lima Fernandes", "00000000067");
+                Aluno aRA01066 = criarAluno("Diogo Souza Silva", "RA01066", r00000000067, esc);
+                Responsavel r00000000068 = criarResp("Bruno Mendes Almeida", "00000000068");
+                Aluno aRA01067 = criarAluno("Thiago Oliveira Soares", "RA01067", r00000000068, esc);
+                Responsavel r00000000069 = criarResp("Maria Soares Ribeiro", "00000000069");
+                Aluno aRA01068 = criarAluno("Carlos Soares Alves", "RA01068", r00000000069, esc);
+                Responsavel r00000000070 = criarResp("Yuri Barbosa Lopes", "00000000070");
+                Aluno aRA01069 = criarAluno("Eduardo Ribeiro Alves", "RA01069", r00000000070, esc);
+                Responsavel r00000000071 = criarResp("Inês Souza Barbosa", "00000000071");
+                Aluno aRA01070 = criarAluno("Helena Almeida Mendes", "RA01070", r00000000071, esc);
+                Responsavel r00000000072 = criarResp("Rafael Martins Santos", "00000000072");
+                Aluno aRA01071 = criarAluno("Vitoria Santos Mendes", "RA01071", r00000000072, esc);
+                Responsavel r00000000073 = criarResp("Beatriz Alves Pereira", "00000000073");
+                Aluno aRA01072 = criarAluno("João Carvalho Barbosa", "RA01072", r00000000073, esc);
+                Responsavel r00000000074 = criarResp("Diogo Silva Carvalho", "00000000074");
+                Aluno aRA01073 = criarAluno("Bruno Soares Ferreira", "RA01073", r00000000074, esc);
+                Responsavel r00000000075 = criarResp("Diogo Cruz Fernandes", "00000000075");
+                Aluno aRA01074 = criarAluno("Carlos Oliveira Almeida", "RA01074", r00000000075, esc);
+                Responsavel r00000000076 = criarResp("Nicolas Costa Silva", "00000000076");
+                Aluno aRA01075 = criarAluno("Eduardo Lima Fernandes", "RA01075", r00000000076, esc);
+                Responsavel r00000000077 = criarResp("Fernanda Alves Silva", "00000000077");
+                Aluno aRA01076 = criarAluno("Fernanda Carvalho Cruz", "RA01076", r00000000077, esc);
+                Responsavel r00000000078 = criarResp("Mariana Almeida Carvalho", "00000000078");
+                Aluno aRA01077 = criarAluno("Eduardo Gomes Martins", "RA01077", r00000000078, esc);
+                Responsavel r00000000079 = criarResp("Matheus Carvalho Soares", "00000000079");
+                Aluno aRA01078 = criarAluno("Helena Soares Rodrigues", "RA01078", r00000000079, esc);
+                Responsavel r00000000080 = criarResp("Pedro Souza Costa", "00000000080");
+                Aluno aRA01079 = criarAluno("Gabriel Martins Souza", "RA01079", r00000000080, esc);
 
-        // ── COORDENADOR ───────────────────────────────────────────────────
-        criarFuncionarioSeNaoExistir(
-            "Maria Coordenadora",
-            "coord@colegio.com",
-            "123456",
-            Role.COORDENADOR,
-            Funcionario.Cargo.COORDENADOR,
-            escolaPrincipal
-        );
+                Turma turma7B = criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01060, aRA01061, aRA01062, aRA01063, aRA01064, aRA01065, aRA01066, aRA01067,
+                                                aRA01068,
+                                                aRA01069, aRA01070, aRA01071, aRA01072, aRA01073, aRA01074, aRA01075,
+                                                aRA01076, aRA01077,
+                                                aRA01078, aRA01079));
 
-        // ── PROFESSORES ───────────────────────────────────────────────────
-        // Professor 1 — vai ser vinculado às turmas de 6º Ano
-        criarFuncionarioSeNaoExistir(
-            "Rafael Professor",
-            "prof.matematica@colegio.com",
-            "123456",
-            Role.PROFESSOR,
-            Funcionario.Cargo.PROFESSOR,
-            escolaPrincipal
-        );
+                // --- 8º Ano A - Manhã ---
+                Responsavel r00000000081 = criarResp("Tiago Silva Alves", "00000000081");
+                Aluno aRA01080 = criarAluno("Ana Ribeiro Fernandes", "RA01080", r00000000081, esc);
+                Responsavel r00000000082 = criarResp("Gabriel Costa Vieira", "00000000082");
+                Aluno aRA01081 = criarAluno("Thiago Almeida Gomes", "RA01081", r00000000082, esc);
+                Responsavel r00000000083 = criarResp("Ana Alves Lima", "00000000083");
+                Aluno aRA01082 = criarAluno("Daniela Alves Oliveira", "RA01082", r00000000083, esc);
+                Responsavel r00000000084 = criarResp("Bruno Santos Rodrigues", "00000000084");
+                Aluno aRA01083 = criarAluno("Yuri Barbosa Rodrigues", "RA01083", r00000000084, esc);
+                Responsavel r00000000085 = criarResp("Vitoria Souza Gomes", "00000000085");
+                Aluno aRA01084 = criarAluno("Helena Silva Vieira", "RA01084", r00000000085, esc);
+                Responsavel r00000000086 = criarResp("Tiago Souza Oliveira", "00000000086");
+                Aluno aRA01085 = criarAluno("Bruno Almeida Soares", "RA01085", r00000000086, esc);
+                Responsavel r00000000087 = criarResp("Fernanda Lopes Souza", "00000000087");
+                Aluno aRA01086 = criarAluno("Thiago Mendes Alves", "RA01086", r00000000087, esc);
+                Responsavel r00000000088 = criarResp("Gabriel Pereira Silva", "00000000088");
+                Aluno aRA01087 = criarAluno("Olivia Mendes Pereira", "RA01087", r00000000088, esc);
+                Responsavel r00000000089 = criarResp("Camila Ferreira Santos", "00000000089");
+                Aluno aRA01088 = criarAluno("Diogo Alves Pereira", "RA01088", r00000000089, esc);
+                Responsavel r00000000090 = criarResp("Vitoria Martins Lima", "00000000090");
+                Aluno aRA01089 = criarAluno("Diogo Costa Ferreira", "RA01089", r00000000090, esc);
+                Responsavel r00000000091 = criarResp("Julia Vieira Rodrigues", "00000000091");
+                Aluno aRA01090 = criarAluno("Larissa Barbosa Soares", "RA01090", r00000000091, esc);
+                Responsavel r00000000092 = criarResp("Fernanda Cruz Barbosa", "00000000092");
+                Aluno aRA01091 = criarAluno("Lucas Carvalho Barbosa", "RA01091", r00000000092, esc);
+                Responsavel r00000000093 = criarResp("Tiago Lima Silva", "00000000093");
+                Aluno aRA01092 = criarAluno("Beatriz Lopes Mendes", "RA01092", r00000000093, esc);
+                Responsavel r00000000094 = criarResp("Tiago Barbosa Pereira", "00000000094");
+                Aluno aRA01093 = criarAluno("Tiago Martins Ribeiro", "RA01093", r00000000094, esc);
+                Responsavel r00000000095 = criarResp("Gabriel Oliveira Ribeiro", "00000000095");
+                Aluno aRA01094 = criarAluno("Eduardo Souza Alves", "RA01094", r00000000095, esc);
+                Responsavel r00000000096 = criarResp("Guilherme Almeida Costa", "00000000096");
+                Aluno aRA01095 = criarAluno("Eduardo Santos Silva", "RA01095", r00000000096, esc);
+                Responsavel r00000000097 = criarResp("Yuri Mendes Costa", "00000000097");
+                Aluno aRA01096 = criarAluno("Camila Lopes Barbosa", "RA01096", r00000000097, esc);
+                Responsavel r00000000098 = criarResp("Helena Mendes Almeida", "00000000098");
+                Aluno aRA01097 = criarAluno("Mariana Ferreira Oliveira", "RA01097", r00000000098, esc);
+                Responsavel r00000000099 = criarResp("Fernanda Almeida Barbosa", "00000000099");
+                Aluno aRA01098 = criarAluno("Larissa Lopes Soares", "RA01098", r00000000099, esc);
+                Responsavel r00000000100 = criarResp("Maria Gomes Vieira", "00000000100");
+                Aluno aRA01099 = criarAluno("Inês Ferreira Cruz", "RA01099", r00000000100, esc);
 
-        // Professor 2 — Português, vinculado às turmas de 5º e 6º Ano
-        criarFuncionarioSeNaoExistir(
-            "Fernanda Professora",
-            "prof.portugues@colegio.com",
-            "123456",
-            Role.PROFESSOR,
-            Funcionario.Cargo.PROFESSOR,
-            escolaPrincipal
-        );
+                Turma turma8A = criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01080, aRA01081, aRA01082, aRA01083, aRA01084, aRA01085, aRA01086, aRA01087,
+                                                aRA01088,
+                                                aRA01089, aRA01090, aRA01091, aRA01092, aRA01093, aRA01094, aRA01095,
+                                                aRA01096, aRA01097,
+                                                aRA01098, aRA01099));
 
-        // ── Funcionários extras para as outras escolas ─────────────────────
-        // Escola 1 — Escola Aprender Mais
-        Escola escola1 = escolas.get(1);
-        criarFuncionarioSeNaoExistir(
-            "Sandra Diretora",
-            "diretor@aprender.com",
-            "123456",
-            Role.DIRETOR,
-            Funcionario.Cargo.DIRETOR,
-            escola1
-        );
-        criarFuncionarioSeNaoExistir(
-            "Paulo Professor",
-            "prof.historia@aprender.com",
-            "123456",
-            Role.PROFESSOR,
-            Funcionario.Cargo.PROFESSOR,
-            escola1
-        );
+                // --- 8º Ano B- Tarde ---
+                Responsavel r00000000101 = criarResp("Tiago Almeida Barbosa", "00000000101");
+                Aluno aRA01100 = criarAluno("Vitoria Vieira Martins", "RA01100", r00000000101, esc);
+                Responsavel r00000000102 = criarResp("Nicolas Soares Vieira", "00000000102");
+                Aluno aRA01101 = criarAluno("Igor Alves Barbosa", "RA01101", r00000000102, esc);
+                Responsavel r00000000103 = criarResp("Yuri Almeida Silva", "00000000103");
+                Aluno aRA01102 = criarAluno("Sophia Soares Ferreira", "RA01102", r00000000103, esc);
+                Responsavel r00000000104 = criarResp("Matheus Santos Oliveira", "00000000104");
+                Aluno aRA01103 = criarAluno("Daniela Martins Lima", "RA01103", r00000000104, esc);
+                Responsavel r00000000105 = criarResp("Bruno Gomes Alves", "00000000105");
+                Aluno aRA01104 = criarAluno("Diogo Almeida Oliveira", "RA01104", r00000000105, esc);
+                Responsavel r00000000106 = criarResp("Vitoria Costa Oliveira", "00000000106");
+                Aluno aRA01105 = criarAluno("Daniela Lopes Soares", "RA01105", r00000000106, esc);
+                Responsavel r00000000107 = criarResp("Gabriel Soares Pereira", "00000000107");
+                Aluno aRA01106 = criarAluno("Inês Soares Cruz", "RA01106", r00000000107, esc);
+                Responsavel r00000000108 = criarResp("Camila Barbosa Lima", "00000000108");
+                Aluno aRA01107 = criarAluno("Igor Mendes Carvalho", "RA01107", r00000000108, esc);
+                Responsavel r00000000109 = criarResp("Olivia Lima Silva", "00000000109");
+                Aluno aRA01108 = criarAluno("Maria Lima Fernandes", "RA01108", r00000000109, esc);
+                Responsavel r00000000110 = criarResp("Beatriz Costa Lima", "00000000110");
+                Aluno aRA01109 = criarAluno("Pedro Carvalho Santos", "RA01109", r00000000110, esc);
+                Responsavel r00000000111 = criarResp("Helena Vieira Silva", "00000000111");
+                Aluno aRA01110 = criarAluno("Ana Santos Alves", "RA01110", r00000000111, esc);
+                Responsavel r00000000112 = criarResp("Ana Pereira Santos", "00000000112");
+                Aluno aRA01111 = criarAluno("Larissa Almeida Rodrigues", "RA01111", r00000000112, esc);
+                Responsavel r00000000113 = criarResp("Inês Gomes Lopes", "00000000113");
+                Aluno aRA01112 = criarAluno("Rafael Lima Carvalho", "RA01112", r00000000113, esc);
+                Responsavel r00000000114 = criarResp("Matheus Pereira Silva", "00000000114");
+                Aluno aRA01113 = criarAluno("Julia Costa Mendes", "RA01113", r00000000114, esc);
+                Responsavel r00000000115 = criarResp("Maria Mendes Silva", "00000000115");
+                Aluno aRA01114 = criarAluno("Guilherme Martins Mendes", "RA01114", r00000000115, esc);
+                Responsavel r00000000116 = criarResp("Fernanda Alves Barbosa", "00000000116");
+                Aluno aRA01115 = criarAluno("Beatriz Soares Lopes", "RA01115", r00000000116, esc);
+                Responsavel r00000000117 = criarResp("Maria Oliveira Gomes", "00000000117");
+                Aluno aRA01116 = criarAluno("Igor Soares Santos", "RA01116", r00000000117, esc);
+                Responsavel r00000000118 = criarResp("Diogo Lima Costa", "00000000118");
+                Aluno aRA01117 = criarAluno("Rafael Rodrigues Almeida", "RA01117", r00000000118, esc);
+                Responsavel r00000000119 = criarResp("Gabriel Gomes Lima", "00000000119");
+                Aluno aRA01118 = criarAluno("Diogo Silva Carvalho", "RA01118", r00000000119, esc);
+                Responsavel r00000000120 = criarResp("Diogo Lima Mendes", "00000000120");
+                Aluno aRA01119 = criarAluno("Olivia Martins Vieira", "RA01119", r00000000120, esc);
 
-        // Escola 2 — Centro Educacional Saber
-        Escola escola2 = escolas.get(2);
-        criarFuncionarioSeNaoExistir(
-            "Roberto Diretor",
-            "diretor@saber.com",
-            "123456",
-            Role.DIRETOR,
-            Funcionario.Cargo.DIRETOR,
-            escola2
-        );
-        criarFuncionarioSeNaoExistir(
-            "Lucia Professora",
-            "prof.ciencias@saber.com",
-            "123456",
-            Role.PROFESSOR,
-            Funcionario.Cargo.PROFESSOR,
-            escola2
-        );
-    }
+                Turma turma8B = criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01100, aRA01101, aRA01102, aRA01103, aRA01104, aRA01105, aRA01106, aRA01107,
+                                                aRA01108,
+                                                aRA01109, aRA01110, aRA01111, aRA01112, aRA01113, aRA01114, aRA01115,
+                                                aRA01116, aRA01117,
+                                                aRA01118, aRA01119));
 
-    /**
-     * Cria o funcionário apenas se o email ainda não existir no banco.
-     * Evita duplicatas a cada reinicialização da aplicação.
-     */
-    private void criarFuncionarioSeNaoExistir(
-            String nome,
-            String email,
-            String senha,
-            Role role,
-            Funcionario.Cargo cargo,
-            Escola escola) {
+                // --- 9º Ano A - Manhã ---
+                Responsavel r00000000121 = criarResp("Beatriz Lopes Ferreira", "00000000121");
+                Aluno aRA01120 = criarAluno("Fernanda Barbosa Rodrigues", "RA01120", r00000000121, esc);
+                Responsavel r00000000122 = criarResp("Julia Soares Cruz", "00000000122");
+                Aluno aRA01121 = criarAluno("Camila Alves Silva", "RA01121", r00000000122, esc);
+                Responsavel r00000000123 = criarResp("Carlos Souza Cruz", "00000000123");
+                Aluno aRA01122 = criarAluno("Lucas Ribeiro Alves", "RA01122", r00000000123, esc);
+                Responsavel r00000000124 = criarResp("Diogo Vieira Cruz", "00000000124");
+                Aluno aRA01123 = criarAluno("Beatriz Santos Silva", "RA01123", r00000000124, esc);
+                Responsavel r00000000125 = criarResp("Igor Rodrigues Almeida", "00000000125");
+                Aluno aRA01124 = criarAluno("Diogo Carvalho Rodrigues", "RA01124", r00000000125, esc);
+                Responsavel r00000000126 = criarResp("Pedro Mendes Cruz", "00000000126");
+                Aluno aRA01125 = criarAluno("Matheus Pereira Ribeiro", "RA01125", r00000000126, esc);
+                Responsavel r00000000127 = criarResp("Ana Oliveira Rodrigues", "00000000127");
+                Aluno aRA01126 = criarAluno("Beatriz Alves Martins", "RA01126", r00000000127, esc);
+                Responsavel r00000000128 = criarResp("Inês Santos Costa", "00000000128");
+                Aluno aRA01127 = criarAluno("Pedro Vieira Oliveira", "RA01127", r00000000128, esc);
+                Responsavel r00000000129 = criarResp("Pedro Costa Almeida", "00000000129");
+                Aluno aRA01128 = criarAluno("Eduardo Almeida Silva", "RA01128", r00000000129, esc);
+                Responsavel r00000000130 = criarResp("Eduardo Lima Vieira", "00000000130");
+                Aluno aRA01129 = criarAluno("Lucas Ferreira Alves", "RA01129", r00000000130, esc);
+                Responsavel r00000000131 = criarResp("Rafael Ribeiro Silva", "00000000131");
+                Aluno aRA01130 = criarAluno("Tiago Cruz Barbosa", "RA01130", r00000000131, esc);
+                Responsavel r00000000132 = criarResp("Igor Fernandes Almeida", "00000000132");
+                Aluno aRA01131 = criarAluno("Igor Barbosa Lopes", "RA01131", r00000000132, esc);
+                Responsavel r00000000133 = criarResp("Sophia Gomes Ferreira", "00000000133");
+                Aluno aRA01132 = criarAluno("Guilherme Martins Santos", "RA01132", r00000000133, esc);
+                Responsavel r00000000134 = criarResp("Eduardo Lima Santos", "00000000134");
+                Aluno aRA01133 = criarAluno("Beatriz Silva Vieira", "RA01133", r00000000134, esc);
+                Responsavel r00000000135 = criarResp("Beatriz Almeida Cruz", "00000000135");
+                Aluno aRA01134 = criarAluno("Mariana Lopes Ribeiro", "RA01134", r00000000135, esc);
+                Responsavel r00000000136 = criarResp("Daniela Santos Oliveira", "00000000136");
+                Aluno aRA01135 = criarAluno("Fernanda Carvalho Martins", "RA01135", r00000000136, esc);
+                Responsavel r00000000137 = criarResp("Carlos Silva Souza", "00000000137");
+                Aluno aRA01136 = criarAluno("Larissa Souza Carvalho", "RA01136", r00000000137, esc);
+                Responsavel r00000000138 = criarResp("Guilherme Vieira Barbosa", "00000000138");
+                Aluno aRA01137 = criarAluno("Olivia Gomes Silva", "RA01137", r00000000138, esc);
+                Responsavel r00000000139 = criarResp("Mariana Cruz Barbosa", "00000000139");
+                Aluno aRA01138 = criarAluno("Tiago Lopes Silva", "RA01138", r00000000139, esc);
+                Responsavel r00000000140 = criarResp("Vitoria Lopes Silva", "00000000140");
+                Aluno aRA01139 = criarAluno("Yuri Cruz Oliveira", "RA01139", r00000000140, esc);
 
-        if (usuarioRepository.findByEmail(email).isPresent()) return;
+                Turma turma9A = criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01120, aRA01121, aRA01122, aRA01123, aRA01124, aRA01125, aRA01126, aRA01127,
+                                                aRA01128,
+                                                aRA01129, aRA01130, aRA01131, aRA01132, aRA01133, aRA01134, aRA01135,
+                                                aRA01136, aRA01137,
+                                                aRA01138, aRA01139));
 
-        Funcionario f = new Funcionario();
-        f.setNome(nome);
-        f.setEmail(email);
-        f.setSenha(passwordEncoder.encode(senha));
-        f.setRole(role);
-        f.setCargo(cargo);
-        f.setEscola(escola);
-        f.setAtivo(true);
-        f.setDataCriacao(LocalDateTime.now());
+                // --- 9º Ano B - Tarde ---
+                Responsavel r00000000141 = criarResp("Bruno Mendes Pereira", "00000000141");
+                Aluno aRA01140 = criarAluno("Diogo Vieira Carvalho", "RA01140", r00000000141, esc);
+                Responsavel r00000000142 = criarResp("Ana Silva Carvalho", "00000000142");
+                Aluno aRA01141 = criarAluno("Thiago Carvalho Gomes", "RA01141", r00000000142, esc);
+                Responsavel r00000000143 = criarResp("Diogo Ferreira Cruz", "00000000143");
+                Aluno aRA01142 = criarAluno("Tiago Lima Lopes", "RA01142", r00000000143, esc);
+                Responsavel r00000000144 = criarResp("Rafael Carvalho Rodrigues", "00000000144");
+                Aluno aRA01143 = criarAluno("Margarida Gomes Cruz", "RA01143", r00000000144, esc);
+                Responsavel r00000000145 = criarResp("Guilherme Santos Souza", "00000000145");
+                Aluno aRA01144 = criarAluno("Rafael Barbosa Fernandes", "RA01144", r00000000145, esc);
+                Responsavel r00000000146 = criarResp("Vitoria Santos Pereira", "00000000146");
+                Aluno aRA01145 = criarAluno("Thiago Soares Ferreira", "RA01145", r00000000146, esc);
+                Responsavel r00000000147 = criarResp("Sophia Souza Mendes", "00000000147");
+                Aluno aRA01146 = criarAluno("Rafael Costa Soares", "RA01146", r00000000147, esc);
+                Responsavel r00000000148 = criarResp("Lucas Lopes Costa", "00000000148");
+                Aluno aRA01147 = criarAluno("Rafael Gomes Ferreira", "RA01147", r00000000148, esc);
+                Responsavel r00000000149 = criarResp("Yuri Oliveira Pereira", "00000000149");
+                Aluno aRA01148 = criarAluno("Sophia Carvalho Rodrigues", "RA01148", r00000000149, esc);
+                Responsavel r00000000150 = criarResp("Diogo Cruz Barbosa", "00000000150");
+                Aluno aRA01149 = criarAluno("Daniela Souza Gomes", "RA01149", r00000000150, esc);
+                Responsavel r00000000151 = criarResp("Nicolas Souza Gomes", "00000000151");
+                Aluno aRA01150 = criarAluno("Guilherme Santos Rodrigues", "RA01150", r00000000151, esc);
+                Responsavel r00000000152 = criarResp("Mariana Cruz Almeida", "00000000152");
+                Aluno aRA01151 = criarAluno("Olivia Cruz Ferreira", "RA01151", r00000000152, esc);
+                Responsavel r00000000153 = criarResp("Beatriz Silva Ribeiro", "00000000153");
+                Aluno aRA01152 = criarAluno("Daniela Fernandes Souza", "RA01152", r00000000153, esc);
+                Responsavel r00000000154 = criarResp("Vitoria Mendes Silva", "00000000154");
+                Aluno aRA01153 = criarAluno("Beatriz Costa Pereira", "RA01153", r00000000154, esc);
+                Responsavel r00000000155 = criarResp("Yuri Rodrigues Almeida", "00000000155");
+                Aluno aRA01154 = criarAluno("Vitoria Silva Carvalho", "RA01154", r00000000155, esc);
+                Responsavel r00000000156 = criarResp("Mariana Silva Almeida", "00000000156");
+                Aluno aRA01155 = criarAluno("Tiago Alves Soares", "RA01155", r00000000156, esc);
+                Responsavel r00000000157 = criarResp("Sophia Ferreira Ribeiro", "00000000157");
+                Aluno aRA01156 = criarAluno("Gabriel Rodrigues Gomes", "RA01156", r00000000157, esc);
+                Responsavel r00000000158 = criarResp("Pedro Cruz Barbosa", "00000000158");
+                Aluno aRA01157 = criarAluno("Tiago Lima Silva", "RA01157", r00000000158, esc);
+                Responsavel r00000000159 = criarResp("Beatriz Almeida Oliveira", "00000000159");
+                Aluno aRA01158 = criarAluno("Igor Gomes Soares", "RA01158", r00000000159, esc);
+                Responsavel r00000000160 = criarResp("Daniela Gomes Oliveira", "00000000160");
+                Aluno aRA01159 = criarAluno("Vitoria Lima Oliveira", "RA01159", r00000000160, esc);
 
-        funcionarioRepository.save(f);
-    }
+                Turma turma9B = criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01140, aRA01141, aRA01142, aRA01143, aRA01144, aRA01145, aRA01146, aRA01147,
+                                                aRA01148,
+                                                aRA01149, aRA01150, aRA01151, aRA01152, aRA01153, aRA01154, aRA01155,
+                                                aRA01156, aRA01157,
+                                                aRA01158, aRA01159));
+
+        }
+
+        private void popularEscola2() {
+                Escola esc = escolaRepository.findById(2L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Daniela Ferreira Souza", "diretor@aprender.com.br", Role.DIRETOR, Funcionario.Cargo.DIRETOR,
+                                esc);
+                criarFunc("Lucas Silva Souza", "secretaria@aprender.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA,
+                                esc);
+                criarFunc("Yuri Barbosa Fernandes", "coordenador@aprender.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Bruno Pereira Silva", "professor@aprender.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR, esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000000161 = criarResp("Maria Ferreira Soares", "00000000161");
+                Aluno aRA01160 = criarAluno("Inês Lopes Lima", "RA01160", r00000000161, esc);
+                Responsavel r00000000162 = criarResp("Guilherme Pereira Ferreira", "00000000162");
+                Aluno aRA01161 = criarAluno("Larissa Silva Cruz", "RA01161", r00000000162, esc);
+                Responsavel r00000000163 = criarResp("João Carvalho Pereira", "00000000163");
+                Aluno aRA01162 = criarAluno("Ana Ribeiro Oliveira", "RA01162", r00000000163, esc);
+                Responsavel r00000000164 = criarResp("Sophia Oliveira Ribeiro", "00000000164");
+                Aluno aRA01163 = criarAluno("Larissa Barbosa Lopes", "RA01163", r00000000164, esc);
+                Responsavel r00000000165 = criarResp("Thiago Ribeiro Carvalho", "00000000165");
+                Aluno aRA01164 = criarAluno("Pedro Pereira Souza", "RA01164", r00000000165, esc);
+                Responsavel r00000000166 = criarResp("Tiago Gomes Lima", "00000000166");
+                Aluno aRA01165 = criarAluno("Tiago Lopes Alves", "RA01165", r00000000166, esc);
+                Responsavel r00000000167 = criarResp("João Soares Costa", "00000000167");
+                Aluno aRA01166 = criarAluno("Guilherme Souza Costa", "RA01166", r00000000167, esc);
+                Responsavel r00000000168 = criarResp("Matheus Alves Barbosa", "00000000168");
+                Aluno aRA01167 = criarAluno("Nicolas Barbosa Silva", "RA01167", r00000000168, esc);
+                Responsavel r00000000169 = criarResp("Mariana Costa Rodrigues", "00000000169");
+                Aluno aRA01168 = criarAluno("Guilherme Lima Ferreira", "RA01168", r00000000169, esc);
+                Responsavel r00000000170 = criarResp("Camila Lopes Soares", "00000000170");
+                Aluno aRA01169 = criarAluno("Fernanda Barbosa Costa", "RA01169", r00000000170, esc);
+                Responsavel r00000000171 = criarResp("Helena Oliveira Martins", "00000000171");
+                Aluno aRA01170 = criarAluno("Diogo Ribeiro Carvalho", "RA01170", r00000000171, esc);
+                Responsavel r00000000172 = criarResp("Camila Santos Pereira", "00000000172");
+                Aluno aRA01171 = criarAluno("Daniela Cruz Souza", "RA01171", r00000000172, esc);
+                Responsavel r00000000173 = criarResp("Fernanda Barbosa Souza", "00000000173");
+                Aluno aRA01172 = criarAluno("Beatriz Souza Gomes", "RA01172", r00000000173, esc);
+                Responsavel r00000000174 = criarResp("Fernanda Barbosa Costa", "00000000174");
+                Aluno aRA01173 = criarAluno("Vitoria Souza Carvalho", "RA01173", r00000000174, esc);
+                Responsavel r00000000175 = criarResp("Gabriel Rodrigues Lima", "00000000175");
+                Aluno aRA01174 = criarAluno("Julia Pereira Cruz", "RA01174", r00000000175, esc);
+                Responsavel r00000000176 = criarResp("Matheus Gomes Carvalho", "00000000176");
+                Aluno aRA01175 = criarAluno("Daniela Oliveira Lopes", "RA01175", r00000000176, esc);
+                Responsavel r00000000177 = criarResp("Sophia Carvalho Ferreira", "00000000177");
+                Aluno aRA01176 = criarAluno("Mariana Oliveira Cruz", "RA01176", r00000000177, esc);
+                Responsavel r00000000178 = criarResp("Ana Oliveira Carvalho", "00000000178");
+                Aluno aRA01177 = criarAluno("Larissa Lima Lopes", "RA01177", r00000000178, esc);
+                Responsavel r00000000179 = criarResp("Fernanda Santos Barbosa", "00000000179");
+                Aluno aRA01178 = criarAluno("Guilherme Alves Almeida", "RA01178", r00000000179, esc);
+                Responsavel r00000000180 = criarResp("Julia Silva Rodrigues", "00000000180");
+                Aluno aRA01179 = criarAluno("Guilherme Pereira Gomes", "RA01179", r00000000180, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01160, aRA01161, aRA01162, aRA01163, aRA01164, aRA01165, aRA01166, aRA01167,
+                                                aRA01168,
+                                                aRA01169, aRA01170, aRA01171, aRA01172, aRA01173, aRA01174, aRA01175,
+                                                aRA01176, aRA01177,
+                                                aRA01178, aRA01179));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000000181 = criarResp("Eduardo Soares Alves", "00000000181");
+                Aluno aRA01180 = criarAluno("Gabriel Santos Almeida", "RA01180", r00000000181, esc);
+                Responsavel r00000000182 = criarResp("Igor Silva Fernandes", "00000000182");
+                Aluno aRA01181 = criarAluno("Lucas Rodrigues Soares", "RA01181", r00000000182, esc);
+                Responsavel r00000000183 = criarResp("Helena Almeida Lopes", "00000000183");
+                Aluno aRA01182 = criarAluno("Fernanda Oliveira Silva", "RA01182", r00000000183, esc);
+                Responsavel r00000000184 = criarResp("Eduardo Lopes Alves", "00000000184");
+                Aluno aRA01183 = criarAluno("Beatriz Martins Lima", "RA01183", r00000000184, esc);
+                Responsavel r00000000185 = criarResp("Bruno Carvalho Fernandes", "00000000185");
+                Aluno aRA01184 = criarAluno("Guilherme Pereira Alves", "RA01184", r00000000185, esc);
+                Responsavel r00000000186 = criarResp("Helena Mendes Fernandes", "00000000186");
+                Aluno aRA01185 = criarAluno("Guilherme Alves Ribeiro", "RA01185", r00000000186, esc);
+                Responsavel r00000000187 = criarResp("Inês Fernandes Almeida", "00000000187");
+                Aluno aRA01186 = criarAluno("Beatriz Pereira Costa", "RA01186", r00000000187, esc);
+                Responsavel r00000000188 = criarResp("Bruno Gomes Cruz", "00000000188");
+                Aluno aRA01187 = criarAluno("Fernanda Vieira Santos", "RA01187", r00000000188, esc);
+                Responsavel r00000000189 = criarResp("Margarida Silva Ferreira", "00000000189");
+                Aluno aRA01188 = criarAluno("Rafael Ferreira Alves", "RA01188", r00000000189, esc);
+                Responsavel r00000000190 = criarResp("João Barbosa Fernandes", "00000000190");
+                Aluno aRA01189 = criarAluno("Julia Carvalho Martins", "RA01189", r00000000190, esc);
+                Responsavel r00000000191 = criarResp("Camila Silva Carvalho", "00000000191");
+                Aluno aRA01190 = criarAluno("Thiago Pereira Soares", "RA01190", r00000000191, esc);
+                Responsavel r00000000192 = criarResp("Fernanda Fernandes Martins", "00000000192");
+                Aluno aRA01191 = criarAluno("Igor Almeida Alves", "RA01191", r00000000192, esc);
+                Responsavel r00000000193 = criarResp("Fernanda Barbosa Pereira", "00000000193");
+                Aluno aRA01192 = criarAluno("Larissa Vieira Fernandes", "RA01192", r00000000193, esc);
+                Responsavel r00000000194 = criarResp("Maria Martins Pereira", "00000000194");
+                Aluno aRA01193 = criarAluno("Ana Souza Rodrigues", "RA01193", r00000000194, esc);
+                Responsavel r00000000195 = criarResp("Pedro Alves Rodrigues", "00000000195");
+                Aluno aRA01194 = criarAluno("Margarida Souza Fernandes", "RA01194", r00000000195, esc);
+                Responsavel r00000000196 = criarResp("Julia Lima Souza", "00000000196");
+                Aluno aRA01195 = criarAluno("Yuri Vieira Alves", "RA01195", r00000000196, esc);
+                Responsavel r00000000197 = criarResp("Julia Fernandes Oliveira", "00000000197");
+                Aluno aRA01196 = criarAluno("Guilherme Almeida Cruz", "RA01196", r00000000197, esc);
+                Responsavel r00000000198 = criarResp("Daniela Costa Alves", "00000000198");
+                Aluno aRA01197 = criarAluno("Margarida Almeida Rodrigues", "RA01197", r00000000198, esc);
+                Responsavel r00000000199 = criarResp("Rafael Mendes Carvalho", "00000000199");
+                Aluno aRA01198 = criarAluno("Thiago Santos Vieira", "RA01198", r00000000199, esc);
+                Responsavel r00000000200 = criarResp("Nicolas Soares Rodrigues", "00000000200");
+                Aluno aRA01199 = criarAluno("Vitoria Almeida Martins", "RA01199", r00000000200, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01180, aRA01181, aRA01182, aRA01183, aRA01184, aRA01185, aRA01186, aRA01187,
+                                                aRA01188,
+                                                aRA01189, aRA01190, aRA01191, aRA01192, aRA01193, aRA01194, aRA01195,
+                                                aRA01196, aRA01197,
+                                                aRA01198, aRA01199));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000000201 = criarResp("Gabriel Rodrigues Silva", "00000000201");
+                Aluno aRA01200 = criarAluno("Julia Pereira Silva", "RA01200", r00000000201, esc);
+                Responsavel r00000000202 = criarResp("Vitoria Gomes Barbosa", "00000000202");
+                Aluno aRA01201 = criarAluno("Rafael Lopes Ribeiro", "RA01201", r00000000202, esc);
+                Responsavel r00000000203 = criarResp("Nicolas Barbosa Gomes", "00000000203");
+                Aluno aRA01202 = criarAluno("Beatriz Costa Souza", "RA01202", r00000000203, esc);
+                Responsavel r00000000204 = criarResp("Mariana Rodrigues Ribeiro", "00000000204");
+                Aluno aRA01203 = criarAluno("Nicolas Fernandes Martins", "RA01203", r00000000204, esc);
+                Responsavel r00000000205 = criarResp("Beatriz Barbosa Almeida", "00000000205");
+                Aluno aRA01204 = criarAluno("Camila Lopes Souza", "RA01204", r00000000205, esc);
+                Responsavel r00000000206 = criarResp("Eduardo Almeida Soares", "00000000206");
+                Aluno aRA01205 = criarAluno("Fernanda Martins Almeida", "RA01205", r00000000206, esc);
+                Responsavel r00000000207 = criarResp("Tiago Costa Gomes", "00000000207");
+                Aluno aRA01206 = criarAluno("Matheus Cruz Pereira", "RA01206", r00000000207, esc);
+                Responsavel r00000000208 = criarResp("Ana Barbosa Rodrigues", "00000000208");
+                Aluno aRA01207 = criarAluno("Eduardo Souza Lima", "RA01207", r00000000208, esc);
+                Responsavel r00000000209 = criarResp("Bruno Soares Gomes", "00000000209");
+                Aluno aRA01208 = criarAluno("Eduardo Mendes Ribeiro", "RA01208", r00000000209, esc);
+                Responsavel r00000000210 = criarResp("Ana Cruz Oliveira", "00000000210");
+                Aluno aRA01209 = criarAluno("Bruno Santos Rodrigues", "RA01209", r00000000210, esc);
+                Responsavel r00000000211 = criarResp("Sophia Vieira Carvalho", "00000000211");
+                Aluno aRA01210 = criarAluno("Carlos Costa Pereira", "RA01210", r00000000211, esc);
+                Responsavel r00000000212 = criarResp("Camila Martins Oliveira", "00000000212");
+                Aluno aRA01211 = criarAluno("Inês Santos Oliveira", "RA01211", r00000000212, esc);
+                Responsavel r00000000213 = criarResp("Helena Carvalho Alves", "00000000213");
+                Aluno aRA01212 = criarAluno("Maria Mendes Pereira", "RA01212", r00000000213, esc);
+                Responsavel r00000000214 = criarResp("Camila Oliveira Alves", "00000000214");
+                Aluno aRA01213 = criarAluno("Inês Santos Almeida", "RA01213", r00000000214, esc);
+                Responsavel r00000000215 = criarResp("Bruno Souza Carvalho", "00000000215");
+                Aluno aRA01214 = criarAluno("Margarida Vieira Pereira", "RA01214", r00000000215, esc);
+                Responsavel r00000000216 = criarResp("Yuri Ferreira Souza", "00000000216");
+                Aluno aRA01215 = criarAluno("João Soares Ribeiro", "RA01215", r00000000216, esc);
+                Responsavel r00000000217 = criarResp("Maria Fernandes Mendes", "00000000217");
+                Aluno aRA01216 = criarAluno("Larissa Lima Pereira", "RA01216", r00000000217, esc);
+                Responsavel r00000000218 = criarResp("Ana Alves Rodrigues", "00000000218");
+                Aluno aRA01217 = criarAluno("Yuri Santos Rodrigues", "RA01217", r00000000218, esc);
+                Responsavel r00000000219 = criarResp("Vitoria Carvalho Lopes", "00000000219");
+                Aluno aRA01218 = criarAluno("Fernanda Vieira Oliveira", "RA01218", r00000000219, esc);
+                Responsavel r00000000220 = criarResp("Olivia Silva Almeida", "00000000220");
+                Aluno aRA01219 = criarAluno("Maria Costa Ribeiro", "RA01219", r00000000220, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01200, aRA01201, aRA01202, aRA01203, aRA01204, aRA01205, aRA01206, aRA01207,
+                                                aRA01208,
+                                                aRA01209, aRA01210, aRA01211, aRA01212, aRA01213, aRA01214, aRA01215,
+                                                aRA01216, aRA01217,
+                                                aRA01218, aRA01219));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000000221 = criarResp("Diogo Costa Santos", "00000000221");
+                Aluno aRA01220 = criarAluno("Carlos Silva Oliveira", "RA01220", r00000000221, esc);
+                Responsavel r00000000222 = criarResp("Diogo Mendes Carvalho", "00000000222");
+                Aluno aRA01221 = criarAluno("Maria Barbosa Almeida", "RA01221", r00000000222, esc);
+                Responsavel r00000000223 = criarResp("Mariana Vieira Lopes", "00000000223");
+                Aluno aRA01222 = criarAluno("Sophia Santos Soares", "RA01222", r00000000223, esc);
+                Responsavel r00000000224 = criarResp("Thiago Lopes Pereira", "00000000224");
+                Aluno aRA01223 = criarAluno("Bruno Martins Oliveira", "RA01223", r00000000224, esc);
+                Responsavel r00000000225 = criarResp("Rafael Alves Fernandes", "00000000225");
+                Aluno aRA01224 = criarAluno("Larissa Souza Silva", "RA01224", r00000000225, esc);
+                Responsavel r00000000226 = criarResp("Sophia Silva Costa", "00000000226");
+                Aluno aRA01225 = criarAluno("Ana Souza Barbosa", "RA01225", r00000000226, esc);
+                Responsavel r00000000227 = criarResp("Inês Santos Soares", "00000000227");
+                Aluno aRA01226 = criarAluno("Camila Silva Lopes", "RA01226", r00000000227, esc);
+                Responsavel r00000000228 = criarResp("Daniela Mendes Barbosa", "00000000228");
+                Aluno aRA01227 = criarAluno("Igor Souza Carvalho", "RA01227", r00000000228, esc);
+                Responsavel r00000000229 = criarResp("Gabriel Barbosa Fernandes", "00000000229");
+                Aluno aRA01228 = criarAluno("Vitoria Rodrigues Souza", "RA01228", r00000000229, esc);
+                Responsavel r00000000230 = criarResp("Mariana Rodrigues Silva", "00000000230");
+                Aluno aRA01229 = criarAluno("Vitoria Lima Vieira", "RA01229", r00000000230, esc);
+                Responsavel r00000000231 = criarResp("Margarida Alves Almeida", "00000000231");
+                Aluno aRA01230 = criarAluno("Bruno Pereira Costa", "RA01230", r00000000231, esc);
+                Responsavel r00000000232 = criarResp("Olivia Alves Silva", "00000000232");
+                Aluno aRA01231 = criarAluno("Lucas Silva Fernandes", "RA01231", r00000000232, esc);
+                Responsavel r00000000233 = criarResp("Mariana Rodrigues Souza", "00000000233");
+                Aluno aRA01232 = criarAluno("Mariana Ferreira Cruz", "RA01232", r00000000233, esc);
+                Responsavel r00000000234 = criarResp("Beatriz Santos Carvalho", "00000000234");
+                Aluno aRA01233 = criarAluno("Beatriz Lopes Alves", "RA01233", r00000000234, esc);
+                Responsavel r00000000235 = criarResp("Vitoria Mendes Ferreira", "00000000235");
+                Aluno aRA01234 = criarAluno("Tiago Soares Ferreira", "RA01234", r00000000235, esc);
+                Responsavel r00000000236 = criarResp("Diogo Pereira Costa", "00000000236");
+                Aluno aRA01235 = criarAluno("Daniela Lima Ribeiro", "RA01235", r00000000236, esc);
+                Responsavel r00000000237 = criarResp("Guilherme Alves Ferreira", "00000000237");
+                Aluno aRA01236 = criarAluno("Fernanda Soares Mendes", "RA01236", r00000000237, esc);
+                Responsavel r00000000238 = criarResp("Ana Fernandes Silva", "00000000238");
+                Aluno aRA01237 = criarAluno("Helena Costa Fernandes", "RA01237", r00000000238, esc);
+                Responsavel r00000000239 = criarResp("Pedro Carvalho Rodrigues", "00000000239");
+                Aluno aRA01238 = criarAluno("Matheus Pereira Fernandes", "RA01238", r00000000239, esc);
+                Responsavel r00000000240 = criarResp("Lucas Souza Rodrigues", "00000000240");
+                Aluno aRA01239 = criarAluno("Nicolas Gomes Barbosa", "RA01239", r00000000240, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01220, aRA01221, aRA01222, aRA01223, aRA01224, aRA01225, aRA01226, aRA01227,
+                                                aRA01228,
+                                                aRA01229, aRA01230, aRA01231, aRA01232, aRA01233, aRA01234, aRA01235,
+                                                aRA01236, aRA01237,
+                                                aRA01238, aRA01239));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000000241 = criarResp("Margarida Barbosa Vieira", "00000000241");
+                Aluno aRA01240 = criarAluno("Gabriel Lima Vieira", "RA01240", r00000000241, esc);
+                Responsavel r00000000242 = criarResp("Gabriel Cruz Rodrigues", "00000000242");
+                Aluno aRA01241 = criarAluno("Mariana Silva Oliveira", "RA01241", r00000000242, esc);
+                Responsavel r00000000243 = criarResp("Camila Carvalho Barbosa", "00000000243");
+                Aluno aRA01242 = criarAluno("Tiago Cruz Alves", "RA01242", r00000000243, esc);
+                Responsavel r00000000244 = criarResp("Pedro Fernandes Souza", "00000000244");
+                Aluno aRA01243 = criarAluno("Camila Pereira Gomes", "RA01243", r00000000244, esc);
+                Responsavel r00000000245 = criarResp("Mariana Vieira Alves", "00000000245");
+                Aluno aRA01244 = criarAluno("Maria Gomes Martins", "RA01244", r00000000245, esc);
+                Responsavel r00000000246 = criarResp("Daniela Rodrigues Gomes", "00000000246");
+                Aluno aRA01245 = criarAluno("Igor Santos Carvalho", "RA01245", r00000000246, esc);
+                Responsavel r00000000247 = criarResp("Ana Soares Cruz", "00000000247");
+                Aluno aRA01246 = criarAluno("Sophia Barbosa Oliveira", "RA01246", r00000000247, esc);
+                Responsavel r00000000248 = criarResp("Bruno Vieira Ribeiro", "00000000248");
+                Aluno aRA01247 = criarAluno("Camila Oliveira Silva", "RA01247", r00000000248, esc);
+                Responsavel r00000000249 = criarResp("Gabriel Rodrigues Soares", "00000000249");
+                Aluno aRA01248 = criarAluno("Gabriel Pereira Souza", "RA01248", r00000000249, esc);
+                Responsavel r00000000250 = criarResp("Nicolas Almeida Fernandes", "00000000250");
+                Aluno aRA01249 = criarAluno("Tiago Pereira Martins", "RA01249", r00000000250, esc);
+                Responsavel r00000000251 = criarResp("Igor Fernandes Martins", "00000000251");
+                Aluno aRA01250 = criarAluno("Gabriel Vieira Santos", "RA01250", r00000000251, esc);
+                Responsavel r00000000252 = criarResp("Igor Souza Silva", "00000000252");
+                Aluno aRA01251 = criarAluno("Lucas Ferreira Vieira", "RA01251", r00000000252, esc);
+                Responsavel r00000000253 = criarResp("Daniela Mendes Barbosa", "00000000253");
+                Aluno aRA01252 = criarAluno("Gabriel Rodrigues Santos", "RA01252", r00000000253, esc);
+                Responsavel r00000000254 = criarResp("Eduardo Lima Fernandes", "00000000254");
+                Aluno aRA01253 = criarAluno("Nicolas Martins Costa", "RA01253", r00000000254, esc);
+                Responsavel r00000000255 = criarResp("Carlos Martins Fernandes", "00000000255");
+                Aluno aRA01254 = criarAluno("Ana Ferreira Fernandes", "RA01254", r00000000255, esc);
+                Responsavel r00000000256 = criarResp("João Fernandes Almeida", "00000000256");
+                Aluno aRA01255 = criarAluno("Maria Ribeiro Santos", "RA01255", r00000000256, esc);
+                Responsavel r00000000257 = criarResp("Julia Cruz Mendes", "00000000257");
+                Aluno aRA01256 = criarAluno("Fernanda Silva Pereira", "RA01256", r00000000257, esc);
+                Responsavel r00000000258 = criarResp("Camila Barbosa Pereira", "00000000258");
+                Aluno aRA01257 = criarAluno("Beatriz Ferreira Lima", "RA01257", r00000000258, esc);
+                Responsavel r00000000259 = criarResp("João Martins Ribeiro", "00000000259");
+                Aluno aRA01258 = criarAluno("Ana Vieira Gomes", "RA01258", r00000000259, esc);
+                Responsavel r00000000260 = criarResp("Pedro Oliveira Souza", "00000000260");
+                Aluno aRA01259 = criarAluno("Tiago Silva Lopes", "RA01259", r00000000260, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01240, aRA01241, aRA01242, aRA01243, aRA01244, aRA01245, aRA01246, aRA01247,
+                                                aRA01248,
+                                                aRA01249, aRA01250, aRA01251, aRA01252, aRA01253, aRA01254, aRA01255,
+                                                aRA01256, aRA01257,
+                                                aRA01258, aRA01259));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000000261 = criarResp("Guilherme Cruz Almeida", "00000000261");
+                Aluno aRA01260 = criarAluno("Igor Santos Lima", "RA01260", r00000000261, esc);
+                Responsavel r00000000262 = criarResp("Beatriz Pereira Carvalho", "00000000262");
+                Aluno aRA01261 = criarAluno("Beatriz Rodrigues Martins", "RA01261", r00000000262, esc);
+                Responsavel r00000000263 = criarResp("João Martins Alves", "00000000263");
+                Aluno aRA01262 = criarAluno("Yuri Rodrigues Almeida", "RA01262", r00000000263, esc);
+                Responsavel r00000000264 = criarResp("Gabriel Santos Soares", "00000000264");
+                Aluno aRA01263 = criarAluno("Helena Barbosa Lima", "RA01263", r00000000264, esc);
+                Responsavel r00000000265 = criarResp("Helena Gomes Silva", "00000000265");
+                Aluno aRA01264 = criarAluno("Sophia Almeida Pereira", "RA01264", r00000000265, esc);
+                Responsavel r00000000266 = criarResp("Margarida Almeida Souza", "00000000266");
+                Aluno aRA01265 = criarAluno("Fernanda Rodrigues Martins", "RA01265", r00000000266, esc);
+                Responsavel r00000000267 = criarResp("Guilherme Gomes Costa", "00000000267");
+                Aluno aRA01266 = criarAluno("Igor Silva Soares", "RA01266", r00000000267, esc);
+                Responsavel r00000000268 = criarResp("Pedro Lopes Costa", "00000000268");
+                Aluno aRA01267 = criarAluno("Pedro Vieira Fernandes", "RA01267", r00000000268, esc);
+                Responsavel r00000000269 = criarResp("Bruno Barbosa Soares", "00000000269");
+                Aluno aRA01268 = criarAluno("Olivia Souza Mendes", "RA01268", r00000000269, esc);
+                Responsavel r00000000270 = criarResp("Nicolas Fernandes Vieira", "00000000270");
+                Aluno aRA01269 = criarAluno("Bruno Ferreira Gomes", "RA01269", r00000000270, esc);
+                Responsavel r00000000271 = criarResp("João Gomes Santos", "00000000271");
+                Aluno aRA01270 = criarAluno("Guilherme Santos Vieira", "RA01270", r00000000271, esc);
+                Responsavel r00000000272 = criarResp("Vitoria Mendes Lima", "00000000272");
+                Aluno aRA01271 = criarAluno("Igor Almeida Fernandes", "RA01271", r00000000272, esc);
+                Responsavel r00000000273 = criarResp("Guilherme Almeida Barbosa", "00000000273");
+                Aluno aRA01272 = criarAluno("Mariana Lopes Santos", "RA01272", r00000000273, esc);
+                Responsavel r00000000274 = criarResp("Nicolas Souza Oliveira", "00000000274");
+                Aluno aRA01273 = criarAluno("Sophia Costa Mendes", "RA01273", r00000000274, esc);
+                Responsavel r00000000275 = criarResp("Olivia Vieira Souza", "00000000275");
+                Aluno aRA01274 = criarAluno("Matheus Oliveira Souza", "RA01274", r00000000275, esc);
+                Responsavel r00000000276 = criarResp("Pedro Barbosa Carvalho", "00000000276");
+                Aluno aRA01275 = criarAluno("Diogo Ribeiro Mendes", "RA01275", r00000000276, esc);
+                Responsavel r00000000277 = criarResp("Eduardo Ferreira Soares", "00000000277");
+                Aluno aRA01276 = criarAluno("Igor Lima Costa", "RA01276", r00000000277, esc);
+                Responsavel r00000000278 = criarResp("Rafael Soares Martins", "00000000278");
+                Aluno aRA01277 = criarAluno("Julia Oliveira Lopes", "RA01277", r00000000278, esc);
+                Responsavel r00000000279 = criarResp("Gabriel Santos Cruz", "00000000279");
+                Aluno aRA01278 = criarAluno("Helena Rodrigues Gomes", "RA01278", r00000000279, esc);
+                Responsavel r00000000280 = criarResp("Yuri Barbosa Silva", "00000000280");
+                Aluno aRA01279 = criarAluno("Thiago Gomes Vieira", "RA01279", r00000000280, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01260, aRA01261, aRA01262, aRA01263, aRA01264, aRA01265, aRA01266, aRA01267,
+                                                aRA01268,
+                                                aRA01269, aRA01270, aRA01271, aRA01272, aRA01273, aRA01274, aRA01275,
+                                                aRA01276, aRA01277,
+                                                aRA01278, aRA01279));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000000281 = criarResp("Margarida Silva Souza", "00000000281");
+                Aluno aRA01280 = criarAluno("Camila Martins Oliveira", "RA01280", r00000000281, esc);
+                Responsavel r00000000282 = criarResp("Larissa Ferreira Rodrigues", "00000000282");
+                Aluno aRA01281 = criarAluno("Camila Martins Alves", "RA01281", r00000000282, esc);
+                Responsavel r00000000283 = criarResp("Sophia Lopes Souza", "00000000283");
+                Aluno aRA01282 = criarAluno("Bruno Gomes Martins", "RA01282", r00000000283, esc);
+                Responsavel r00000000284 = criarResp("Camila Santos Cruz", "00000000284");
+                Aluno aRA01283 = criarAluno("Larissa Santos Costa", "RA01283", r00000000284, esc);
+                Responsavel r00000000285 = criarResp("Bruno Pereira Silva", "00000000285");
+                Aluno aRA01284 = criarAluno("Inês Soares Gomes", "RA01284", r00000000285, esc);
+                Responsavel r00000000286 = criarResp("Yuri Ribeiro Rodrigues", "00000000286");
+                Aluno aRA01285 = criarAluno("Eduardo Soares Gomes", "RA01285", r00000000286, esc);
+                Responsavel r00000000287 = criarResp("Matheus Lima Rodrigues", "00000000287");
+                Aluno aRA01286 = criarAluno("Lucas Cruz Martins", "RA01286", r00000000287, esc);
+                Responsavel r00000000288 = criarResp("Maria Cruz Silva", "00000000288");
+                Aluno aRA01287 = criarAluno("Helena Vieira Almeida", "RA01287", r00000000288, esc);
+                Responsavel r00000000289 = criarResp("Nicolas Ribeiro Fernandes", "00000000289");
+                Aluno aRA01288 = criarAluno("Larissa Oliveira Costa", "RA01288", r00000000289, esc);
+                Responsavel r00000000290 = criarResp("Gabriel Costa Barbosa", "00000000290");
+                Aluno aRA01289 = criarAluno("Beatriz Souza Vieira", "RA01289", r00000000290, esc);
+                Responsavel r00000000291 = criarResp("Bruno Gomes Ferreira", "00000000291");
+                Aluno aRA01290 = criarAluno("João Lima Silva", "RA01290", r00000000291, esc);
+                Responsavel r00000000292 = criarResp("Carlos Vieira Gomes", "00000000292");
+                Aluno aRA01291 = criarAluno("Lucas Mendes Alves", "RA01291", r00000000292, esc);
+                Responsavel r00000000293 = criarResp("Olivia Silva Alves", "00000000293");
+                Aluno aRA01292 = criarAluno("Gabriel Lima Carvalho", "RA01292", r00000000293, esc);
+                Responsavel r00000000294 = criarResp("Tiago Carvalho Alves", "00000000294");
+                Aluno aRA01293 = criarAluno("Rafael Vieira Ribeiro", "RA01293", r00000000294, esc);
+                Responsavel r00000000295 = criarResp("Camila Almeida Santos", "00000000295");
+                Aluno aRA01294 = criarAluno("Bruno Santos Mendes", "RA01294", r00000000295, esc);
+                Responsavel r00000000296 = criarResp("Nicolas Fernandes Barbosa", "00000000296");
+                Aluno aRA01295 = criarAluno("Tiago Ferreira Almeida", "RA01295", r00000000296, esc);
+                Responsavel r00000000297 = criarResp("Margarida Lima Cruz", "00000000297");
+                Aluno aRA01296 = criarAluno("Camila Gomes Lima", "RA01296", r00000000297, esc);
+                Responsavel r00000000298 = criarResp("Matheus Gomes Fernandes", "00000000298");
+                Aluno aRA01297 = criarAluno("Ana Martins Barbosa", "RA01297", r00000000298, esc);
+                Responsavel r00000000299 = criarResp("Larissa Oliveira Mendes", "00000000299");
+                Aluno aRA01298 = criarAluno("Mariana Barbosa Oliveira", "RA01298", r00000000299, esc);
+                Responsavel r00000000300 = criarResp("Eduardo Costa Gomes", "00000000300");
+                Aluno aRA01299 = criarAluno("Ana Ferreira Cruz", "RA01299", r00000000300, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01280, aRA01281, aRA01282, aRA01283, aRA01284, aRA01285, aRA01286, aRA01287,
+                                                aRA01288,
+                                                aRA01289, aRA01290, aRA01291, aRA01292, aRA01293, aRA01294, aRA01295,
+                                                aRA01296, aRA01297,
+                                                aRA01298, aRA01299));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000000301 = criarResp("Olivia Lopes Vieira", "00000000301");
+                Aluno aRA01300 = criarAluno("Fernanda Lima Souza", "RA01300", r00000000301, esc);
+                Responsavel r00000000302 = criarResp("Diogo Cruz Lopes", "00000000302");
+                Aluno aRA01301 = criarAluno("Fernanda Oliveira Pereira", "RA01301", r00000000302, esc);
+                Responsavel r00000000303 = criarResp("Olivia Costa Almeida", "00000000303");
+                Aluno aRA01302 = criarAluno("Carlos Ferreira Alves", "RA01302", r00000000303, esc);
+                Responsavel r00000000304 = criarResp("Pedro Alves Souza", "00000000304");
+                Aluno aRA01303 = criarAluno("Nicolas Martins Lima", "RA01303", r00000000304, esc);
+                Responsavel r00000000305 = criarResp("Yuri Ferreira Oliveira", "00000000305");
+                Aluno aRA01304 = criarAluno("Camila Ferreira Ribeiro", "RA01304", r00000000305, esc);
+                Responsavel r00000000306 = criarResp("Tiago Oliveira Rodrigues", "00000000306");
+                Aluno aRA01305 = criarAluno("Vitoria Vieira Ferreira", "RA01305", r00000000306, esc);
+                Responsavel r00000000307 = criarResp("Bruno Vieira Ferreira", "00000000307");
+                Aluno aRA01306 = criarAluno("Ana Silva Cruz", "RA01306", r00000000307, esc);
+                Responsavel r00000000308 = criarResp("Mariana Martins Silva", "00000000308");
+                Aluno aRA01307 = criarAluno("Diogo Gomes Silva", "RA01307", r00000000308, esc);
+                Responsavel r00000000309 = criarResp("Matheus Vieira Costa", "00000000309");
+                Aluno aRA01308 = criarAluno("Camila Carvalho Oliveira", "RA01308", r00000000309, esc);
+                Responsavel r00000000310 = criarResp("Inês Mendes Martins", "00000000310");
+                Aluno aRA01309 = criarAluno("Olivia Barbosa Vieira", "RA01309", r00000000310, esc);
+                Responsavel r00000000311 = criarResp("Margarida Souza Costa", "00000000311");
+                Aluno aRA01310 = criarAluno("Gabriel Vieira Santos", "RA01310", r00000000311, esc);
+                Responsavel r00000000312 = criarResp("Carlos Carvalho Costa", "00000000312");
+                Aluno aRA01311 = criarAluno("Guilherme Fernandes Mendes", "RA01311", r00000000312, esc);
+                Responsavel r00000000313 = criarResp("Eduardo Silva Mendes", "00000000313");
+                Aluno aRA01312 = criarAluno("Maria Santos Ribeiro", "RA01312", r00000000313, esc);
+                Responsavel r00000000314 = criarResp("Camila Fernandes Souza", "00000000314");
+                Aluno aRA01313 = criarAluno("Lucas Oliveira Mendes", "RA01313", r00000000314, esc);
+                Responsavel r00000000315 = criarResp("Julia Martins Lopes", "00000000315");
+                Aluno aRA01314 = criarAluno("Sophia Lima Santos", "RA01314", r00000000315, esc);
+                Responsavel r00000000316 = criarResp("Rafael Ribeiro Souza", "00000000316");
+                Aluno aRA01315 = criarAluno("Maria Ferreira Martins", "RA01315", r00000000316, esc);
+                Responsavel r00000000317 = criarResp("Olivia Souza Almeida", "00000000317");
+                Aluno aRA01316 = criarAluno("Helena Almeida Alves", "RA01316", r00000000317, esc);
+                Responsavel r00000000318 = criarResp("Matheus Cruz Lopes", "00000000318");
+                Aluno aRA01317 = criarAluno("João Gomes Alves", "RA01317", r00000000318, esc);
+                Responsavel r00000000319 = criarResp("Maria Souza Gomes", "00000000319");
+                Aluno aRA01318 = criarAluno("Thiago Martins Alves", "RA01318", r00000000319, esc);
+                Responsavel r00000000320 = criarResp("Bruno Fernandes Lopes", "00000000320");
+                Aluno aRA01319 = criarAluno("Mariana Soares Lopes", "RA01319", r00000000320, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01300, aRA01301, aRA01302, aRA01303, aRA01304, aRA01305, aRA01306, aRA01307,
+                                                aRA01308,
+                                                aRA01309, aRA01310, aRA01311, aRA01312, aRA01313, aRA01314, aRA01315,
+                                                aRA01316, aRA01317,
+                                                aRA01318, aRA01319));
+
+        }
+
+        private void popularEscola3() {
+                Escola esc = escolaRepository.findById(3L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Eduardo Vieira Santos", "diretor@saber.com.br", Role.DIRETOR, Funcionario.Cargo.DIRETOR,
+                                esc);
+                criarFunc("Nicolas Fernandes Martins", "secretaria@saber.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA,
+                                esc);
+                criarFunc("Ana Lima Gomes", "coordenador@saber.com.br", Role.COORDENADOR, Funcionario.Cargo.COORDENADOR,
+                                esc);
+                criarFunc("Maria Fernandes Silva", "professor@saber.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR, esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000000321 = criarResp("Nicolas Silva Oliveira", "00000000321");
+                Aluno aRA01320 = criarAluno("Matheus Lima Gomes", "RA01320", r00000000321, esc);
+                Responsavel r00000000322 = criarResp("Lucas Alves Santos", "00000000322");
+                Aluno aRA01321 = criarAluno("Nicolas Soares Souza", "RA01321", r00000000322, esc);
+                Responsavel r00000000323 = criarResp("Guilherme Ribeiro Barbosa", "00000000323");
+                Aluno aRA01322 = criarAluno("Nicolas Lima Souza", "RA01322", r00000000323, esc);
+                Responsavel r00000000324 = criarResp("Nicolas Soares Lopes", "00000000324");
+                Aluno aRA01323 = criarAluno("Nicolas Barbosa Ferreira", "RA01323", r00000000324, esc);
+                Responsavel r00000000325 = criarResp("Matheus Gomes Silva", "00000000325");
+                Aluno aRA01324 = criarAluno("Tiago Santos Lopes", "RA01324", r00000000325, esc);
+                Responsavel r00000000326 = criarResp("Igor Barbosa Soares", "00000000326");
+                Aluno aRA01325 = criarAluno("Larissa Rodrigues Santos", "RA01325", r00000000326, esc);
+                Responsavel r00000000327 = criarResp("Fernanda Mendes Lima", "00000000327");
+                Aluno aRA01326 = criarAluno("Tiago Vieira Cruz", "RA01326", r00000000327, esc);
+                Responsavel r00000000328 = criarResp("Julia Martins Pereira", "00000000328");
+                Aluno aRA01327 = criarAluno("Maria Cruz Pereira", "RA01327", r00000000328, esc);
+                Responsavel r00000000329 = criarResp("Guilherme Martins Gomes", "00000000329");
+                Aluno aRA01328 = criarAluno("Camila Ferreira Vieira", "RA01328", r00000000329, esc);
+                Responsavel r00000000330 = criarResp("Larissa Silva Lima", "00000000330");
+                Aluno aRA01329 = criarAluno("Thiago Barbosa Rodrigues", "RA01329", r00000000330, esc);
+                Responsavel r00000000331 = criarResp("Igor Santos Costa", "00000000331");
+                Aluno aRA01330 = criarAluno("Camila Alves Soares", "RA01330", r00000000331, esc);
+                Responsavel r00000000332 = criarResp("Yuri Alves Soares", "00000000332");
+                Aluno aRA01331 = criarAluno("Bruno Martins Carvalho", "RA01331", r00000000332, esc);
+                Responsavel r00000000333 = criarResp("Bruno Silva Oliveira", "00000000333");
+                Aluno aRA01332 = criarAluno("Eduardo Mendes Silva", "RA01332", r00000000333, esc);
+                Responsavel r00000000334 = criarResp("Pedro Santos Rodrigues", "00000000334");
+                Aluno aRA01333 = criarAluno("Bruno Santos Costa", "RA01333", r00000000334, esc);
+                Responsavel r00000000335 = criarResp("Gabriel Vieira Almeida", "00000000335");
+                Aluno aRA01334 = criarAluno("Helena Pereira Mendes", "RA01334", r00000000335, esc);
+                Responsavel r00000000336 = criarResp("Daniela Silva Martins", "00000000336");
+                Aluno aRA01335 = criarAluno("João Pereira Souza", "RA01335", r00000000336, esc);
+                Responsavel r00000000337 = criarResp("Lucas Barbosa Silva", "00000000337");
+                Aluno aRA01336 = criarAluno("Bruno Santos Pereira", "RA01336", r00000000337, esc);
+                Responsavel r00000000338 = criarResp("Ana Gomes Oliveira", "00000000338");
+                Aluno aRA01337 = criarAluno("Camila Barbosa Martins", "RA01337", r00000000338, esc);
+                Responsavel r00000000339 = criarResp("Sophia Ferreira Carvalho", "00000000339");
+                Aluno aRA01338 = criarAluno("Vitoria Gomes Barbosa", "RA01338", r00000000339, esc);
+                Responsavel r00000000340 = criarResp("Beatriz Rodrigues Mendes", "00000000340");
+                Aluno aRA01339 = criarAluno("Olivia Oliveira Soares", "RA01339", r00000000340, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01320, aRA01321, aRA01322, aRA01323, aRA01324, aRA01325, aRA01326, aRA01327,
+                                                aRA01328,
+                                                aRA01329, aRA01330, aRA01331, aRA01332, aRA01333, aRA01334, aRA01335,
+                                                aRA01336, aRA01337,
+                                                aRA01338, aRA01339));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000000341 = criarResp("Fernanda Oliveira Ribeiro", "00000000341");
+                Aluno aRA01340 = criarAluno("Pedro Fernandes Costa", "RA01340", r00000000341, esc);
+                Responsavel r00000000342 = criarResp("Tiago Carvalho Lopes", "00000000342");
+                Aluno aRA01341 = criarAluno("Mariana Oliveira Costa", "RA01341", r00000000342, esc);
+                Responsavel r00000000343 = criarResp("Camila Fernandes Ribeiro", "00000000343");
+                Aluno aRA01342 = criarAluno("Inês Gomes Souza", "RA01342", r00000000343, esc);
+                Responsavel r00000000344 = criarResp("Bruno Pereira Martins", "00000000344");
+                Aluno aRA01343 = criarAluno("Ana Ribeiro Cruz", "RA01343", r00000000344, esc);
+                Responsavel r00000000345 = criarResp("Rafael Vieira Gomes", "00000000345");
+                Aluno aRA01344 = criarAluno("Gabriel Barbosa Pereira", "RA01344", r00000000345, esc);
+                Responsavel r00000000346 = criarResp("Beatriz Soares Ribeiro", "00000000346");
+                Aluno aRA01345 = criarAluno("Gabriel Mendes Ferreira", "RA01345", r00000000346, esc);
+                Responsavel r00000000347 = criarResp("Lucas Ribeiro Costa", "00000000347");
+                Aluno aRA01346 = criarAluno("Carlos Fernandes Lopes", "RA01346", r00000000347, esc);
+                Responsavel r00000000348 = criarResp("Ana Vieira Pereira", "00000000348");
+                Aluno aRA01347 = criarAluno("Olivia Costa Santos", "RA01347", r00000000348, esc);
+                Responsavel r00000000349 = criarResp("Helena Almeida Martins", "00000000349");
+                Aluno aRA01348 = criarAluno("Bruno Ferreira Vieira", "RA01348", r00000000349, esc);
+                Responsavel r00000000350 = criarResp("Lucas Cruz Santos", "00000000350");
+                Aluno aRA01349 = criarAluno("Larissa Pereira Santos", "RA01349", r00000000350, esc);
+                Responsavel r00000000351 = criarResp("Eduardo Lopes Souza", "00000000351");
+                Aluno aRA01350 = criarAluno("Rafael Lopes Soares", "RA01350", r00000000351, esc);
+                Responsavel r00000000352 = criarResp("Bruno Carvalho Santos", "00000000352");
+                Aluno aRA01351 = criarAluno("Maria Costa Lopes", "RA01351", r00000000352, esc);
+                Responsavel r00000000353 = criarResp("Matheus Souza Lima", "00000000353");
+                Aluno aRA01352 = criarAluno("Vitoria Soares Ribeiro", "RA01352", r00000000353, esc);
+                Responsavel r00000000354 = criarResp("Larissa Gomes Barbosa", "00000000354");
+                Aluno aRA01353 = criarAluno("Ana Fernandes Lima", "RA01353", r00000000354, esc);
+                Responsavel r00000000355 = criarResp("Matheus Vieira Gomes", "00000000355");
+                Aluno aRA01354 = criarAluno("Julia Barbosa Gomes", "RA01354", r00000000355, esc);
+                Responsavel r00000000356 = criarResp("Mariana Mendes Silva", "00000000356");
+                Aluno aRA01355 = criarAluno("João Lopes Fernandes", "RA01355", r00000000356, esc);
+                Responsavel r00000000357 = criarResp("Olivia Mendes Carvalho", "00000000357");
+                Aluno aRA01356 = criarAluno("Rafael Alves Silva", "RA01356", r00000000357, esc);
+                Responsavel r00000000358 = criarResp("Diogo Lima Alves", "00000000358");
+                Aluno aRA01357 = criarAluno("Helena Pereira Vieira", "RA01357", r00000000358, esc);
+                Responsavel r00000000359 = criarResp("João Mendes Lopes", "00000000359");
+                Aluno aRA01358 = criarAluno("Tiago Santos Gomes", "RA01358", r00000000359, esc);
+                Responsavel r00000000360 = criarResp("Nicolas Oliveira Ferreira", "00000000360");
+                Aluno aRA01359 = criarAluno("Daniela Martins Santos", "RA01359", r00000000360, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01340, aRA01341, aRA01342, aRA01343, aRA01344, aRA01345, aRA01346, aRA01347,
+                                                aRA01348,
+                                                aRA01349, aRA01350, aRA01351, aRA01352, aRA01353, aRA01354, aRA01355,
+                                                aRA01356, aRA01357,
+                                                aRA01358, aRA01359));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000000361 = criarResp("Margarida Fernandes Almeida", "00000000361");
+                Aluno aRA01360 = criarAluno("Yuri Barbosa Lopes", "RA01360", r00000000361, esc);
+                Responsavel r00000000362 = criarResp("Olivia Mendes Vieira", "00000000362");
+                Aluno aRA01361 = criarAluno("Nicolas Santos Ribeiro", "RA01361", r00000000362, esc);
+                Responsavel r00000000363 = criarResp("Rafael Soares Lopes", "00000000363");
+                Aluno aRA01362 = criarAluno("Nicolas Alves Almeida", "RA01362", r00000000363, esc);
+                Responsavel r00000000364 = criarResp("Olivia Carvalho Lima", "00000000364");
+                Aluno aRA01363 = criarAluno("Guilherme Vieira Costa", "RA01363", r00000000364, esc);
+                Responsavel r00000000365 = criarResp("Ana Vieira Ferreira", "00000000365");
+                Aluno aRA01364 = criarAluno("Helena Fernandes Gomes", "RA01364", r00000000365, esc);
+                Responsavel r00000000366 = criarResp("Pedro Lopes Lima", "00000000366");
+                Aluno aRA01365 = criarAluno("Yuri Carvalho Ferreira", "RA01365", r00000000366, esc);
+                Responsavel r00000000367 = criarResp("Sophia Ferreira Alves", "00000000367");
+                Aluno aRA01366 = criarAluno("Daniela Silva Alves", "RA01366", r00000000367, esc);
+                Responsavel r00000000368 = criarResp("Diogo Ferreira Carvalho", "00000000368");
+                Aluno aRA01367 = criarAluno("Pedro Almeida Barbosa", "RA01367", r00000000368, esc);
+                Responsavel r00000000369 = criarResp("Nicolas Santos Soares", "00000000369");
+                Aluno aRA01368 = criarAluno("Mariana Oliveira Carvalho", "RA01368", r00000000369, esc);
+                Responsavel r00000000370 = criarResp("Eduardo Martins Mendes", "00000000370");
+                Aluno aRA01369 = criarAluno("Olivia Souza Soares", "RA01369", r00000000370, esc);
+                Responsavel r00000000371 = criarResp("Lucas Martins Lopes", "00000000371");
+                Aluno aRA01370 = criarAluno("Eduardo Carvalho Soares", "RA01370", r00000000371, esc);
+                Responsavel r00000000372 = criarResp("Mariana Cruz Oliveira", "00000000372");
+                Aluno aRA01371 = criarAluno("Eduardo Mendes Santos", "RA01371", r00000000372, esc);
+                Responsavel r00000000373 = criarResp("Margarida Costa Alves", "00000000373");
+                Aluno aRA01372 = criarAluno("Helena Carvalho Ferreira", "RA01372", r00000000373, esc);
+                Responsavel r00000000374 = criarResp("Nicolas Lopes Martins", "00000000374");
+                Aluno aRA01373 = criarAluno("Larissa Carvalho Rodrigues", "RA01373", r00000000374, esc);
+                Responsavel r00000000375 = criarResp("Bruno Almeida Costa", "00000000375");
+                Aluno aRA01374 = criarAluno("Larissa Ferreira Barbosa", "RA01374", r00000000375, esc);
+                Responsavel r00000000376 = criarResp("Diogo Ribeiro Barbosa", "00000000376");
+                Aluno aRA01375 = criarAluno("Matheus Mendes Costa", "RA01375", r00000000376, esc);
+                Responsavel r00000000377 = criarResp("Guilherme Santos Ferreira", "00000000377");
+                Aluno aRA01376 = criarAluno("Julia Martins Souza", "RA01376", r00000000377, esc);
+                Responsavel r00000000378 = criarResp("Margarida Santos Ferreira", "00000000378");
+                Aluno aRA01377 = criarAluno("Vitoria Martins Rodrigues", "RA01377", r00000000378, esc);
+                Responsavel r00000000379 = criarResp("Fernanda Soares Gomes", "00000000379");
+                Aluno aRA01378 = criarAluno("Tiago Silva Gomes", "RA01378", r00000000379, esc);
+                Responsavel r00000000380 = criarResp("Larissa Gomes Costa", "00000000380");
+                Aluno aRA01379 = criarAluno("Mariana Oliveira Gomes", "RA01379", r00000000380, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01360, aRA01361, aRA01362, aRA01363, aRA01364, aRA01365, aRA01366, aRA01367,
+                                                aRA01368,
+                                                aRA01369, aRA01370, aRA01371, aRA01372, aRA01373, aRA01374, aRA01375,
+                                                aRA01376, aRA01377,
+                                                aRA01378, aRA01379));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000000381 = criarResp("Mariana Lima Alves", "00000000381");
+                Aluno aRA01380 = criarAluno("Olivia Cruz Oliveira", "RA01380", r00000000381, esc);
+                Responsavel r00000000382 = criarResp("João Gomes Fernandes", "00000000382");
+                Aluno aRA01381 = criarAluno("Vitoria Ferreira Vieira", "RA01381", r00000000382, esc);
+                Responsavel r00000000383 = criarResp("Matheus Almeida Carvalho", "00000000383");
+                Aluno aRA01382 = criarAluno("João Soares Barbosa", "RA01382", r00000000383, esc);
+                Responsavel r00000000384 = criarResp("Pedro Oliveira Cruz", "00000000384");
+                Aluno aRA01383 = criarAluno("Guilherme Gomes Barbosa", "RA01383", r00000000384, esc);
+                Responsavel r00000000385 = criarResp("Rafael Costa Gomes", "00000000385");
+                Aluno aRA01384 = criarAluno("Inês Costa Gomes", "RA01384", r00000000385, esc);
+                Responsavel r00000000386 = criarResp("Sophia Mendes Barbosa", "00000000386");
+                Aluno aRA01385 = criarAluno("Helena Rodrigues Costa", "RA01385", r00000000386, esc);
+                Responsavel r00000000387 = criarResp("Bruno Soares Rodrigues", "00000000387");
+                Aluno aRA01386 = criarAluno("Rafael Mendes Almeida", "RA01386", r00000000387, esc);
+                Responsavel r00000000388 = criarResp("Nicolas Pereira Soares", "00000000388");
+                Aluno aRA01387 = criarAluno("Matheus Costa Alves", "RA01387", r00000000388, esc);
+                Responsavel r00000000389 = criarResp("Lucas Almeida Fernandes", "00000000389");
+                Aluno aRA01388 = criarAluno("Tiago Fernandes Ferreira", "RA01388", r00000000389, esc);
+                Responsavel r00000000390 = criarResp("Julia Martins Soares", "00000000390");
+                Aluno aRA01389 = criarAluno("João Oliveira Carvalho", "RA01389", r00000000390, esc);
+                Responsavel r00000000391 = criarResp("João Cruz Pereira", "00000000391");
+                Aluno aRA01390 = criarAluno("Igor Gomes Lima", "RA01390", r00000000391, esc);
+                Responsavel r00000000392 = criarResp("Beatriz Vieira Gomes", "00000000392");
+                Aluno aRA01391 = criarAluno("Eduardo Rodrigues Ribeiro", "RA01391", r00000000392, esc);
+                Responsavel r00000000393 = criarResp("Larissa Barbosa Soares", "00000000393");
+                Aluno aRA01392 = criarAluno("Guilherme Almeida Gomes", "RA01392", r00000000393, esc);
+                Responsavel r00000000394 = criarResp("Pedro Soares Barbosa", "00000000394");
+                Aluno aRA01393 = criarAluno("Ana Silva Cruz", "RA01393", r00000000394, esc);
+                Responsavel r00000000395 = criarResp("Bruno Silva Vieira", "00000000395");
+                Aluno aRA01394 = criarAluno("Guilherme Santos Mendes", "RA01394", r00000000395, esc);
+                Responsavel r00000000396 = criarResp("Rafael Costa Gomes", "00000000396");
+                Aluno aRA01395 = criarAluno("Maria Silva Cruz", "RA01395", r00000000396, esc);
+                Responsavel r00000000397 = criarResp("Diogo Barbosa Oliveira", "00000000397");
+                Aluno aRA01396 = criarAluno("Mariana Lima Lopes", "RA01396", r00000000397, esc);
+                Responsavel r00000000398 = criarResp("Margarida Souza Pereira", "00000000398");
+                Aluno aRA01397 = criarAluno("Yuri Almeida Pereira", "RA01397", r00000000398, esc);
+                Responsavel r00000000399 = criarResp("Gabriel Oliveira Vieira", "00000000399");
+                Aluno aRA01398 = criarAluno("Fernanda Rodrigues Vieira", "RA01398", r00000000399, esc);
+                Responsavel r00000000400 = criarResp("Mariana Barbosa Cruz", "00000000400");
+                Aluno aRA01399 = criarAluno("Thiago Santos Rodrigues", "RA01399", r00000000400, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01380, aRA01381, aRA01382, aRA01383, aRA01384, aRA01385, aRA01386, aRA01387,
+                                                aRA01388,
+                                                aRA01389, aRA01390, aRA01391, aRA01392, aRA01393, aRA01394, aRA01395,
+                                                aRA01396, aRA01397,
+                                                aRA01398, aRA01399));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000000401 = criarResp("Tiago Cruz Santos", "00000000401");
+                Aluno aRA01400 = criarAluno("Eduardo Costa Ribeiro", "RA01400", r00000000401, esc);
+                Responsavel r00000000402 = criarResp("Beatriz Santos Vieira", "00000000402");
+                Aluno aRA01401 = criarAluno("Thiago Ferreira Cruz", "RA01401", r00000000402, esc);
+                Responsavel r00000000403 = criarResp("Diogo Rodrigues Lopes", "00000000403");
+                Aluno aRA01402 = criarAluno("Pedro Martins Silva", "RA01402", r00000000403, esc);
+                Responsavel r00000000404 = criarResp("Gabriel Santos Silva", "00000000404");
+                Aluno aRA01403 = criarAluno("Bruno Santos Fernandes", "RA01403", r00000000404, esc);
+                Responsavel r00000000405 = criarResp("Nicolas Pereira Costa", "00000000405");
+                Aluno aRA01404 = criarAluno("Mariana Silva Barbosa", "RA01404", r00000000405, esc);
+                Responsavel r00000000406 = criarResp("Maria Mendes Ribeiro", "00000000406");
+                Aluno aRA01405 = criarAluno("Camila Costa Rodrigues", "RA01405", r00000000406, esc);
+                Responsavel r00000000407 = criarResp("Olivia Souza Santos", "00000000407");
+                Aluno aRA01406 = criarAluno("Mariana Barbosa Alves", "RA01406", r00000000407, esc);
+                Responsavel r00000000408 = criarResp("Igor Martins Lima", "00000000408");
+                Aluno aRA01407 = criarAluno("Igor Soares Ribeiro", "RA01407", r00000000408, esc);
+                Responsavel r00000000409 = criarResp("Guilherme Lima Almeida", "00000000409");
+                Aluno aRA01408 = criarAluno("Inês Vieira Martins", "RA01408", r00000000409, esc);
+                Responsavel r00000000410 = criarResp("Yuri Mendes Pereira", "00000000410");
+                Aluno aRA01409 = criarAluno("Vitoria Vieira Lima", "RA01409", r00000000410, esc);
+                Responsavel r00000000411 = criarResp("Helena Souza Martins", "00000000411");
+                Aluno aRA01410 = criarAluno("Maria Rodrigues Vieira", "RA01410", r00000000411, esc);
+                Responsavel r00000000412 = criarResp("João Cruz Fernandes", "00000000412");
+                Aluno aRA01411 = criarAluno("Fernanda Vieira Alves", "RA01411", r00000000412, esc);
+                Responsavel r00000000413 = criarResp("Vitoria Ferreira Martins", "00000000413");
+                Aluno aRA01412 = criarAluno("Camila Alves Silva", "RA01412", r00000000413, esc);
+                Responsavel r00000000414 = criarResp("Pedro Martins Barbosa", "00000000414");
+                Aluno aRA01413 = criarAluno("Daniela Mendes Vieira", "RA01413", r00000000414, esc);
+                Responsavel r00000000415 = criarResp("Bruno Carvalho Costa", "00000000415");
+                Aluno aRA01414 = criarAluno("Daniela Oliveira Souza", "RA01414", r00000000415, esc);
+                Responsavel r00000000416 = criarResp("Olivia Ribeiro Vieira", "00000000416");
+                Aluno aRA01415 = criarAluno("Igor Soares Alves", "RA01415", r00000000416, esc);
+                Responsavel r00000000417 = criarResp("Margarida Vieira Ferreira", "00000000417");
+                Aluno aRA01416 = criarAluno("Igor Pereira Carvalho", "RA01416", r00000000417, esc);
+                Responsavel r00000000418 = criarResp("Daniela Santos Ferreira", "00000000418");
+                Aluno aRA01417 = criarAluno("João Almeida Carvalho", "RA01417", r00000000418, esc);
+                Responsavel r00000000419 = criarResp("Vitoria Almeida Barbosa", "00000000419");
+                Aluno aRA01418 = criarAluno("Eduardo Soares Lima", "RA01418", r00000000419, esc);
+                Responsavel r00000000420 = criarResp("Eduardo Silva Martins", "00000000420");
+                Aluno aRA01419 = criarAluno("Olivia Pereira Souza", "RA01419", r00000000420, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01400, aRA01401, aRA01402, aRA01403, aRA01404, aRA01405, aRA01406, aRA01407,
+                                                aRA01408,
+                                                aRA01409, aRA01410, aRA01411, aRA01412, aRA01413, aRA01414, aRA01415,
+                                                aRA01416, aRA01417,
+                                                aRA01418, aRA01419));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000000421 = criarResp("Larissa Ribeiro Costa", "00000000421");
+                Aluno aRA01420 = criarAluno("Guilherme Ferreira Costa", "RA01420", r00000000421, esc);
+                Responsavel r00000000422 = criarResp("Lucas Cruz Vieira", "00000000422");
+                Aluno aRA01421 = criarAluno("Beatriz Vieira Gomes", "RA01421", r00000000422, esc);
+                Responsavel r00000000423 = criarResp("Bruno Ferreira Souza", "00000000423");
+                Aluno aRA01422 = criarAluno("Fernanda Mendes Vieira", "RA01422", r00000000423, esc);
+                Responsavel r00000000424 = criarResp("Gabriel Almeida Pereira", "00000000424");
+                Aluno aRA01423 = criarAluno("Yuri Pereira Almeida", "RA01423", r00000000424, esc);
+                Responsavel r00000000425 = criarResp("Lucas Lopes Fernandes", "00000000425");
+                Aluno aRA01424 = criarAluno("Daniela Lopes Gomes", "RA01424", r00000000425, esc);
+                Responsavel r00000000426 = criarResp("João Souza Almeida", "00000000426");
+                Aluno aRA01425 = criarAluno("Gabriel Barbosa Lopes", "RA01425", r00000000426, esc);
+                Responsavel r00000000427 = criarResp("Bruno Oliveira Pereira", "00000000427");
+                Aluno aRA01426 = criarAluno("Helena Silva Ribeiro", "RA01426", r00000000427, esc);
+                Responsavel r00000000428 = criarResp("Guilherme Silva Lopes", "00000000428");
+                Aluno aRA01427 = criarAluno("Gabriel Almeida Oliveira", "RA01427", r00000000428, esc);
+                Responsavel r00000000429 = criarResp("Mariana Almeida Alves", "00000000429");
+                Aluno aRA01428 = criarAluno("Pedro Silva Soares", "RA01428", r00000000429, esc);
+                Responsavel r00000000430 = criarResp("Helena Fernandes Martins", "00000000430");
+                Aluno aRA01429 = criarAluno("Nicolas Martins Cruz", "RA01429", r00000000430, esc);
+                Responsavel r00000000431 = criarResp("Diogo Lima Almeida", "00000000431");
+                Aluno aRA01430 = criarAluno("Olivia Rodrigues Lopes", "RA01430", r00000000431, esc);
+                Responsavel r00000000432 = criarResp("Bruno Souza Vieira", "00000000432");
+                Aluno aRA01431 = criarAluno("Lucas Fernandes Gomes", "RA01431", r00000000432, esc);
+                Responsavel r00000000433 = criarResp("Carlos Vieira Silva", "00000000433");
+                Aluno aRA01432 = criarAluno("João Oliveira Lima", "RA01432", r00000000433, esc);
+                Responsavel r00000000434 = criarResp("Guilherme Martins Vieira", "00000000434");
+                Aluno aRA01433 = criarAluno("Igor Almeida Cruz", "RA01433", r00000000434, esc);
+                Responsavel r00000000435 = criarResp("Larissa Soares Ferreira", "00000000435");
+                Aluno aRA01434 = criarAluno("Ana Lima Ribeiro", "RA01434", r00000000435, esc);
+                Responsavel r00000000436 = criarResp("Diogo Pereira Martins", "00000000436");
+                Aluno aRA01435 = criarAluno("Ana Almeida Rodrigues", "RA01435", r00000000436, esc);
+                Responsavel r00000000437 = criarResp("Nicolas Alves Martins", "00000000437");
+                Aluno aRA01436 = criarAluno("João Oliveira Vieira", "RA01436", r00000000437, esc);
+                Responsavel r00000000438 = criarResp("Fernanda Carvalho Almeida", "00000000438");
+                Aluno aRA01437 = criarAluno("Mariana Santos Soares", "RA01437", r00000000438, esc);
+                Responsavel r00000000439 = criarResp("Helena Alves Mendes", "00000000439");
+                Aluno aRA01438 = criarAluno("Bruno Mendes Cruz", "RA01438", r00000000439, esc);
+                Responsavel r00000000440 = criarResp("Vitoria Vieira Fernandes", "00000000440");
+                Aluno aRA01439 = criarAluno("Eduardo Ribeiro Ferreira", "RA01439", r00000000440, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01420, aRA01421, aRA01422, aRA01423, aRA01424, aRA01425, aRA01426, aRA01427,
+                                                aRA01428,
+                                                aRA01429, aRA01430, aRA01431, aRA01432, aRA01433, aRA01434, aRA01435,
+                                                aRA01436, aRA01437,
+                                                aRA01438, aRA01439));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000000441 = criarResp("Rafael Oliveira Costa", "00000000441");
+                Aluno aRA01440 = criarAluno("Eduardo Cruz Silva", "RA01440", r00000000441, esc);
+                Responsavel r00000000442 = criarResp("Eduardo Pereira Lopes", "00000000442");
+                Aluno aRA01441 = criarAluno("Ana Vieira Gomes", "RA01441", r00000000442, esc);
+                Responsavel r00000000443 = criarResp("Yuri Pereira Martins", "00000000443");
+                Aluno aRA01442 = criarAluno("João Pereira Gomes", "RA01442", r00000000443, esc);
+                Responsavel r00000000444 = criarResp("Margarida Silva Fernandes", "00000000444");
+                Aluno aRA01443 = criarAluno("Guilherme Ferreira Souza", "RA01443", r00000000444, esc);
+                Responsavel r00000000445 = criarResp("Matheus Lima Ribeiro", "00000000445");
+                Aluno aRA01444 = criarAluno("Ana Almeida Mendes", "RA01444", r00000000445, esc);
+                Responsavel r00000000446 = criarResp("Daniela Rodrigues Gomes", "00000000446");
+                Aluno aRA01445 = criarAluno("Carlos Costa Oliveira", "RA01445", r00000000446, esc);
+                Responsavel r00000000447 = criarResp("Thiago Carvalho Alves", "00000000447");
+                Aluno aRA01446 = criarAluno("Camila Cruz Soares", "RA01446", r00000000447, esc);
+                Responsavel r00000000448 = criarResp("Nicolas Mendes Martins", "00000000448");
+                Aluno aRA01447 = criarAluno("Sophia Gomes Carvalho", "RA01447", r00000000448, esc);
+                Responsavel r00000000449 = criarResp("Rafael Ferreira Vieira", "00000000449");
+                Aluno aRA01448 = criarAluno("Diogo Silva Ferreira", "RA01448", r00000000449, esc);
+                Responsavel r00000000450 = criarResp("Vitoria Souza Vieira", "00000000450");
+                Aluno aRA01449 = criarAluno("Larissa Oliveira Souza", "RA01449", r00000000450, esc);
+                Responsavel r00000000451 = criarResp("Gabriel Souza Carvalho", "00000000451");
+                Aluno aRA01450 = criarAluno("Nicolas Costa Rodrigues", "RA01450", r00000000451, esc);
+                Responsavel r00000000452 = criarResp("Igor Soares Rodrigues", "00000000452");
+                Aluno aRA01451 = criarAluno("Bruno Silva Lima", "RA01451", r00000000452, esc);
+                Responsavel r00000000453 = criarResp("Yuri Ribeiro Lima", "00000000453");
+                Aluno aRA01452 = criarAluno("Tiago Ferreira Oliveira", "RA01452", r00000000453, esc);
+                Responsavel r00000000454 = criarResp("Lucas Vieira Soares", "00000000454");
+                Aluno aRA01453 = criarAluno("Ana Lopes Pereira", "RA01453", r00000000454, esc);
+                Responsavel r00000000455 = criarResp("Nicolas Ribeiro Rodrigues", "00000000455");
+                Aluno aRA01454 = criarAluno("Carlos Almeida Fernandes", "RA01454", r00000000455, esc);
+                Responsavel r00000000456 = criarResp("Guilherme Lima Ribeiro", "00000000456");
+                Aluno aRA01455 = criarAluno("Ana Soares Gomes", "RA01455", r00000000456, esc);
+                Responsavel r00000000457 = criarResp("Lucas Rodrigues Carvalho", "00000000457");
+                Aluno aRA01456 = criarAluno("Ana Gomes Ribeiro", "RA01456", r00000000457, esc);
+                Responsavel r00000000458 = criarResp("Nicolas Almeida Pereira", "00000000458");
+                Aluno aRA01457 = criarAluno("Rafael Ferreira Ribeiro", "RA01457", r00000000458, esc);
+                Responsavel r00000000459 = criarResp("Tiago Alves Almeida", "00000000459");
+                Aluno aRA01458 = criarAluno("Ana Souza Cruz", "RA01458", r00000000459, esc);
+                Responsavel r00000000460 = criarResp("Igor Souza Ferreira", "00000000460");
+                Aluno aRA01459 = criarAluno("Camila Barbosa Carvalho", "RA01459", r00000000460, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01440, aRA01441, aRA01442, aRA01443, aRA01444, aRA01445, aRA01446, aRA01447,
+                                                aRA01448,
+                                                aRA01449, aRA01450, aRA01451, aRA01452, aRA01453, aRA01454, aRA01455,
+                                                aRA01456, aRA01457,
+                                                aRA01458, aRA01459));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000000461 = criarResp("Nicolas Silva Souza", "00000000461");
+                Aluno aRA01460 = criarAluno("Vitoria Souza Alves", "RA01460", r00000000461, esc);
+                Responsavel r00000000462 = criarResp("Vitoria Soares Alves", "00000000462");
+                Aluno aRA01461 = criarAluno("Mariana Almeida Mendes", "RA01461", r00000000462, esc);
+                Responsavel r00000000463 = criarResp("Eduardo Lima Soares", "00000000463");
+                Aluno aRA01462 = criarAluno("Vitoria Vieira Ferreira", "RA01462", r00000000463, esc);
+                Responsavel r00000000464 = criarResp("Nicolas Santos Martins", "00000000464");
+                Aluno aRA01463 = criarAluno("Nicolas Souza Lopes", "RA01463", r00000000464, esc);
+                Responsavel r00000000465 = criarResp("Yuri Fernandes Lima", "00000000465");
+                Aluno aRA01464 = criarAluno("Helena Lima Fernandes", "RA01464", r00000000465, esc);
+                Responsavel r00000000466 = criarResp("Maria Vieira Cruz", "00000000466");
+                Aluno aRA01465 = criarAluno("Diogo Barbosa Alves", "RA01465", r00000000466, esc);
+                Responsavel r00000000467 = criarResp("Vitoria Carvalho Souza", "00000000467");
+                Aluno aRA01466 = criarAluno("Tiago Santos Gomes", "RA01466", r00000000467, esc);
+                Responsavel r00000000468 = criarResp("Camila Almeida Ferreira", "00000000468");
+                Aluno aRA01467 = criarAluno("Rafael Martins Souza", "RA01467", r00000000468, esc);
+                Responsavel r00000000469 = criarResp("Gabriel Martins Almeida", "00000000469");
+                Aluno aRA01468 = criarAluno("Guilherme Ribeiro Mendes", "RA01468", r00000000469, esc);
+                Responsavel r00000000470 = criarResp("Daniela Costa Pereira", "00000000470");
+                Aluno aRA01469 = criarAluno("Mariana Souza Silva", "RA01469", r00000000470, esc);
+                Responsavel r00000000471 = criarResp("Tiago Souza Santos", "00000000471");
+                Aluno aRA01470 = criarAluno("Gabriel Carvalho Oliveira", "RA01470", r00000000471, esc);
+                Responsavel r00000000472 = criarResp("Olivia Martins Silva", "00000000472");
+                Aluno aRA01471 = criarAluno("Vitoria Carvalho Mendes", "RA01471", r00000000472, esc);
+                Responsavel r00000000473 = criarResp("Yuri Lima Cruz", "00000000473");
+                Aluno aRA01472 = criarAluno("Pedro Silva Vieira", "RA01472", r00000000473, esc);
+                Responsavel r00000000474 = criarResp("Julia Santos Mendes", "00000000474");
+                Aluno aRA01473 = criarAluno("Pedro Souza Carvalho", "RA01473", r00000000474, esc);
+                Responsavel r00000000475 = criarResp("Beatriz Costa Soares", "00000000475");
+                Aluno aRA01474 = criarAluno("Mariana Cruz Souza", "RA01474", r00000000475, esc);
+                Responsavel r00000000476 = criarResp("Inês Silva Ribeiro", "00000000476");
+                Aluno aRA01475 = criarAluno("Igor Barbosa Silva", "RA01475", r00000000476, esc);
+                Responsavel r00000000477 = criarResp("Beatriz Fernandes Santos", "00000000477");
+                Aluno aRA01476 = criarAluno("Igor Barbosa Santos", "RA01476", r00000000477, esc);
+                Responsavel r00000000478 = criarResp("Inês Souza Ribeiro", "00000000478");
+                Aluno aRA01477 = criarAluno("Julia Almeida Carvalho", "RA01477", r00000000478, esc);
+                Responsavel r00000000479 = criarResp("Inês Ribeiro Soares", "00000000479");
+                Aluno aRA01478 = criarAluno("Mariana Almeida Cruz", "RA01478", r00000000479, esc);
+                Responsavel r00000000480 = criarResp("Mariana Alves Fernandes", "00000000480");
+                Aluno aRA01479 = criarAluno("Margarida Gomes Santos", "RA01479", r00000000480, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01460, aRA01461, aRA01462, aRA01463, aRA01464, aRA01465, aRA01466, aRA01467,
+                                                aRA01468,
+                                                aRA01469, aRA01470, aRA01471, aRA01472, aRA01473, aRA01474, aRA01475,
+                                                aRA01476, aRA01477,
+                                                aRA01478, aRA01479));
+
+        }
+
+        private void popularEscola4() {
+                Escola esc = escolaRepository.findById(4L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("João Rodrigues Oliveira", "diretor@pingodegente.com.br", Role.DIRETOR,
+                                Funcionario.Cargo.DIRETOR,
+                                esc);
+                criarFunc("Nicolas Rodrigues Soares", "secretaria@pingodegente.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA, esc);
+                criarFunc("Thiago Martins Oliveira", "coordenador@pingodegente.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Pedro Ferreira Ribeiro", "professor@pingodegente.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR, esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000000481 = criarResp("Inês Santos Souza", "00000000481");
+                Aluno aRA01480 = criarAluno("Vitoria Gomes Rodrigues", "RA01480", r00000000481, esc);
+                Responsavel r00000000482 = criarResp("Maria Soares Alves", "00000000482");
+                Aluno aRA01481 = criarAluno("Carlos Souza Oliveira", "RA01481", r00000000482, esc);
+                Responsavel r00000000483 = criarResp("Thiago Barbosa Almeida", "00000000483");
+                Aluno aRA01482 = criarAluno("Rafael Santos Alves", "RA01482", r00000000483, esc);
+                Responsavel r00000000484 = criarResp("João Cruz Ferreira", "00000000484");
+                Aluno aRA01483 = criarAluno("Carlos Martins Mendes", "RA01483", r00000000484, esc);
+                Responsavel r00000000485 = criarResp("Camila Ribeiro Barbosa", "00000000485");
+                Aluno aRA01484 = criarAluno("Yuri Soares Fernandes", "RA01484", r00000000485, esc);
+                Responsavel r00000000486 = criarResp("Helena Vieira Gomes", "00000000486");
+                Aluno aRA01485 = criarAluno("Nicolas Silva Souza", "RA01485", r00000000486, esc);
+                Responsavel r00000000487 = criarResp("Larissa Lopes Barbosa", "00000000487");
+                Aluno aRA01486 = criarAluno("Thiago Ribeiro Santos", "RA01486", r00000000487, esc);
+                Responsavel r00000000488 = criarResp("Nicolas Alves Fernandes", "00000000488");
+                Aluno aRA01487 = criarAluno("Thiago Almeida Lopes", "RA01487", r00000000488, esc);
+                Responsavel r00000000489 = criarResp("Tiago Souza Barbosa", "00000000489");
+                Aluno aRA01488 = criarAluno("Diogo Lopes Mendes", "RA01488", r00000000489, esc);
+                Responsavel r00000000490 = criarResp("Mariana Lopes Mendes", "00000000490");
+                Aluno aRA01489 = criarAluno("Nicolas Martins Fernandes", "RA01489", r00000000490, esc);
+                Responsavel r00000000491 = criarResp("Guilherme Gomes Mendes", "00000000491");
+                Aluno aRA01490 = criarAluno("Gabriel Martins Pereira", "RA01490", r00000000491, esc);
+                Responsavel r00000000492 = criarResp("Nicolas Rodrigues Martins", "00000000492");
+                Aluno aRA01491 = criarAluno("Rafael Pereira Oliveira", "RA01491", r00000000492, esc);
+                Responsavel r00000000493 = criarResp("Camila Vieira Souza", "00000000493");
+                Aluno aRA01492 = criarAluno("Matheus Lopes Soares", "RA01492", r00000000493, esc);
+                Responsavel r00000000494 = criarResp("Helena Silva Costa", "00000000494");
+                Aluno aRA01493 = criarAluno("Pedro Alves Costa", "RA01493", r00000000494, esc);
+                Responsavel r00000000495 = criarResp("Bruno Ribeiro Lopes", "00000000495");
+                Aluno aRA01494 = criarAluno("Tiago Silva Mendes", "RA01494", r00000000495, esc);
+                Responsavel r00000000496 = criarResp("Gabriel Mendes Ferreira", "00000000496");
+                Aluno aRA01495 = criarAluno("Julia Pereira Ferreira", "RA01495", r00000000496, esc);
+                Responsavel r00000000497 = criarResp("Sophia Carvalho Souza", "00000000497");
+                Aluno aRA01496 = criarAluno("Ana Ferreira Rodrigues", "RA01496", r00000000497, esc);
+                Responsavel r00000000498 = criarResp("Beatriz Lopes Vieira", "00000000498");
+                Aluno aRA01497 = criarAluno("João Carvalho Cruz", "RA01497", r00000000498, esc);
+                Responsavel r00000000499 = criarResp("Margarida Fernandes Martins", "00000000499");
+                Aluno aRA01498 = criarAluno("João Fernandes Barbosa", "RA01498", r00000000499, esc);
+                Responsavel r00000000500 = criarResp("Maria Alves Souza", "00000000500");
+                Aluno aRA01499 = criarAluno("Nicolas Ferreira Ribeiro", "RA01499", r00000000500, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01480, aRA01481, aRA01482, aRA01483, aRA01484, aRA01485, aRA01486, aRA01487,
+                                                aRA01488,
+                                                aRA01489, aRA01490, aRA01491, aRA01492, aRA01493, aRA01494, aRA01495,
+                                                aRA01496, aRA01497,
+                                                aRA01498, aRA01499));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000000501 = criarResp("Thiago Vieira Soares", "00000000501");
+                Aluno aRA01500 = criarAluno("Vitoria Costa Barbosa", "RA01500", r00000000501, esc);
+                Responsavel r00000000502 = criarResp("Mariana Ribeiro Vieira", "00000000502");
+                Aluno aRA01501 = criarAluno("Fernanda Pereira Alves", "RA01501", r00000000502, esc);
+                Responsavel r00000000503 = criarResp("Diogo Ribeiro Barbosa", "00000000503");
+                Aluno aRA01502 = criarAluno("Maria Costa Fernandes", "RA01502", r00000000503, esc);
+                Responsavel r00000000504 = criarResp("Maria Ribeiro Cruz", "00000000504");
+                Aluno aRA01503 = criarAluno("Maria Martins Gomes", "RA01503", r00000000504, esc);
+                Responsavel r00000000505 = criarResp("Mariana Carvalho Costa", "00000000505");
+                Aluno aRA01504 = criarAluno("Olivia Martins Carvalho", "RA01504", r00000000505, esc);
+                Responsavel r00000000506 = criarResp("Matheus Martins Vieira", "00000000506");
+                Aluno aRA01505 = criarAluno("Eduardo Mendes Souza", "RA01505", r00000000506, esc);
+                Responsavel r00000000507 = criarResp("Guilherme Lima Almeida", "00000000507");
+                Aluno aRA01506 = criarAluno("Pedro Almeida Gomes", "RA01506", r00000000507, esc);
+                Responsavel r00000000508 = criarResp("Mariana Souza Ribeiro", "00000000508");
+                Aluno aRA01507 = criarAluno("Guilherme Mendes Carvalho", "RA01507", r00000000508, esc);
+                Responsavel r00000000509 = criarResp("Helena Ferreira Fernandes", "00000000509");
+                Aluno aRA01508 = criarAluno("Pedro Silva Carvalho", "RA01508", r00000000509, esc);
+                Responsavel r00000000510 = criarResp("Nicolas Cruz Gomes", "00000000510");
+                Aluno aRA01509 = criarAluno("Margarida Silva Fernandes", "RA01509", r00000000510, esc);
+                Responsavel r00000000511 = criarResp("Lucas Fernandes Santos", "00000000511");
+                Aluno aRA01510 = criarAluno("Ana Ribeiro Santos", "RA01510", r00000000511, esc);
+                Responsavel r00000000512 = criarResp("Helena Carvalho Almeida", "00000000512");
+                Aluno aRA01511 = criarAluno("Igor Souza Costa", "RA01511", r00000000512, esc);
+                Responsavel r00000000513 = criarResp("Rafael Lima Mendes", "00000000513");
+                Aluno aRA01512 = criarAluno("Yuri Soares Lopes", "RA01512", r00000000513, esc);
+                Responsavel r00000000514 = criarResp("Julia Carvalho Martins", "00000000514");
+                Aluno aRA01513 = criarAluno("Diogo Lima Almeida", "RA01513", r00000000514, esc);
+                Responsavel r00000000515 = criarResp("Ana Souza Costa", "00000000515");
+                Aluno aRA01514 = criarAluno("Helena Oliveira Lopes", "RA01514", r00000000515, esc);
+                Responsavel r00000000516 = criarResp("Rafael Oliveira Alves", "00000000516");
+                Aluno aRA01515 = criarAluno("Margarida Cruz Almeida", "RA01515", r00000000516, esc);
+                Responsavel r00000000517 = criarResp("Gabriel Fernandes Mendes", "00000000517");
+                Aluno aRA01516 = criarAluno("Olivia Rodrigues Ribeiro", "RA01516", r00000000517, esc);
+                Responsavel r00000000518 = criarResp("Matheus Oliveira Barbosa", "00000000518");
+                Aluno aRA01517 = criarAluno("Diogo Pereira Carvalho", "RA01517", r00000000518, esc);
+                Responsavel r00000000519 = criarResp("Pedro Gomes Almeida", "00000000519");
+                Aluno aRA01518 = criarAluno("Maria Vieira Silva", "RA01518", r00000000519, esc);
+                Responsavel r00000000520 = criarResp("Ana Cruz Santos", "00000000520");
+                Aluno aRA01519 = criarAluno("Thiago Santos Costa", "RA01519", r00000000520, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01500, aRA01501, aRA01502, aRA01503, aRA01504, aRA01505, aRA01506, aRA01507,
+                                                aRA01508,
+                                                aRA01509, aRA01510, aRA01511, aRA01512, aRA01513, aRA01514, aRA01515,
+                                                aRA01516, aRA01517,
+                                                aRA01518, aRA01519));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000000521 = criarResp("Inês Santos Oliveira", "00000000521");
+                Aluno aRA01520 = criarAluno("Guilherme Vieira Costa", "RA01520", r00000000521, esc);
+                Responsavel r00000000522 = criarResp("Diogo Vieira Ferreira", "00000000522");
+                Aluno aRA01521 = criarAluno("Fernanda Rodrigues Ferreira", "RA01521", r00000000522, esc);
+                Responsavel r00000000523 = criarResp("Igor Mendes Rodrigues", "00000000523");
+                Aluno aRA01522 = criarAluno("Maria Ferreira Lima", "RA01522", r00000000523, esc);
+                Responsavel r00000000524 = criarResp("Tiago Fernandes Lima", "00000000524");
+                Aluno aRA01523 = criarAluno("Diogo Martins Ribeiro", "RA01523", r00000000524, esc);
+                Responsavel r00000000525 = criarResp("Guilherme Vieira Rodrigues", "00000000525");
+                Aluno aRA01524 = criarAluno("Fernanda Pereira Rodrigues", "RA01524", r00000000525, esc);
+                Responsavel r00000000526 = criarResp("Thiago Silva Rodrigues", "00000000526");
+                Aluno aRA01525 = criarAluno("Mariana Gomes Pereira", "RA01525", r00000000526, esc);
+                Responsavel r00000000527 = criarResp("Vitoria Cruz Ribeiro", "00000000527");
+                Aluno aRA01526 = criarAluno("Yuri Vieira Carvalho", "RA01526", r00000000527, esc);
+                Responsavel r00000000528 = criarResp("Nicolas Vieira Lima", "00000000528");
+                Aluno aRA01527 = criarAluno("Matheus Fernandes Vieira", "RA01527", r00000000528, esc);
+                Responsavel r00000000529 = criarResp("Igor Oliveira Pereira", "00000000529");
+                Aluno aRA01528 = criarAluno("Margarida Ribeiro Lopes", "RA01528", r00000000529, esc);
+                Responsavel r00000000530 = criarResp("Maria Pereira Soares", "00000000530");
+                Aluno aRA01529 = criarAluno("Vitoria Fernandes Souza", "RA01529", r00000000530, esc);
+                Responsavel r00000000531 = criarResp("Diogo Silva Gomes", "00000000531");
+                Aluno aRA01530 = criarAluno("Thiago Santos Costa", "RA01530", r00000000531, esc);
+                Responsavel r00000000532 = criarResp("Helena Barbosa Cruz", "00000000532");
+                Aluno aRA01531 = criarAluno("Ana Barbosa Lima", "RA01531", r00000000532, esc);
+                Responsavel r00000000533 = criarResp("Eduardo Santos Mendes", "00000000533");
+                Aluno aRA01532 = criarAluno("Mariana Oliveira Rodrigues", "RA01532", r00000000533, esc);
+                Responsavel r00000000534 = criarResp("Larissa Lima Soares", "00000000534");
+                Aluno aRA01533 = criarAluno("Nicolas Rodrigues Fernandes", "RA01533", r00000000534, esc);
+                Responsavel r00000000535 = criarResp("Inês Rodrigues Mendes", "00000000535");
+                Aluno aRA01534 = criarAluno("Gabriel Mendes Carvalho", "RA01534", r00000000535, esc);
+                Responsavel r00000000536 = criarResp("Beatriz Rodrigues Lima", "00000000536");
+                Aluno aRA01535 = criarAluno("Bruno Martins Souza", "RA01535", r00000000536, esc);
+                Responsavel r00000000537 = criarResp("Vitoria Lopes Rodrigues", "00000000537");
+                Aluno aRA01536 = criarAluno("Nicolas Lopes Gomes", "RA01536", r00000000537, esc);
+                Responsavel r00000000538 = criarResp("Gabriel Mendes Lima", "00000000538");
+                Aluno aRA01537 = criarAluno("Bruno Soares Lima", "RA01537", r00000000538, esc);
+                Responsavel r00000000539 = criarResp("Pedro Pereira Fernandes", "00000000539");
+                Aluno aRA01538 = criarAluno("Larissa Mendes Vieira", "RA01538", r00000000539, esc);
+                Responsavel r00000000540 = criarResp("Daniela Barbosa Oliveira", "00000000540");
+                Aluno aRA01539 = criarAluno("Camila Silva Cruz", "RA01539", r00000000540, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01520, aRA01521, aRA01522, aRA01523, aRA01524, aRA01525, aRA01526, aRA01527,
+                                                aRA01528,
+                                                aRA01529, aRA01530, aRA01531, aRA01532, aRA01533, aRA01534, aRA01535,
+                                                aRA01536, aRA01537,
+                                                aRA01538, aRA01539));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000000541 = criarResp("Maria Carvalho Gomes", "00000000541");
+                Aluno aRA01540 = criarAluno("Diogo Alves Vieira", "RA01540", r00000000541, esc);
+                Responsavel r00000000542 = criarResp("Vitoria Lima Costa", "00000000542");
+                Aluno aRA01541 = criarAluno("Helena Cruz Soares", "RA01541", r00000000542, esc);
+                Responsavel r00000000543 = criarResp("Daniela Ribeiro Santos", "00000000543");
+                Aluno aRA01542 = criarAluno("Pedro Soares Costa", "RA01542", r00000000543, esc);
+                Responsavel r00000000544 = criarResp("Helena Souza Pereira", "00000000544");
+                Aluno aRA01543 = criarAluno("Julia Mendes Martins", "RA01543", r00000000544, esc);
+                Responsavel r00000000545 = criarResp("Igor Martins Souza", "00000000545");
+                Aluno aRA01544 = criarAluno("Ana Alves Santos", "RA01544", r00000000545, esc);
+                Responsavel r00000000546 = criarResp("Nicolas Mendes Santos", "00000000546");
+                Aluno aRA01545 = criarAluno("Rafael Pereira Alves", "RA01545", r00000000546, esc);
+                Responsavel r00000000547 = criarResp("Inês Ribeiro Martins", "00000000547");
+                Aluno aRA01546 = criarAluno("Mariana Martins Lopes", "RA01546", r00000000547, esc);
+                Responsavel r00000000548 = criarResp("Ana Lima Vieira", "00000000548");
+                Aluno aRA01547 = criarAluno("Carlos Santos Lopes", "RA01547", r00000000548, esc);
+                Responsavel r00000000549 = criarResp("Eduardo Silva Fernandes", "00000000549");
+                Aluno aRA01548 = criarAluno("Igor Rodrigues Mendes", "RA01548", r00000000549, esc);
+                Responsavel r00000000550 = criarResp("Nicolas Oliveira Silva", "00000000550");
+                Aluno aRA01549 = criarAluno("Margarida Oliveira Silva", "RA01549", r00000000550, esc);
+                Responsavel r00000000551 = criarResp("Igor Vieira Martins", "00000000551");
+                Aluno aRA01550 = criarAluno("Sophia Silva Lima", "RA01550", r00000000551, esc);
+                Responsavel r00000000552 = criarResp("Carlos Costa Almeida", "00000000552");
+                Aluno aRA01551 = criarAluno("Nicolas Pereira Ribeiro", "RA01551", r00000000552, esc);
+                Responsavel r00000000553 = criarResp("Igor Costa Fernandes", "00000000553");
+                Aluno aRA01552 = criarAluno("Igor Gomes Vieira", "RA01552", r00000000553, esc);
+                Responsavel r00000000554 = criarResp("Ana Ribeiro Lopes", "00000000554");
+                Aluno aRA01553 = criarAluno("Carlos Soares Fernandes", "RA01553", r00000000554, esc);
+                Responsavel r00000000555 = criarResp("Lucas Almeida Costa", "00000000555");
+                Aluno aRA01554 = criarAluno("Tiago Almeida Santos", "RA01554", r00000000555, esc);
+                Responsavel r00000000556 = criarResp("Margarida Lopes Gomes", "00000000556");
+                Aluno aRA01555 = criarAluno("Rafael Gomes Carvalho", "RA01555", r00000000556, esc);
+                Responsavel r00000000557 = criarResp("Inês Rodrigues Souza", "00000000557");
+                Aluno aRA01556 = criarAluno("Diogo Lima Santos", "RA01556", r00000000557, esc);
+                Responsavel r00000000558 = criarResp("Olivia Mendes Fernandes", "00000000558");
+                Aluno aRA01557 = criarAluno("Fernanda Almeida Lima", "RA01557", r00000000558, esc);
+                Responsavel r00000000559 = criarResp("Camila Cruz Rodrigues", "00000000559");
+                Aluno aRA01558 = criarAluno("Vitoria Alves Barbosa", "RA01558", r00000000559, esc);
+                Responsavel r00000000560 = criarResp("Daniela Cruz Ferreira", "00000000560");
+                Aluno aRA01559 = criarAluno("Ana Gomes Souza", "RA01559", r00000000560, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01540, aRA01541, aRA01542, aRA01543, aRA01544, aRA01545, aRA01546, aRA01547,
+                                                aRA01548,
+                                                aRA01549, aRA01550, aRA01551, aRA01552, aRA01553, aRA01554, aRA01555,
+                                                aRA01556, aRA01557,
+                                                aRA01558, aRA01559));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000000561 = criarResp("Diogo Costa Almeida", "00000000561");
+                Aluno aRA01560 = criarAluno("Matheus Santos Rodrigues", "RA01560", r00000000561, esc);
+                Responsavel r00000000562 = criarResp("Camila Gomes Costa", "00000000562");
+                Aluno aRA01561 = criarAluno("João Ferreira Lopes", "RA01561", r00000000562, esc);
+                Responsavel r00000000563 = criarResp("Julia Lopes Rodrigues", "00000000563");
+                Aluno aRA01562 = criarAluno("João Costa Almeida", "RA01562", r00000000563, esc);
+                Responsavel r00000000564 = criarResp("Maria Lima Souza", "00000000564");
+                Aluno aRA01563 = criarAluno("Camila Ferreira Costa", "RA01563", r00000000564, esc);
+                Responsavel r00000000565 = criarResp("Olivia Cruz Mendes", "00000000565");
+                Aluno aRA01564 = criarAluno("Eduardo Almeida Rodrigues", "RA01564", r00000000565, esc);
+                Responsavel r00000000566 = criarResp("João Santos Soares", "00000000566");
+                Aluno aRA01565 = criarAluno("Nicolas Soares Almeida", "RA01565", r00000000566, esc);
+                Responsavel r00000000567 = criarResp("Eduardo Ferreira Carvalho", "00000000567");
+                Aluno aRA01566 = criarAluno("Olivia Costa Vieira", "RA01566", r00000000567, esc);
+                Responsavel r00000000568 = criarResp("Lucas Almeida Ribeiro", "00000000568");
+                Aluno aRA01567 = criarAluno("Olivia Soares Lima", "RA01567", r00000000568, esc);
+                Responsavel r00000000569 = criarResp("Mariana Rodrigues Carvalho", "00000000569");
+                Aluno aRA01568 = criarAluno("Fernanda Mendes Vieira", "RA01568", r00000000569, esc);
+                Responsavel r00000000570 = criarResp("Camila Cruz Ferreira", "00000000570");
+                Aluno aRA01569 = criarAluno("Bruno Mendes Ferreira", "RA01569", r00000000570, esc);
+                Responsavel r00000000571 = criarResp("Fernanda Ferreira Fernandes", "00000000571");
+                Aluno aRA01570 = criarAluno("Mariana Silva Pereira", "RA01570", r00000000571, esc);
+                Responsavel r00000000572 = criarResp("Inês Pereira Cruz", "00000000572");
+                Aluno aRA01571 = criarAluno("Carlos Santos Alves", "RA01571", r00000000572, esc);
+                Responsavel r00000000573 = criarResp("Eduardo Cruz Ferreira", "00000000573");
+                Aluno aRA01572 = criarAluno("Rafael Soares Cruz", "RA01572", r00000000573, esc);
+                Responsavel r00000000574 = criarResp("Maria Lopes Alves", "00000000574");
+                Aluno aRA01573 = criarAluno("Diogo Ferreira Ribeiro", "RA01573", r00000000574, esc);
+                Responsavel r00000000575 = criarResp("Beatriz Costa Rodrigues", "00000000575");
+                Aluno aRA01574 = criarAluno("Eduardo Gomes Rodrigues", "RA01574", r00000000575, esc);
+                Responsavel r00000000576 = criarResp("Nicolas Alves Rodrigues", "00000000576");
+                Aluno aRA01575 = criarAluno("Diogo Vieira Mendes", "RA01575", r00000000576, esc);
+                Responsavel r00000000577 = criarResp("Eduardo Souza Mendes", "00000000577");
+                Aluno aRA01576 = criarAluno("Beatriz Vieira Lopes", "RA01576", r00000000577, esc);
+                Responsavel r00000000578 = criarResp("Beatriz Santos Silva", "00000000578");
+                Aluno aRA01577 = criarAluno("Pedro Rodrigues Lopes", "RA01577", r00000000578, esc);
+                Responsavel r00000000579 = criarResp("Beatriz Gomes Martins", "00000000579");
+                Aluno aRA01578 = criarAluno("Yuri Carvalho Silva", "RA01578", r00000000579, esc);
+                Responsavel r00000000580 = criarResp("Inês Gomes Ribeiro", "00000000580");
+                Aluno aRA01579 = criarAluno("Vitoria Rodrigues Lima", "RA01579", r00000000580, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01560, aRA01561, aRA01562, aRA01563, aRA01564, aRA01565, aRA01566, aRA01567,
+                                                aRA01568,
+                                                aRA01569, aRA01570, aRA01571, aRA01572, aRA01573, aRA01574, aRA01575,
+                                                aRA01576, aRA01577,
+                                                aRA01578, aRA01579));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000000581 = criarResp("Margarida Pereira Alves", "00000000581");
+                Aluno aRA01580 = criarAluno("Lucas Oliveira Barbosa", "RA01580", r00000000581, esc);
+                Responsavel r00000000582 = criarResp("Beatriz Ribeiro Martins", "00000000582");
+                Aluno aRA01581 = criarAluno("Helena Cruz Carvalho", "RA01581", r00000000582, esc);
+                Responsavel r00000000583 = criarResp("Nicolas Souza Barbosa", "00000000583");
+                Aluno aRA01582 = criarAluno("Margarida Carvalho Vieira", "RA01582", r00000000583, esc);
+                Responsavel r00000000584 = criarResp("Diogo Barbosa Soares", "00000000584");
+                Aluno aRA01583 = criarAluno("Carlos Ferreira Costa", "RA01583", r00000000584, esc);
+                Responsavel r00000000585 = criarResp("Gabriel Mendes Alves", "00000000585");
+                Aluno aRA01584 = criarAluno("Gabriel Rodrigues Martins", "RA01584", r00000000585, esc);
+                Responsavel r00000000586 = criarResp("Tiago Lima Oliveira", "00000000586");
+                Aluno aRA01585 = criarAluno("Beatriz Oliveira Cruz", "RA01585", r00000000586, esc);
+                Responsavel r00000000587 = criarResp("Camila Vieira Cruz", "00000000587");
+                Aluno aRA01586 = criarAluno("Thiago Mendes Martins", "RA01586", r00000000587, esc);
+                Responsavel r00000000588 = criarResp("Daniela Fernandes Barbosa", "00000000588");
+                Aluno aRA01587 = criarAluno("Maria Pereira Rodrigues", "RA01587", r00000000588, esc);
+                Responsavel r00000000589 = criarResp("Maria Soares Pereira", "00000000589");
+                Aluno aRA01588 = criarAluno("Camila Oliveira Lopes", "RA01588", r00000000589, esc);
+                Responsavel r00000000590 = criarResp("Nicolas Ribeiro Lima", "00000000590");
+                Aluno aRA01589 = criarAluno("João Gomes Silva", "RA01589", r00000000590, esc);
+                Responsavel r00000000591 = criarResp("Matheus Ribeiro Santos", "00000000591");
+                Aluno aRA01590 = criarAluno("Helena Gomes Costa", "RA01590", r00000000591, esc);
+                Responsavel r00000000592 = criarResp("Vitoria Vieira Gomes", "00000000592");
+                Aluno aRA01591 = criarAluno("Lucas Souza Soares", "RA01591", r00000000592, esc);
+                Responsavel r00000000593 = criarResp("Tiago Souza Carvalho", "00000000593");
+                Aluno aRA01592 = criarAluno("Eduardo Cruz Almeida", "RA01592", r00000000593, esc);
+                Responsavel r00000000594 = criarResp("Eduardo Martins Almeida", "00000000594");
+                Aluno aRA01593 = criarAluno("Helena Martins Almeida", "RA01593", r00000000594, esc);
+                Responsavel r00000000595 = criarResp("Pedro Oliveira Cruz", "00000000595");
+                Aluno aRA01594 = criarAluno("Gabriel Gomes Martins", "RA01594", r00000000595, esc);
+                Responsavel r00000000596 = criarResp("Maria Costa Soares", "00000000596");
+                Aluno aRA01595 = criarAluno("Beatriz Fernandes Rodrigues", "RA01595", r00000000596, esc);
+                Responsavel r00000000597 = criarResp("Carlos Almeida Costa", "00000000597");
+                Aluno aRA01596 = criarAluno("Daniela Ferreira Santos", "RA01596", r00000000597, esc);
+                Responsavel r00000000598 = criarResp("Daniela Fernandes Alves", "00000000598");
+                Aluno aRA01597 = criarAluno("Daniela Pereira Carvalho", "RA01597", r00000000598, esc);
+                Responsavel r00000000599 = criarResp("Sophia Martins Fernandes", "00000000599");
+                Aluno aRA01598 = criarAluno("Ana Silva Soares", "RA01598", r00000000599, esc);
+                Responsavel r00000000600 = criarResp("Vitoria Rodrigues Martins", "00000000600");
+                Aluno aRA01599 = criarAluno("Vitoria Almeida Gomes", "RA01599", r00000000600, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01580, aRA01581, aRA01582, aRA01583, aRA01584, aRA01585, aRA01586, aRA01587,
+                                                aRA01588,
+                                                aRA01589, aRA01590, aRA01591, aRA01592, aRA01593, aRA01594, aRA01595,
+                                                aRA01596, aRA01597,
+                                                aRA01598, aRA01599));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000000601 = criarResp("Igor Oliveira Barbosa", "00000000601");
+                Aluno aRA01600 = criarAluno("Vitoria Mendes Silva", "RA01600", r00000000601, esc);
+                Responsavel r00000000602 = criarResp("Helena Souza Santos", "00000000602");
+                Aluno aRA01601 = criarAluno("Beatriz Oliveira Fernandes", "RA01601", r00000000602, esc);
+                Responsavel r00000000603 = criarResp("Igor Almeida Cruz", "00000000603");
+                Aluno aRA01602 = criarAluno("Julia Oliveira Martins", "RA01602", r00000000603, esc);
+                Responsavel r00000000604 = criarResp("Mariana Ferreira Costa", "00000000604");
+                Aluno aRA01603 = criarAluno("Gabriel Santos Martins", "RA01603", r00000000604, esc);
+                Responsavel r00000000605 = criarResp("Eduardo Oliveira Alves", "00000000605");
+                Aluno aRA01604 = criarAluno("Ana Santos Lopes", "RA01604", r00000000605, esc);
+                Responsavel r00000000606 = criarResp("Bruno Pereira Ribeiro", "00000000606");
+                Aluno aRA01605 = criarAluno("Tiago Oliveira Ferreira", "RA01605", r00000000606, esc);
+                Responsavel r00000000607 = criarResp("Diogo Souza Barbosa", "00000000607");
+                Aluno aRA01606 = criarAluno("Fernanda Martins Almeida", "RA01606", r00000000607, esc);
+                Responsavel r00000000608 = criarResp("Rafael Carvalho Cruz", "00000000608");
+                Aluno aRA01607 = criarAluno("Pedro Silva Gomes", "RA01607", r00000000608, esc);
+                Responsavel r00000000609 = criarResp("Inês Souza Mendes", "00000000609");
+                Aluno aRA01608 = criarAluno("Thiago Santos Ribeiro", "RA01608", r00000000609, esc);
+                Responsavel r00000000610 = criarResp("Daniela Soares Lopes", "00000000610");
+                Aluno aRA01609 = criarAluno("Julia Oliveira Rodrigues", "RA01609", r00000000610, esc);
+                Responsavel r00000000611 = criarResp("Carlos Rodrigues Carvalho", "00000000611");
+                Aluno aRA01610 = criarAluno("Ana Cruz Costa", "RA01610", r00000000611, esc);
+                Responsavel r00000000612 = criarResp("Eduardo Almeida Alves", "00000000612");
+                Aluno aRA01611 = criarAluno("Yuri Souza Almeida", "RA01611", r00000000612, esc);
+                Responsavel r00000000613 = criarResp("Lucas Gomes Cruz", "00000000613");
+                Aluno aRA01612 = criarAluno("Camila Soares Ferreira", "RA01612", r00000000613, esc);
+                Responsavel r00000000614 = criarResp("Eduardo Mendes Souza", "00000000614");
+                Aluno aRA01613 = criarAluno("João Fernandes Cruz", "RA01613", r00000000614, esc);
+                Responsavel r00000000615 = criarResp("Sophia Barbosa Lima", "00000000615");
+                Aluno aRA01614 = criarAluno("Rafael Barbosa Gomes", "RA01614", r00000000615, esc);
+                Responsavel r00000000616 = criarResp("Vitoria Costa Souza", "00000000616");
+                Aluno aRA01615 = criarAluno("Nicolas Oliveira Lima", "RA01615", r00000000616, esc);
+                Responsavel r00000000617 = criarResp("Carlos Santos Mendes", "00000000617");
+                Aluno aRA01616 = criarAluno("Ana Martins Costa", "RA01616", r00000000617, esc);
+                Responsavel r00000000618 = criarResp("Lucas Lima Silva", "00000000618");
+                Aluno aRA01617 = criarAluno("Gabriel Almeida Vieira", "RA01617", r00000000618, esc);
+                Responsavel r00000000619 = criarResp("Bruno Carvalho Rodrigues", "00000000619");
+                Aluno aRA01618 = criarAluno("Camila Almeida Gomes", "RA01618", r00000000619, esc);
+                Responsavel r00000000620 = criarResp("Lucas Alves Lima", "00000000620");
+                Aluno aRA01619 = criarAluno("Tiago Lopes Costa", "RA01619", r00000000620, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01600, aRA01601, aRA01602, aRA01603, aRA01604, aRA01605, aRA01606, aRA01607,
+                                                aRA01608,
+                                                aRA01609, aRA01610, aRA01611, aRA01612, aRA01613, aRA01614, aRA01615,
+                                                aRA01616, aRA01617,
+                                                aRA01618, aRA01619));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000000621 = criarResp("Inês Barbosa Alves", "00000000621");
+                Aluno aRA01620 = criarAluno("Rafael Martins Soares", "RA01620", r00000000621, esc);
+                Responsavel r00000000622 = criarResp("Carlos Santos Pereira", "00000000622");
+                Aluno aRA01621 = criarAluno("Guilherme Alves Souza", "RA01621", r00000000622, esc);
+                Responsavel r00000000623 = criarResp("Julia Rodrigues Souza", "00000000623");
+                Aluno aRA01622 = criarAluno("João Fernandes Rodrigues", "RA01622", r00000000623, esc);
+                Responsavel r00000000624 = criarResp("Beatriz Lopes Ribeiro", "00000000624");
+                Aluno aRA01623 = criarAluno("Helena Costa Cruz", "RA01623", r00000000624, esc);
+                Responsavel r00000000625 = criarResp("Igor Martins Fernandes", "00000000625");
+                Aluno aRA01624 = criarAluno("Nicolas Costa Almeida", "RA01624", r00000000625, esc);
+                Responsavel r00000000626 = criarResp("Margarida Fernandes Souza", "00000000626");
+                Aluno aRA01625 = criarAluno("Helena Ribeiro Soares", "RA01625", r00000000626, esc);
+                Responsavel r00000000627 = criarResp("Bruno Gomes Carvalho", "00000000627");
+                Aluno aRA01626 = criarAluno("Thiago Soares Vieira", "RA01626", r00000000627, esc);
+                Responsavel r00000000628 = criarResp("Lucas Gomes Carvalho", "00000000628");
+                Aluno aRA01627 = criarAluno("Olivia Alves Cruz", "RA01627", r00000000628, esc);
+                Responsavel r00000000629 = criarResp("Julia Barbosa Silva", "00000000629");
+                Aluno aRA01628 = criarAluno("Carlos Santos Vieira", "RA01628", r00000000629, esc);
+                Responsavel r00000000630 = criarResp("Bruno Santos Souza", "00000000630");
+                Aluno aRA01629 = criarAluno("Maria Rodrigues Martins", "RA01629", r00000000630, esc);
+                Responsavel r00000000631 = criarResp("Inês Oliveira Carvalho", "00000000631");
+                Aluno aRA01630 = criarAluno("Bruno Barbosa Carvalho", "RA01630", r00000000631, esc);
+                Responsavel r00000000632 = criarResp("Fernanda Pereira Barbosa", "00000000632");
+                Aluno aRA01631 = criarAluno("Inês Vieira Barbosa", "RA01631", r00000000632, esc);
+                Responsavel r00000000633 = criarResp("Gabriel Pereira Alves", "00000000633");
+                Aluno aRA01632 = criarAluno("Helena Ribeiro Silva", "RA01632", r00000000633, esc);
+                Responsavel r00000000634 = criarResp("João Ferreira Gomes", "00000000634");
+                Aluno aRA01633 = criarAluno("Larissa Souza Cruz", "RA01633", r00000000634, esc);
+                Responsavel r00000000635 = criarResp("Fernanda Fernandes Cruz", "00000000635");
+                Aluno aRA01634 = criarAluno("Diogo Mendes Lima", "RA01634", r00000000635, esc);
+                Responsavel r00000000636 = criarResp("Camila Alves Lopes", "00000000636");
+                Aluno aRA01635 = criarAluno("Tiago Barbosa Almeida", "RA01635", r00000000636, esc);
+                Responsavel r00000000637 = criarResp("Diogo Oliveira Rodrigues", "00000000637");
+                Aluno aRA01636 = criarAluno("Margarida Soares Santos", "RA01636", r00000000637, esc);
+                Responsavel r00000000638 = criarResp("Vitoria Lopes Gomes", "00000000638");
+                Aluno aRA01637 = criarAluno("Pedro Soares Fernandes", "RA01637", r00000000638, esc);
+                Responsavel r00000000639 = criarResp("Thiago Cruz Costa", "00000000639");
+                Aluno aRA01638 = criarAluno("Bruno Lopes Silva", "RA01638", r00000000639, esc);
+                Responsavel r00000000640 = criarResp("Beatriz Oliveira Ribeiro", "00000000640");
+                Aluno aRA01639 = criarAluno("Vitoria Almeida Martins", "RA01639", r00000000640, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01620, aRA01621, aRA01622, aRA01623, aRA01624, aRA01625, aRA01626, aRA01627,
+                                                aRA01628,
+                                                aRA01629, aRA01630, aRA01631, aRA01632, aRA01633, aRA01634, aRA01635,
+                                                aRA01636, aRA01637,
+                                                aRA01638, aRA01639));
+
+        }
+
+        private void popularEscola5() {
+                Escola esc = escolaRepository.findById(5L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Mariana Soares Lopes", "diretor@bandeirantes.com.br", Role.DIRETOR,
+                                Funcionario.Cargo.DIRETOR, esc);
+                criarFunc("Sophia Souza Martins", "secretaria@bandeirantes.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA, esc);
+                criarFunc("Matheus Souza Martins", "coordenador@bandeirantes.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Guilherme Santos Carvalho", "professor@bandeirantes.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR, esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000000641 = criarResp("Lucas Souza Rodrigues", "00000000641");
+                Aluno aRA01640 = criarAluno("Julia Soares Almeida", "RA01640", r00000000641, esc);
+                Responsavel r00000000642 = criarResp("Pedro Alves Mendes", "00000000642");
+                Aluno aRA01641 = criarAluno("Beatriz Alves Soares", "RA01641", r00000000642, esc);
+                Responsavel r00000000643 = criarResp("Bruno Martins Ferreira", "00000000643");
+                Aluno aRA01642 = criarAluno("Julia Cruz Martins", "RA01642", r00000000643, esc);
+                Responsavel r00000000644 = criarResp("Igor Cruz Costa", "00000000644");
+                Aluno aRA01643 = criarAluno("Julia Fernandes Barbosa", "RA01643", r00000000644, esc);
+                Responsavel r00000000645 = criarResp("Beatriz Souza Lima", "00000000645");
+                Aluno aRA01644 = criarAluno("Inês Costa Silva", "RA01644", r00000000645, esc);
+                Responsavel r00000000646 = criarResp("Margarida Vieira Souza", "00000000646");
+                Aluno aRA01645 = criarAluno("Diogo Martins Soares", "RA01645", r00000000646, esc);
+                Responsavel r00000000647 = criarResp("Nicolas Ferreira Oliveira", "00000000647");
+                Aluno aRA01646 = criarAluno("Eduardo Martins Lima", "RA01646", r00000000647, esc);
+                Responsavel r00000000648 = criarResp("Vitoria Silva Carvalho", "00000000648");
+                Aluno aRA01647 = criarAluno("Guilherme Lima Costa", "RA01647", r00000000648, esc);
+                Responsavel r00000000649 = criarResp("Pedro Fernandes Alves", "00000000649");
+                Aluno aRA01648 = criarAluno("Tiago Costa Gomes", "RA01648", r00000000649, esc);
+                Responsavel r00000000650 = criarResp("Daniela Lopes Soares", "00000000650");
+                Aluno aRA01649 = criarAluno("Rafael Lopes Pereira", "RA01649", r00000000650, esc);
+                Responsavel r00000000651 = criarResp("Nicolas Rodrigues Almeida", "00000000651");
+                Aluno aRA01650 = criarAluno("Igor Santos Barbosa", "RA01650", r00000000651, esc);
+                Responsavel r00000000652 = criarResp("Ana Silva Lima", "00000000652");
+                Aluno aRA01651 = criarAluno("Rafael Barbosa Silva", "RA01651", r00000000652, esc);
+                Responsavel r00000000653 = criarResp("Rafael Lopes Soares", "00000000653");
+                Aluno aRA01652 = criarAluno("Lucas Pereira Martins", "RA01652", r00000000653, esc);
+                Responsavel r00000000654 = criarResp("Daniela Alves Fernandes", "00000000654");
+                Aluno aRA01653 = criarAluno("Mariana Cruz Barbosa", "RA01653", r00000000654, esc);
+                Responsavel r00000000655 = criarResp("Olivia Ribeiro Mendes", "00000000655");
+                Aluno aRA01654 = criarAluno("Julia Alves Souza", "RA01654", r00000000655, esc);
+                Responsavel r00000000656 = criarResp("Eduardo Mendes Gomes", "00000000656");
+                Aluno aRA01655 = criarAluno("João Fernandes Santos", "RA01655", r00000000656, esc);
+                Responsavel r00000000657 = criarResp("Gabriel Gomes Rodrigues", "00000000657");
+                Aluno aRA01656 = criarAluno("Larissa Gomes Cruz", "RA01656", r00000000657, esc);
+                Responsavel r00000000658 = criarResp("Eduardo Costa Almeida", "00000000658");
+                Aluno aRA01657 = criarAluno("Thiago Oliveira Silva", "RA01657", r00000000658, esc);
+                Responsavel r00000000659 = criarResp("Carlos Mendes Santos", "00000000659");
+                Aluno aRA01658 = criarAluno("Ana Ferreira Cruz", "RA01658", r00000000659, esc);
+                Responsavel r00000000660 = criarResp("Mariana Gomes Souza", "00000000660");
+                Aluno aRA01659 = criarAluno("Daniela Lima Santos", "RA01659", r00000000660, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01640, aRA01641, aRA01642, aRA01643, aRA01644, aRA01645, aRA01646, aRA01647,
+                                                aRA01648,
+                                                aRA01649, aRA01650, aRA01651, aRA01652, aRA01653, aRA01654, aRA01655,
+                                                aRA01656, aRA01657,
+                                                aRA01658, aRA01659));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000000661 = criarResp("Gabriel Carvalho Cruz", "00000000661");
+                Aluno aRA01660 = criarAluno("Olivia Costa Silva", "RA01660", r00000000661, esc);
+                Responsavel r00000000662 = criarResp("Julia Cruz Barbosa", "00000000662");
+                Aluno aRA01661 = criarAluno("Julia Alves Almeida", "RA01661", r00000000662, esc);
+                Responsavel r00000000663 = criarResp("Fernanda Costa Barbosa", "00000000663");
+                Aluno aRA01662 = criarAluno("Diogo Martins Gomes", "RA01662", r00000000663, esc);
+                Responsavel r00000000664 = criarResp("Carlos Soares Santos", "00000000664");
+                Aluno aRA01663 = criarAluno("Diogo Soares Ribeiro", "RA01663", r00000000664, esc);
+                Responsavel r00000000665 = criarResp("Igor Silva Lima", "00000000665");
+                Aluno aRA01664 = criarAluno("Fernanda Lima Vieira", "RA01664", r00000000665, esc);
+                Responsavel r00000000666 = criarResp("Bruno Gomes Fernandes", "00000000666");
+                Aluno aRA01665 = criarAluno("Olivia Martins Fernandes", "RA01665", r00000000666, esc);
+                Responsavel r00000000667 = criarResp("Daniela Carvalho Ferreira", "00000000667");
+                Aluno aRA01666 = criarAluno("Vitoria Cruz Barbosa", "RA01666", r00000000667, esc);
+                Responsavel r00000000668 = criarResp("Julia Costa Ferreira", "00000000668");
+                Aluno aRA01667 = criarAluno("Diogo Oliveira Carvalho", "RA01667", r00000000668, esc);
+                Responsavel r00000000669 = criarResp("Beatriz Martins Mendes", "00000000669");
+                Aluno aRA01668 = criarAluno("Lucas Carvalho Silva", "RA01668", r00000000669, esc);
+                Responsavel r00000000670 = criarResp("Igor Alves Almeida", "00000000670");
+                Aluno aRA01669 = criarAluno("Gabriel Pereira Soares", "RA01669", r00000000670, esc);
+                Responsavel r00000000671 = criarResp("Inês Souza Silva", "00000000671");
+                Aluno aRA01670 = criarAluno("Yuri Gomes Almeida", "RA01670", r00000000671, esc);
+                Responsavel r00000000672 = criarResp("Margarida Vieira Oliveira", "00000000672");
+                Aluno aRA01671 = criarAluno("Guilherme Costa Ferreira", "RA01671", r00000000672, esc);
+                Responsavel r00000000673 = criarResp("Eduardo Soares Gomes", "00000000673");
+                Aluno aRA01672 = criarAluno("Maria Almeida Lima", "RA01672", r00000000673, esc);
+                Responsavel r00000000674 = criarResp("Daniela Pereira Alves", "00000000674");
+                Aluno aRA01673 = criarAluno("Lucas Martins Santos", "RA01673", r00000000674, esc);
+                Responsavel r00000000675 = criarResp("Nicolas Pereira Carvalho", "00000000675");
+                Aluno aRA01674 = criarAluno("Julia Souza Lopes", "RA01674", r00000000675, esc);
+                Responsavel r00000000676 = criarResp("Mariana Oliveira Cruz", "00000000676");
+                Aluno aRA01675 = criarAluno("Pedro Alves Ribeiro", "RA01675", r00000000676, esc);
+                Responsavel r00000000677 = criarResp("Eduardo Rodrigues Costa", "00000000677");
+                Aluno aRA01676 = criarAluno("Daniela Gomes Alves", "RA01676", r00000000677, esc);
+                Responsavel r00000000678 = criarResp("Fernanda Costa Almeida", "00000000678");
+                Aluno aRA01677 = criarAluno("Diogo Gomes Lopes", "RA01677", r00000000678, esc);
+                Responsavel r00000000679 = criarResp("Pedro Carvalho Ribeiro", "00000000679");
+                Aluno aRA01678 = criarAluno("Bruno Silva Souza", "RA01678", r00000000679, esc);
+                Responsavel r00000000680 = criarResp("Vitoria Mendes Alves", "00000000680");
+                Aluno aRA01679 = criarAluno("Inês Silva Lopes", "RA01679", r00000000680, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01660, aRA01661, aRA01662, aRA01663, aRA01664, aRA01665, aRA01666, aRA01667,
+                                                aRA01668,
+                                                aRA01669, aRA01670, aRA01671, aRA01672, aRA01673, aRA01674, aRA01675,
+                                                aRA01676, aRA01677,
+                                                aRA01678, aRA01679));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000000681 = criarResp("Bruno Mendes Oliveira", "00000000681");
+                Aluno aRA01680 = criarAluno("Mariana Souza Ribeiro", "RA01680", r00000000681, esc);
+                Responsavel r00000000682 = criarResp("Beatriz Ribeiro Barbosa", "00000000682");
+                Aluno aRA01681 = criarAluno("Julia Pereira Ferreira", "RA01681", r00000000682, esc);
+                Responsavel r00000000683 = criarResp("Lucas Mendes Lopes", "00000000683");
+                Aluno aRA01682 = criarAluno("Beatriz Silva Soares", "RA01682", r00000000683, esc);
+                Responsavel r00000000684 = criarResp("Bruno Barbosa Costa", "00000000684");
+                Aluno aRA01683 = criarAluno("Julia Costa Mendes", "RA01683", r00000000684, esc);
+                Responsavel r00000000685 = criarResp("Guilherme Lopes Ferreira", "00000000685");
+                Aluno aRA01684 = criarAluno("Matheus Alves Silva", "RA01684", r00000000685, esc);
+                Responsavel r00000000686 = criarResp("Mariana Gomes Carvalho", "00000000686");
+                Aluno aRA01685 = criarAluno("Ana Mendes Ferreira", "RA01685", r00000000686, esc);
+                Responsavel r00000000687 = criarResp("Vitoria Cruz Gomes", "00000000687");
+                Aluno aRA01686 = criarAluno("Fernanda Silva Soares", "RA01686", r00000000687, esc);
+                Responsavel r00000000688 = criarResp("Beatriz Costa Lima", "00000000688");
+                Aluno aRA01687 = criarAluno("Lucas Pereira Vieira", "RA01687", r00000000688, esc);
+                Responsavel r00000000689 = criarResp("Fernanda Almeida Carvalho", "00000000689");
+                Aluno aRA01688 = criarAluno("Bruno Costa Lopes", "RA01688", r00000000689, esc);
+                Responsavel r00000000690 = criarResp("Rafael Gomes Vieira", "00000000690");
+                Aluno aRA01689 = criarAluno("Gabriel Mendes Martins", "RA01689", r00000000690, esc);
+                Responsavel r00000000691 = criarResp("Ana Cruz Pereira", "00000000691");
+                Aluno aRA01690 = criarAluno("Fernanda Soares Martins", "RA01690", r00000000691, esc);
+                Responsavel r00000000692 = criarResp("Ana Lima Cruz", "00000000692");
+                Aluno aRA01691 = criarAluno("Diogo Vieira Ferreira", "RA01691", r00000000692, esc);
+                Responsavel r00000000693 = criarResp("Gabriel Lopes Rodrigues", "00000000693");
+                Aluno aRA01692 = criarAluno("Sophia Ferreira Mendes", "RA01692", r00000000693, esc);
+                Responsavel r00000000694 = criarResp("Bruno Soares Fernandes", "00000000694");
+                Aluno aRA01693 = criarAluno("Julia Lima Mendes", "RA01693", r00000000694, esc);
+                Responsavel r00000000695 = criarResp("Carlos Ribeiro Cruz", "00000000695");
+                Aluno aRA01694 = criarAluno("Inês Barbosa Carvalho", "RA01694", r00000000695, esc);
+                Responsavel r00000000696 = criarResp("Inês Pereira Almeida", "00000000696");
+                Aluno aRA01695 = criarAluno("Gabriel Barbosa Cruz", "RA01695", r00000000696, esc);
+                Responsavel r00000000697 = criarResp("Larissa Santos Barbosa", "00000000697");
+                Aluno aRA01696 = criarAluno("Larissa Ribeiro Lima", "RA01696", r00000000697, esc);
+                Responsavel r00000000698 = criarResp("Eduardo Santos Silva", "00000000698");
+                Aluno aRA01697 = criarAluno("Camila Lima Alves", "RA01697", r00000000698, esc);
+                Responsavel r00000000699 = criarResp("Margarida Carvalho Soares", "00000000699");
+                Aluno aRA01698 = criarAluno("Carlos Pereira Ferreira", "RA01698", r00000000699, esc);
+                Responsavel r00000000700 = criarResp("João Vieira Silva", "00000000700");
+                Aluno aRA01699 = criarAluno("João Vieira Martins", "RA01699", r00000000700, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01680, aRA01681, aRA01682, aRA01683, aRA01684, aRA01685, aRA01686, aRA01687,
+                                                aRA01688,
+                                                aRA01689, aRA01690, aRA01691, aRA01692, aRA01693, aRA01694, aRA01695,
+                                                aRA01696, aRA01697,
+                                                aRA01698, aRA01699));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000000701 = criarResp("Fernanda Rodrigues Martins", "00000000701");
+                Aluno aRA01700 = criarAluno("Yuri Mendes Cruz", "RA01700", r00000000701, esc);
+                Responsavel r00000000702 = criarResp("Mariana Rodrigues Almeida", "00000000702");
+                Aluno aRA01701 = criarAluno("Bruno Santos Oliveira", "RA01701", r00000000702, esc);
+                Responsavel r00000000703 = criarResp("Guilherme Vieira Carvalho", "00000000703");
+                Aluno aRA01702 = criarAluno("Fernanda Soares Mendes", "RA01702", r00000000703, esc);
+                Responsavel r00000000704 = criarResp("Beatriz Gomes Lima", "00000000704");
+                Aluno aRA01703 = criarAluno("Lucas Silva Mendes", "RA01703", r00000000704, esc);
+                Responsavel r00000000705 = criarResp("Olivia Silva Mendes", "00000000705");
+                Aluno aRA01704 = criarAluno("Igor Silva Almeida", "RA01704", r00000000705, esc);
+                Responsavel r00000000706 = criarResp("Eduardo Mendes Barbosa", "00000000706");
+                Aluno aRA01705 = criarAluno("Fernanda Gomes Ferreira", "RA01705", r00000000706, esc);
+                Responsavel r00000000707 = criarResp("Diogo Souza Lopes", "00000000707");
+                Aluno aRA01706 = criarAluno("Guilherme Costa Ferreira", "RA01706", r00000000707, esc);
+                Responsavel r00000000708 = criarResp("Fernanda Vieira Oliveira", "00000000708");
+                Aluno aRA01707 = criarAluno("Margarida Alves Fernandes", "RA01707", r00000000708, esc);
+                Responsavel r00000000709 = criarResp("Maria Cruz Silva", "00000000709");
+                Aluno aRA01708 = criarAluno("Julia Cruz Ribeiro", "RA01708", r00000000709, esc);
+                Responsavel r00000000710 = criarResp("Mariana Gomes Rodrigues", "00000000710");
+                Aluno aRA01709 = criarAluno("João Almeida Mendes", "RA01709", r00000000710, esc);
+                Responsavel r00000000711 = criarResp("Eduardo Carvalho Ferreira", "00000000711");
+                Aluno aRA01710 = criarAluno("Carlos Cruz Lopes", "RA01710", r00000000711, esc);
+                Responsavel r00000000712 = criarResp("João Silva Mendes", "00000000712");
+                Aluno aRA01711 = criarAluno("Julia Lima Souza", "RA01711", r00000000712, esc);
+                Responsavel r00000000713 = criarResp("Tiago Soares Lima", "00000000713");
+                Aluno aRA01712 = criarAluno("Nicolas Rodrigues Ferreira", "RA01712", r00000000713, esc);
+                Responsavel r00000000714 = criarResp("Helena Ferreira Cruz", "00000000714");
+                Aluno aRA01713 = criarAluno("Tiago Ferreira Vieira", "RA01713", r00000000714, esc);
+                Responsavel r00000000715 = criarResp("Gabriel Oliveira Lopes", "00000000715");
+                Aluno aRA01714 = criarAluno("Maria Alves Carvalho", "RA01714", r00000000715, esc);
+                Responsavel r00000000716 = criarResp("Camila Lima Costa", "00000000716");
+                Aluno aRA01715 = criarAluno("Fernanda Lima Soares", "RA01715", r00000000716, esc);
+                Responsavel r00000000717 = criarResp("Tiago Almeida Carvalho", "00000000717");
+                Aluno aRA01716 = criarAluno("Yuri Costa Soares", "RA01716", r00000000717, esc);
+                Responsavel r00000000718 = criarResp("Rafael Ferreira Barbosa", "00000000718");
+                Aluno aRA01717 = criarAluno("Sophia Almeida Ribeiro", "RA01717", r00000000718, esc);
+                Responsavel r00000000719 = criarResp("Julia Almeida Souza", "00000000719");
+                Aluno aRA01718 = criarAluno("Larissa Vieira Costa", "RA01718", r00000000719, esc);
+                Responsavel r00000000720 = criarResp("Guilherme Almeida Gomes", "00000000720");
+                Aluno aRA01719 = criarAluno("João Gomes Lima", "RA01719", r00000000720, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01700, aRA01701, aRA01702, aRA01703, aRA01704, aRA01705, aRA01706, aRA01707,
+                                                aRA01708,
+                                                aRA01709, aRA01710, aRA01711, aRA01712, aRA01713, aRA01714, aRA01715,
+                                                aRA01716, aRA01717,
+                                                aRA01718, aRA01719));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000000721 = criarResp("Nicolas Cruz Lopes", "00000000721");
+                Aluno aRA01720 = criarAluno("Daniela Souza Fernandes", "RA01720", r00000000721, esc);
+                Responsavel r00000000722 = criarResp("Matheus Souza Ribeiro", "00000000722");
+                Aluno aRA01721 = criarAluno("Gabriel Vieira Soares", "RA01721", r00000000722, esc);
+                Responsavel r00000000723 = criarResp("Carlos Mendes Gomes", "00000000723");
+                Aluno aRA01722 = criarAluno("Thiago Santos Almeida", "RA01722", r00000000723, esc);
+                Responsavel r00000000724 = criarResp("Daniela Costa Barbosa", "00000000724");
+                Aluno aRA01723 = criarAluno("Olivia Almeida Barbosa", "RA01723", r00000000724, esc);
+                Responsavel r00000000725 = criarResp("Yuri Costa Carvalho", "00000000725");
+                Aluno aRA01724 = criarAluno("Camila Barbosa Oliveira", "RA01724", r00000000725, esc);
+                Responsavel r00000000726 = criarResp("Pedro Barbosa Ferreira", "00000000726");
+                Aluno aRA01725 = criarAluno("Camila Lopes Oliveira", "RA01725", r00000000726, esc);
+                Responsavel r00000000727 = criarResp("Olivia Oliveira Ferreira", "00000000727");
+                Aluno aRA01726 = criarAluno("Pedro Oliveira Silva", "RA01726", r00000000727, esc);
+                Responsavel r00000000728 = criarResp("Lucas Ferreira Rodrigues", "00000000728");
+                Aluno aRA01727 = criarAluno("Larissa Carvalho Mendes", "RA01727", r00000000728, esc);
+                Responsavel r00000000729 = criarResp("Helena Martins Lima", "00000000729");
+                Aluno aRA01728 = criarAluno("Tiago Pereira Rodrigues", "RA01728", r00000000729, esc);
+                Responsavel r00000000730 = criarResp("Sophia Ferreira Fernandes", "00000000730");
+                Aluno aRA01729 = criarAluno("Maria Lopes Gomes", "RA01729", r00000000730, esc);
+                Responsavel r00000000731 = criarResp("Matheus Lopes Soares", "00000000731");
+                Aluno aRA01730 = criarAluno("Vitoria Barbosa Souza", "RA01730", r00000000731, esc);
+                Responsavel r00000000732 = criarResp("Thiago Costa Santos", "00000000732");
+                Aluno aRA01731 = criarAluno("Guilherme Costa Mendes", "RA01731", r00000000732, esc);
+                Responsavel r00000000733 = criarResp("Guilherme Santos Rodrigues", "00000000733");
+                Aluno aRA01732 = criarAluno("Olivia Souza Rodrigues", "RA01732", r00000000733, esc);
+                Responsavel r00000000734 = criarResp("Guilherme Almeida Ribeiro", "00000000734");
+                Aluno aRA01733 = criarAluno("Inês Costa Gomes", "RA01733", r00000000734, esc);
+                Responsavel r00000000735 = criarResp("Diogo Soares Pereira", "00000000735");
+                Aluno aRA01734 = criarAluno("Maria Carvalho Gomes", "RA01734", r00000000735, esc);
+                Responsavel r00000000736 = criarResp("Carlos Soares Carvalho", "00000000736");
+                Aluno aRA01735 = criarAluno("Inês Rodrigues Alves", "RA01735", r00000000736, esc);
+                Responsavel r00000000737 = criarResp("Daniela Mendes Oliveira", "00000000737");
+                Aluno aRA01736 = criarAluno("Lucas Gomes Barbosa", "RA01736", r00000000737, esc);
+                Responsavel r00000000738 = criarResp("Diogo Ferreira Martins", "00000000738");
+                Aluno aRA01737 = criarAluno("Margarida Mendes Cruz", "RA01737", r00000000738, esc);
+                Responsavel r00000000739 = criarResp("Helena Vieira Gomes", "00000000739");
+                Aluno aRA01738 = criarAluno("Bruno Souza Vieira", "RA01738", r00000000739, esc);
+                Responsavel r00000000740 = criarResp("Pedro Santos Rodrigues", "00000000740");
+                Aluno aRA01739 = criarAluno("Maria Lima Almeida", "RA01739", r00000000740, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01720, aRA01721, aRA01722, aRA01723, aRA01724, aRA01725, aRA01726, aRA01727,
+                                                aRA01728,
+                                                aRA01729, aRA01730, aRA01731, aRA01732, aRA01733, aRA01734, aRA01735,
+                                                aRA01736, aRA01737,
+                                                aRA01738, aRA01739));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000000741 = criarResp("Lucas Almeida Ferreira", "00000000741");
+                Aluno aRA01740 = criarAluno("Carlos Ribeiro Silva", "RA01740", r00000000741, esc);
+                Responsavel r00000000742 = criarResp("Mariana Silva Vieira", "00000000742");
+                Aluno aRA01741 = criarAluno("Rafael Soares Ferreira", "RA01741", r00000000742, esc);
+                Responsavel r00000000743 = criarResp("Yuri Vieira Cruz", "00000000743");
+                Aluno aRA01742 = criarAluno("Thiago Martins Souza", "RA01742", r00000000743, esc);
+                Responsavel r00000000744 = criarResp("Thiago Santos Soares", "00000000744");
+                Aluno aRA01743 = criarAluno("Bruno Barbosa Vieira", "RA01743", r00000000744, esc);
+                Responsavel r00000000745 = criarResp("Daniela Alves Carvalho", "00000000745");
+                Aluno aRA01744 = criarAluno("Camila Pereira Alves", "RA01744", r00000000745, esc);
+                Responsavel r00000000746 = criarResp("Vitoria Ribeiro Oliveira", "00000000746");
+                Aluno aRA01745 = criarAluno("Ana Lopes Alves", "RA01745", r00000000746, esc);
+                Responsavel r00000000747 = criarResp("Diogo Silva Ferreira", "00000000747");
+                Aluno aRA01746 = criarAluno("Vitoria Oliveira Soares", "RA01746", r00000000747, esc);
+                Responsavel r00000000748 = criarResp("Tiago Oliveira Gomes", "00000000748");
+                Aluno aRA01747 = criarAluno("Fernanda Costa Mendes", "RA01747", r00000000748, esc);
+                Responsavel r00000000749 = criarResp("Camila Almeida Oliveira", "00000000749");
+                Aluno aRA01748 = criarAluno("Carlos Martins Rodrigues", "RA01748", r00000000749, esc);
+                Responsavel r00000000750 = criarResp("Daniela Cruz Lopes", "00000000750");
+                Aluno aRA01749 = criarAluno("Eduardo Alves Martins", "RA01749", r00000000750, esc);
+                Responsavel r00000000751 = criarResp("Bruno Soares Cruz", "00000000751");
+                Aluno aRA01750 = criarAluno("Helena Costa Vieira", "RA01750", r00000000751, esc);
+                Responsavel r00000000752 = criarResp("Inês Lima Oliveira", "00000000752");
+                Aluno aRA01751 = criarAluno("Bruno Martins Souza", "RA01751", r00000000752, esc);
+                Responsavel r00000000753 = criarResp("Fernanda Costa Barbosa", "00000000753");
+                Aluno aRA01752 = criarAluno("Guilherme Santos Pereira", "RA01752", r00000000753, esc);
+                Responsavel r00000000754 = criarResp("Nicolas Barbosa Martins", "00000000754");
+                Aluno aRA01753 = criarAluno("Inês Carvalho Lopes", "RA01753", r00000000754, esc);
+                Responsavel r00000000755 = criarResp("Gabriel Gomes Barbosa", "00000000755");
+                Aluno aRA01754 = criarAluno("Carlos Pereira Alves", "RA01754", r00000000755, esc);
+                Responsavel r00000000756 = criarResp("Rafael Souza Cruz", "00000000756");
+                Aluno aRA01755 = criarAluno("Larissa Cruz Ferreira", "RA01755", r00000000756, esc);
+                Responsavel r00000000757 = criarResp("Beatriz Costa Soares", "00000000757");
+                Aluno aRA01756 = criarAluno("Igor Fernandes Carvalho", "RA01756", r00000000757, esc);
+                Responsavel r00000000758 = criarResp("Diogo Alves Martins", "00000000758");
+                Aluno aRA01757 = criarAluno("Inês Pereira Martins", "RA01757", r00000000758, esc);
+                Responsavel r00000000759 = criarResp("Gabriel Lopes Martins", "00000000759");
+                Aluno aRA01758 = criarAluno("João Ribeiro Martins", "RA01758", r00000000759, esc);
+                Responsavel r00000000760 = criarResp("Lucas Lopes Mendes", "00000000760");
+                Aluno aRA01759 = criarAluno("Lucas Souza Oliveira", "RA01759", r00000000760, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01740, aRA01741, aRA01742, aRA01743, aRA01744, aRA01745, aRA01746, aRA01747,
+                                                aRA01748,
+                                                aRA01749, aRA01750, aRA01751, aRA01752, aRA01753, aRA01754, aRA01755,
+                                                aRA01756, aRA01757,
+                                                aRA01758, aRA01759));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000000761 = criarResp("Tiago Rodrigues Cruz", "00000000761");
+                Aluno aRA01760 = criarAluno("Fernanda Alves Martins", "RA01760", r00000000761, esc);
+                Responsavel r00000000762 = criarResp("Inês Vieira Martins", "00000000762");
+                Aluno aRA01761 = criarAluno("Guilherme Alves Barbosa", "RA01761", r00000000762, esc);
+                Responsavel r00000000763 = criarResp("Carlos Rodrigues Costa", "00000000763");
+                Aluno aRA01762 = criarAluno("Beatriz Mendes Soares", "RA01762", r00000000763, esc);
+                Responsavel r00000000764 = criarResp("Daniela Santos Fernandes", "00000000764");
+                Aluno aRA01763 = criarAluno("Gabriel Barbosa Santos", "RA01763", r00000000764, esc);
+                Responsavel r00000000765 = criarResp("Larissa Lima Soares", "00000000765");
+                Aluno aRA01764 = criarAluno("Margarida Soares Barbosa", "RA01764", r00000000765, esc);
+                Responsavel r00000000766 = criarResp("Rafael Rodrigues Gomes", "00000000766");
+                Aluno aRA01765 = criarAluno("Yuri Cruz Silva", "RA01765", r00000000766, esc);
+                Responsavel r00000000767 = criarResp("Yuri Oliveira Soares", "00000000767");
+                Aluno aRA01766 = criarAluno("Pedro Mendes Vieira", "RA01766", r00000000767, esc);
+                Responsavel r00000000768 = criarResp("Julia Vieira Cruz", "00000000768");
+                Aluno aRA01767 = criarAluno("Carlos Vieira Silva", "RA01767", r00000000768, esc);
+                Responsavel r00000000769 = criarResp("Thiago Almeida Silva", "00000000769");
+                Aluno aRA01768 = criarAluno("Maria Souza Lima", "RA01768", r00000000769, esc);
+                Responsavel r00000000770 = criarResp("Camila Carvalho Soares", "00000000770");
+                Aluno aRA01769 = criarAluno("Sophia Carvalho Ribeiro", "RA01769", r00000000770, esc);
+                Responsavel r00000000771 = criarResp("Julia Ferreira Oliveira", "00000000771");
+                Aluno aRA01770 = criarAluno("Diogo Santos Fernandes", "RA01770", r00000000771, esc);
+                Responsavel r00000000772 = criarResp("Beatriz Ferreira Soares", "00000000772");
+                Aluno aRA01771 = criarAluno("Maria Pereira Gomes", "RA01771", r00000000772, esc);
+                Responsavel r00000000773 = criarResp("Nicolas Rodrigues Mendes", "00000000773");
+                Aluno aRA01772 = criarAluno("Lucas Silva Ribeiro", "RA01772", r00000000773, esc);
+                Responsavel r00000000774 = criarResp("Nicolas Lopes Lima", "00000000774");
+                Aluno aRA01773 = criarAluno("Mariana Vieira Souza", "RA01773", r00000000774, esc);
+                Responsavel r00000000775 = criarResp("Igor Martins Souza", "00000000775");
+                Aluno aRA01774 = criarAluno("Beatriz Ferreira Lima", "RA01774", r00000000775, esc);
+                Responsavel r00000000776 = criarResp("Beatriz Vieira Lima", "00000000776");
+                Aluno aRA01775 = criarAluno("Eduardo Soares Mendes", "RA01775", r00000000776, esc);
+                Responsavel r00000000777 = criarResp("Fernanda Almeida Silva", "00000000777");
+                Aluno aRA01776 = criarAluno("Mariana Vieira Mendes", "RA01776", r00000000777, esc);
+                Responsavel r00000000778 = criarResp("Maria Carvalho Ribeiro", "00000000778");
+                Aluno aRA01777 = criarAluno("Olivia Ribeiro Oliveira", "RA01777", r00000000778, esc);
+                Responsavel r00000000779 = criarResp("Matheus Lima Vieira", "00000000779");
+                Aluno aRA01778 = criarAluno("Helena Costa Souza", "RA01778", r00000000779, esc);
+                Responsavel r00000000780 = criarResp("Fernanda Carvalho Vieira", "00000000780");
+                Aluno aRA01779 = criarAluno("Inês Oliveira Soares", "RA01779", r00000000780, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01760, aRA01761, aRA01762, aRA01763, aRA01764, aRA01765, aRA01766, aRA01767,
+                                                aRA01768,
+                                                aRA01769, aRA01770, aRA01771, aRA01772, aRA01773, aRA01774, aRA01775,
+                                                aRA01776, aRA01777,
+                                                aRA01778, aRA01779));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000000781 = criarResp("Yuri Carvalho Ribeiro", "00000000781");
+                Aluno aRA01780 = criarAluno("Daniela Oliveira Costa", "RA01780", r00000000781, esc);
+                Responsavel r00000000782 = criarResp("Beatriz Martins Silva", "00000000782");
+                Aluno aRA01781 = criarAluno("Matheus Alves Vieira", "RA01781", r00000000782, esc);
+                Responsavel r00000000783 = criarResp("João Gomes Oliveira", "00000000783");
+                Aluno aRA01782 = criarAluno("Beatriz Oliveira Ferreira", "RA01782", r00000000783, esc);
+                Responsavel r00000000784 = criarResp("Bruno Alves Ferreira", "00000000784");
+                Aluno aRA01783 = criarAluno("Olivia Carvalho Barbosa", "RA01783", r00000000784, esc);
+                Responsavel r00000000785 = criarResp("Rafael Vieira Rodrigues", "00000000785");
+                Aluno aRA01784 = criarAluno("Guilherme Carvalho Barbosa", "RA01784", r00000000785, esc);
+                Responsavel r00000000786 = criarResp("Sophia Mendes Alves", "00000000786");
+                Aluno aRA01785 = criarAluno("Olivia Costa Ribeiro", "RA01785", r00000000786, esc);
+                Responsavel r00000000787 = criarResp("Rafael Santos Barbosa", "00000000787");
+                Aluno aRA01786 = criarAluno("Tiago Cruz Souza", "RA01786", r00000000787, esc);
+                Responsavel r00000000788 = criarResp("Nicolas Lima Alves", "00000000788");
+                Aluno aRA01787 = criarAluno("Daniela Silva Lima", "RA01787", r00000000788, esc);
+                Responsavel r00000000789 = criarResp("Nicolas Almeida Lima", "00000000789");
+                Aluno aRA01788 = criarAluno("Carlos Carvalho Almeida", "RA01788", r00000000789, esc);
+                Responsavel r00000000790 = criarResp("Daniela Lima Ferreira", "00000000790");
+                Aluno aRA01789 = criarAluno("Pedro Pereira Almeida", "RA01789", r00000000790, esc);
+                Responsavel r00000000791 = criarResp("Daniela Soares Alves", "00000000791");
+                Aluno aRA01790 = criarAluno("Yuri Soares Ferreira", "RA01790", r00000000791, esc);
+                Responsavel r00000000792 = criarResp("Yuri Lopes Rodrigues", "00000000792");
+                Aluno aRA01791 = criarAluno("Thiago Costa Ferreira", "RA01791", r00000000792, esc);
+                Responsavel r00000000793 = criarResp("Sophia Fernandes Pereira", "00000000793");
+                Aluno aRA01792 = criarAluno("Maria Oliveira Lopes", "RA01792", r00000000793, esc);
+                Responsavel r00000000794 = criarResp("Yuri Martins Almeida", "00000000794");
+                Aluno aRA01793 = criarAluno("João Ribeiro Silva", "RA01793", r00000000794, esc);
+                Responsavel r00000000795 = criarResp("Carlos Silva Pereira", "00000000795");
+                Aluno aRA01794 = criarAluno("Mariana Martins Rodrigues", "RA01794", r00000000795, esc);
+                Responsavel r00000000796 = criarResp("Fernanda Alves Carvalho", "00000000796");
+                Aluno aRA01795 = criarAluno("Lucas Lima Silva", "RA01795", r00000000796, esc);
+                Responsavel r00000000797 = criarResp("Matheus Martins Almeida", "00000000797");
+                Aluno aRA01796 = criarAluno("Carlos Souza Oliveira", "RA01796", r00000000797, esc);
+                Responsavel r00000000798 = criarResp("Olivia Martins Barbosa", "00000000798");
+                Aluno aRA01797 = criarAluno("Julia Carvalho Souza", "RA01797", r00000000798, esc);
+                Responsavel r00000000799 = criarResp("João Ferreira Alves", "00000000799");
+                Aluno aRA01798 = criarAluno("João Vieira Silva", "RA01798", r00000000799, esc);
+                Responsavel r00000000800 = criarResp("Larissa Alves Carvalho", "00000000800");
+                Aluno aRA01799 = criarAluno("Gabriel Ferreira Almeida", "RA01799", r00000000800, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01780, aRA01781, aRA01782, aRA01783, aRA01784, aRA01785, aRA01786, aRA01787,
+                                                aRA01788,
+                                                aRA01789, aRA01790, aRA01791, aRA01792, aRA01793, aRA01794, aRA01795,
+                                                aRA01796, aRA01797,
+                                                aRA01798, aRA01799));
+
+        }
+
+        private void popularEscola6() {
+                Escola esc = escolaRepository.findById(6L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Igor Vieira Cruz", "diretor@raiodeluz.com.br", Role.DIRETOR, Funcionario.Cargo.DIRETOR, esc);
+                criarFunc("Vitoria Gomes Rodrigues", "secretaria@raiodeluz.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA, esc);
+                criarFunc("Bruno Ribeiro Rodrigues", "coordenador@raiodeluz.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Nicolas Vieira Martins", "professor@raiodeluz.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR,
+                                esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000000801 = criarResp("Beatriz Souza Soares", "00000000801");
+                Aluno aRA01800 = criarAluno("Helena Costa Soares", "RA01800", r00000000801, esc);
+                Responsavel r00000000802 = criarResp("Lucas Lima Carvalho", "00000000802");
+                Aluno aRA01801 = criarAluno("Mariana Soares Carvalho", "RA01801", r00000000802, esc);
+                Responsavel r00000000803 = criarResp("João Santos Pereira", "00000000803");
+                Aluno aRA01802 = criarAluno("Bruno Oliveira Soares", "RA01802", r00000000803, esc);
+                Responsavel r00000000804 = criarResp("Mariana Lima Lopes", "00000000804");
+                Aluno aRA01803 = criarAluno("Bruno Alves Soares", "RA01803", r00000000804, esc);
+                Responsavel r00000000805 = criarResp("Guilherme Santos Ribeiro", "00000000805");
+                Aluno aRA01804 = criarAluno("Beatriz Soares Souza", "RA01804", r00000000805, esc);
+                Responsavel r00000000806 = criarResp("Margarida Lima Soares", "00000000806");
+                Aluno aRA01805 = criarAluno("Matheus Almeida Vieira", "RA01805", r00000000806, esc);
+                Responsavel r00000000807 = criarResp("Helena Costa Santos", "00000000807");
+                Aluno aRA01806 = criarAluno("Daniela Oliveira Ribeiro", "RA01806", r00000000807, esc);
+                Responsavel r00000000808 = criarResp("Tiago Martins Pereira", "00000000808");
+                Aluno aRA01807 = criarAluno("Julia Rodrigues Costa", "RA01807", r00000000808, esc);
+                Responsavel r00000000809 = criarResp("Pedro Cruz Oliveira", "00000000809");
+                Aluno aRA01808 = criarAluno("Ana Lima Almeida", "RA01808", r00000000809, esc);
+                Responsavel r00000000810 = criarResp("João Pereira Soares", "00000000810");
+                Aluno aRA01809 = criarAluno("Pedro Cruz Rodrigues", "RA01809", r00000000810, esc);
+                Responsavel r00000000811 = criarResp("Sophia Carvalho Vieira", "00000000811");
+                Aluno aRA01810 = criarAluno("Beatriz Rodrigues Martins", "RA01810", r00000000811, esc);
+                Responsavel r00000000812 = criarResp("Inês Santos Carvalho", "00000000812");
+                Aluno aRA01811 = criarAluno("Rafael Carvalho Lopes", "RA01811", r00000000812, esc);
+                Responsavel r00000000813 = criarResp("Helena Carvalho Silva", "00000000813");
+                Aluno aRA01812 = criarAluno("Bruno Cruz Vieira", "RA01812", r00000000813, esc);
+                Responsavel r00000000814 = criarResp("Bruno Soares Ferreira", "00000000814");
+                Aluno aRA01813 = criarAluno("Nicolas Ferreira Ribeiro", "RA01813", r00000000814, esc);
+                Responsavel r00000000815 = criarResp("Diogo Ferreira Martins", "00000000815");
+                Aluno aRA01814 = criarAluno("Larissa Rodrigues Cruz", "RA01814", r00000000815, esc);
+                Responsavel r00000000816 = criarResp("Nicolas Vieira Souza", "00000000816");
+                Aluno aRA01815 = criarAluno("Bruno Vieira Santos", "RA01815", r00000000816, esc);
+                Responsavel r00000000817 = criarResp("Sophia Costa Oliveira", "00000000817");
+                Aluno aRA01816 = criarAluno("Gabriel Santos Martins", "RA01816", r00000000817, esc);
+                Responsavel r00000000818 = criarResp("Tiago Costa Cruz", "00000000818");
+                Aluno aRA01817 = criarAluno("Tiago Santos Fernandes", "RA01817", r00000000818, esc);
+                Responsavel r00000000819 = criarResp("Daniela Cruz Ferreira", "00000000819");
+                Aluno aRA01818 = criarAluno("Larissa Almeida Fernandes", "RA01818", r00000000819, esc);
+                Responsavel r00000000820 = criarResp("Larissa Silva Carvalho", "00000000820");
+                Aluno aRA01819 = criarAluno("Fernanda Cruz Carvalho", "RA01819", r00000000820, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01800, aRA01801, aRA01802, aRA01803, aRA01804, aRA01805, aRA01806, aRA01807,
+                                                aRA01808,
+                                                aRA01809, aRA01810, aRA01811, aRA01812, aRA01813, aRA01814, aRA01815,
+                                                aRA01816, aRA01817,
+                                                aRA01818, aRA01819));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000000821 = criarResp("Vitoria Martins Carvalho", "00000000821");
+                Aluno aRA01820 = criarAluno("Diogo Fernandes Alves", "RA01820", r00000000821, esc);
+                Responsavel r00000000822 = criarResp("Olivia Oliveira Lima", "00000000822");
+                Aluno aRA01821 = criarAluno("Gabriel Costa Santos", "RA01821", r00000000822, esc);
+                Responsavel r00000000823 = criarResp("Larissa Lopes Ferreira", "00000000823");
+                Aluno aRA01822 = criarAluno("Sophia Costa Soares", "RA01822", r00000000823, esc);
+                Responsavel r00000000824 = criarResp("Nicolas Cruz Rodrigues", "00000000824");
+                Aluno aRA01823 = criarAluno("Nicolas Souza Fernandes", "RA01823", r00000000824, esc);
+                Responsavel r00000000825 = criarResp("Inês Alves Lopes", "00000000825");
+                Aluno aRA01824 = criarAluno("Sophia Santos Ferreira", "RA01824", r00000000825, esc);
+                Responsavel r00000000826 = criarResp("Ana Alves Vieira", "00000000826");
+                Aluno aRA01825 = criarAluno("Julia Gomes Alves", "RA01825", r00000000826, esc);
+                Responsavel r00000000827 = criarResp("Igor Silva Almeida", "00000000827");
+                Aluno aRA01826 = criarAluno("Eduardo Pereira Ferreira", "RA01826", r00000000827, esc);
+                Responsavel r00000000828 = criarResp("João Gomes Carvalho", "00000000828");
+                Aluno aRA01827 = criarAluno("Matheus Ribeiro Souza", "RA01827", r00000000828, esc);
+                Responsavel r00000000829 = criarResp("Rafael Santos Fernandes", "00000000829");
+                Aluno aRA01828 = criarAluno("Inês Pereira Vieira", "RA01828", r00000000829, esc);
+                Responsavel r00000000830 = criarResp("Tiago Santos Mendes", "00000000830");
+                Aluno aRA01829 = criarAluno("Bruno Barbosa Fernandes", "RA01829", r00000000830, esc);
+                Responsavel r00000000831 = criarResp("Diogo Rodrigues Cruz", "00000000831");
+                Aluno aRA01830 = criarAluno("Gabriel Mendes Santos", "RA01830", r00000000831, esc);
+                Responsavel r00000000832 = criarResp("Eduardo Souza Mendes", "00000000832");
+                Aluno aRA01831 = criarAluno("Pedro Ferreira Soares", "RA01831", r00000000832, esc);
+                Responsavel r00000000833 = criarResp("Fernanda Ferreira Fernandes", "00000000833");
+                Aluno aRA01832 = criarAluno("Vitoria Martins Costa", "RA01832", r00000000833, esc);
+                Responsavel r00000000834 = criarResp("Camila Almeida Barbosa", "00000000834");
+                Aluno aRA01833 = criarAluno("Margarida Lopes Silva", "RA01833", r00000000834, esc);
+                Responsavel r00000000835 = criarResp("Pedro Pereira Almeida", "00000000835");
+                Aluno aRA01834 = criarAluno("Mariana Fernandes Costa", "RA01834", r00000000835, esc);
+                Responsavel r00000000836 = criarResp("Pedro Santos Costa", "00000000836");
+                Aluno aRA01835 = criarAluno("Beatriz Souza Cruz", "RA01835", r00000000836, esc);
+                Responsavel r00000000837 = criarResp("Diogo Gomes Lopes", "00000000837");
+                Aluno aRA01836 = criarAluno("Rafael Alves Mendes", "RA01836", r00000000837, esc);
+                Responsavel r00000000838 = criarResp("Mariana Souza Costa", "00000000838");
+                Aluno aRA01837 = criarAluno("Diogo Oliveira Ferreira", "RA01837", r00000000838, esc);
+                Responsavel r00000000839 = criarResp("Pedro Gomes Santos", "00000000839");
+                Aluno aRA01838 = criarAluno("Tiago Ribeiro Cruz", "RA01838", r00000000839, esc);
+                Responsavel r00000000840 = criarResp("Carlos Pereira Santos", "00000000840");
+                Aluno aRA01839 = criarAluno("João Barbosa Soares", "RA01839", r00000000840, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01820, aRA01821, aRA01822, aRA01823, aRA01824, aRA01825, aRA01826, aRA01827,
+                                                aRA01828,
+                                                aRA01829, aRA01830, aRA01831, aRA01832, aRA01833, aRA01834, aRA01835,
+                                                aRA01836, aRA01837,
+                                                aRA01838, aRA01839));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000000841 = criarResp("Nicolas Barbosa Santos", "00000000841");
+                Aluno aRA01840 = criarAluno("Igor Silva Vieira", "RA01840", r00000000841, esc);
+                Responsavel r00000000842 = criarResp("Thiago Rodrigues Silva", "00000000842");
+                Aluno aRA01841 = criarAluno("Fernanda Mendes Santos", "RA01841", r00000000842, esc);
+                Responsavel r00000000843 = criarResp("Helena Rodrigues Costa", "00000000843");
+                Aluno aRA01842 = criarAluno("Yuri Alves Gomes", "RA01842", r00000000843, esc);
+                Responsavel r00000000844 = criarResp("Pedro Almeida Cruz", "00000000844");
+                Aluno aRA01843 = criarAluno("Helena Lopes Mendes", "RA01843", r00000000844, esc);
+                Responsavel r00000000845 = criarResp("Vitoria Silva Santos", "00000000845");
+                Aluno aRA01844 = criarAluno("Vitoria Vieira Martins", "RA01844", r00000000845, esc);
+                Responsavel r00000000846 = criarResp("Vitoria Oliveira Alves", "00000000846");
+                Aluno aRA01845 = criarAluno("Fernanda Almeida Martins", "RA01845", r00000000846, esc);
+                Responsavel r00000000847 = criarResp("Mariana Ferreira Lopes", "00000000847");
+                Aluno aRA01846 = criarAluno("Lucas Carvalho Santos", "RA01846", r00000000847, esc);
+                Responsavel r00000000848 = criarResp("Carlos Lopes Alves", "00000000848");
+                Aluno aRA01847 = criarAluno("Guilherme Silva Fernandes", "RA01847", r00000000848, esc);
+                Responsavel r00000000849 = criarResp("Margarida Martins Carvalho", "00000000849");
+                Aluno aRA01848 = criarAluno("Lucas Costa Cruz", "RA01848", r00000000849, esc);
+                Responsavel r00000000850 = criarResp("Mariana Almeida Mendes", "00000000850");
+                Aluno aRA01849 = criarAluno("Vitoria Santos Barbosa", "RA01849", r00000000850, esc);
+                Responsavel r00000000851 = criarResp("Beatriz Pereira Mendes", "00000000851");
+                Aluno aRA01850 = criarAluno("Yuri Rodrigues Lima", "RA01850", r00000000851, esc);
+                Responsavel r00000000852 = criarResp("Matheus Lima Oliveira", "00000000852");
+                Aluno aRA01851 = criarAluno("Thiago Mendes Vieira", "RA01851", r00000000852, esc);
+                Responsavel r00000000853 = criarResp("Bruno Pereira Rodrigues", "00000000853");
+                Aluno aRA01852 = criarAluno("Larissa Pereira Alves", "RA01852", r00000000853, esc);
+                Responsavel r00000000854 = criarResp("Igor Lima Souza", "00000000854");
+                Aluno aRA01853 = criarAluno("Mariana Pereira Rodrigues", "RA01853", r00000000854, esc);
+                Responsavel r00000000855 = criarResp("Olivia Ribeiro Mendes", "00000000855");
+                Aluno aRA01854 = criarAluno("Nicolas Fernandes Silva", "RA01854", r00000000855, esc);
+                Responsavel r00000000856 = criarResp("Larissa Ribeiro Lima", "00000000856");
+                Aluno aRA01855 = criarAluno("Mariana Soares Rodrigues", "RA01855", r00000000856, esc);
+                Responsavel r00000000857 = criarResp("Diogo Oliveira Souza", "00000000857");
+                Aluno aRA01856 = criarAluno("Gabriel Cruz Oliveira", "RA01856", r00000000857, esc);
+                Responsavel r00000000858 = criarResp("Rafael Ribeiro Alves", "00000000858");
+                Aluno aRA01857 = criarAluno("Margarida Santos Cruz", "RA01857", r00000000858, esc);
+                Responsavel r00000000859 = criarResp("Igor Alves Barbosa", "00000000859");
+                Aluno aRA01858 = criarAluno("Fernanda Gomes Almeida", "RA01858", r00000000859, esc);
+                Responsavel r00000000860 = criarResp("Beatriz Mendes Martins", "00000000860");
+                Aluno aRA01859 = criarAluno("Sophia Silva Oliveira", "RA01859", r00000000860, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01840, aRA01841, aRA01842, aRA01843, aRA01844, aRA01845, aRA01846, aRA01847,
+                                                aRA01848,
+                                                aRA01849, aRA01850, aRA01851, aRA01852, aRA01853, aRA01854, aRA01855,
+                                                aRA01856, aRA01857,
+                                                aRA01858, aRA01859));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000000861 = criarResp("Diogo Mendes Lopes", "00000000861");
+                Aluno aRA01860 = criarAluno("Tiago Almeida Ferreira", "RA01860", r00000000861, esc);
+                Responsavel r00000000862 = criarResp("Matheus Lopes Oliveira", "00000000862");
+                Aluno aRA01861 = criarAluno("Helena Carvalho Oliveira", "RA01861", r00000000862, esc);
+                Responsavel r00000000863 = criarResp("Tiago Ribeiro Silva", "00000000863");
+                Aluno aRA01862 = criarAluno("Maria Souza Mendes", "RA01862", r00000000863, esc);
+                Responsavel r00000000864 = criarResp("Tiago Lima Ferreira", "00000000864");
+                Aluno aRA01863 = criarAluno("Beatriz Fernandes Martins", "RA01863", r00000000864, esc);
+                Responsavel r00000000865 = criarResp("Matheus Costa Pereira", "00000000865");
+                Aluno aRA01864 = criarAluno("Margarida Soares Carvalho", "RA01864", r00000000865, esc);
+                Responsavel r00000000866 = criarResp("Diogo Silva Gomes", "00000000866");
+                Aluno aRA01865 = criarAluno("Daniela Souza Silva", "RA01865", r00000000866, esc);
+                Responsavel r00000000867 = criarResp("Maria Silva Lima", "00000000867");
+                Aluno aRA01866 = criarAluno("Tiago Ribeiro Rodrigues", "RA01866", r00000000867, esc);
+                Responsavel r00000000868 = criarResp("Sophia Lima Souza", "00000000868");
+                Aluno aRA01867 = criarAluno("Daniela Almeida Santos", "RA01867", r00000000868, esc);
+                Responsavel r00000000869 = criarResp("Inês Oliveira Silva", "00000000869");
+                Aluno aRA01868 = criarAluno("Eduardo Oliveira Ribeiro", "RA01868", r00000000869, esc);
+                Responsavel r00000000870 = criarResp("Diogo Rodrigues Santos", "00000000870");
+                Aluno aRA01869 = criarAluno("Margarida Ferreira Pereira", "RA01869", r00000000870, esc);
+                Responsavel r00000000871 = criarResp("Fernanda Alves Mendes", "00000000871");
+                Aluno aRA01870 = criarAluno("Fernanda Santos Costa", "RA01870", r00000000871, esc);
+                Responsavel r00000000872 = criarResp("Larissa Vieira Alves", "00000000872");
+                Aluno aRA01871 = criarAluno("Nicolas Lopes Oliveira", "RA01871", r00000000872, esc);
+                Responsavel r00000000873 = criarResp("Nicolas Martins Cruz", "00000000873");
+                Aluno aRA01872 = criarAluno("Igor Gomes Almeida", "RA01872", r00000000873, esc);
+                Responsavel r00000000874 = criarResp("Olivia Pereira Vieira", "00000000874");
+                Aluno aRA01873 = criarAluno("Ana Mendes Ribeiro", "RA01873", r00000000874, esc);
+                Responsavel r00000000875 = criarResp("Yuri Rodrigues Mendes", "00000000875");
+                Aluno aRA01874 = criarAluno("Beatriz Cruz Martins", "RA01874", r00000000875, esc);
+                Responsavel r00000000876 = criarResp("Margarida Costa Pereira", "00000000876");
+                Aluno aRA01875 = criarAluno("Pedro Costa Souza", "RA01875", r00000000876, esc);
+                Responsavel r00000000877 = criarResp("Thiago Ribeiro Ferreira", "00000000877");
+                Aluno aRA01876 = criarAluno("Rafael Pereira Fernandes", "RA01876", r00000000877, esc);
+                Responsavel r00000000878 = criarResp("Beatriz Soares Lima", "00000000878");
+                Aluno aRA01877 = criarAluno("Camila Alves Lopes", "RA01877", r00000000878, esc);
+                Responsavel r00000000879 = criarResp("Larissa Gomes Souza", "00000000879");
+                Aluno aRA01878 = criarAluno("Julia Rodrigues Souza", "RA01878", r00000000879, esc);
+                Responsavel r00000000880 = criarResp("Tiago Cruz Martins", "00000000880");
+                Aluno aRA01879 = criarAluno("Nicolas Soares Alves", "RA01879", r00000000880, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01860, aRA01861, aRA01862, aRA01863, aRA01864, aRA01865, aRA01866, aRA01867,
+                                                aRA01868,
+                                                aRA01869, aRA01870, aRA01871, aRA01872, aRA01873, aRA01874, aRA01875,
+                                                aRA01876, aRA01877,
+                                                aRA01878, aRA01879));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000000881 = criarResp("Daniela Soares Barbosa", "00000000881");
+                Aluno aRA01880 = criarAluno("Eduardo Alves Lopes", "RA01880", r00000000881, esc);
+                Responsavel r00000000882 = criarResp("Maria Mendes Vieira", "00000000882");
+                Aluno aRA01881 = criarAluno("Vitoria Silva Carvalho", "RA01881", r00000000882, esc);
+                Responsavel r00000000883 = criarResp("Guilherme Santos Vieira", "00000000883");
+                Aluno aRA01882 = criarAluno("Vitoria Lopes Lima", "RA01882", r00000000883, esc);
+                Responsavel r00000000884 = criarResp("Tiago Lopes Fernandes", "00000000884");
+                Aluno aRA01883 = criarAluno("Daniela Gomes Rodrigues", "RA01883", r00000000884, esc);
+                Responsavel r00000000885 = criarResp("Pedro Ribeiro Almeida", "00000000885");
+                Aluno aRA01884 = criarAluno("Igor Santos Lima", "RA01884", r00000000885, esc);
+                Responsavel r00000000886 = criarResp("Olivia Lopes Ferreira", "00000000886");
+                Aluno aRA01885 = criarAluno("Margarida Ferreira Cruz", "RA01885", r00000000886, esc);
+                Responsavel r00000000887 = criarResp("Thiago Ribeiro Ferreira", "00000000887");
+                Aluno aRA01886 = criarAluno("Julia Barbosa Fernandes", "RA01886", r00000000887, esc);
+                Responsavel r00000000888 = criarResp("Diogo Mendes Oliveira", "00000000888");
+                Aluno aRA01887 = criarAluno("Carlos Fernandes Lima", "RA01887", r00000000888, esc);
+                Responsavel r00000000889 = criarResp("Rafael Carvalho Lopes", "00000000889");
+                Aluno aRA01888 = criarAluno("Eduardo Alves Martins", "RA01888", r00000000889, esc);
+                Responsavel r00000000890 = criarResp("Mariana Soares Rodrigues", "00000000890");
+                Aluno aRA01889 = criarAluno("Julia Lima Ribeiro", "RA01889", r00000000890, esc);
+                Responsavel r00000000891 = criarResp("Mariana Costa Lima", "00000000891");
+                Aluno aRA01890 = criarAluno("Maria Cruz Pereira", "RA01890", r00000000891, esc);
+                Responsavel r00000000892 = criarResp("João Costa Martins", "00000000892");
+                Aluno aRA01891 = criarAluno("Yuri Lopes Gomes", "RA01891", r00000000892, esc);
+                Responsavel r00000000893 = criarResp("Gabriel Lopes Barbosa", "00000000893");
+                Aluno aRA01892 = criarAluno("Sophia Mendes Santos", "RA01892", r00000000893, esc);
+                Responsavel r00000000894 = criarResp("Eduardo Fernandes Almeida", "00000000894");
+                Aluno aRA01893 = criarAluno("Thiago Costa Oliveira", "RA01893", r00000000894, esc);
+                Responsavel r00000000895 = criarResp("Carlos Santos Lopes", "00000000895");
+                Aluno aRA01894 = criarAluno("Sophia Silva Oliveira", "RA01894", r00000000895, esc);
+                Responsavel r00000000896 = criarResp("Carlos Santos Rodrigues", "00000000896");
+                Aluno aRA01895 = criarAluno("Helena Santos Soares", "RA01895", r00000000896, esc);
+                Responsavel r00000000897 = criarResp("Carlos Costa Rodrigues", "00000000897");
+                Aluno aRA01896 = criarAluno("Nicolas Carvalho Lima", "RA01896", r00000000897, esc);
+                Responsavel r00000000898 = criarResp("Inês Soares Gomes", "00000000898");
+                Aluno aRA01897 = criarAluno("Tiago Lima Lopes", "RA01897", r00000000898, esc);
+                Responsavel r00000000899 = criarResp("Fernanda Martins Ribeiro", "00000000899");
+                Aluno aRA01898 = criarAluno("João Carvalho Soares", "RA01898", r00000000899, esc);
+                Responsavel r00000000900 = criarResp("Maria Cruz Ferreira", "00000000900");
+                Aluno aRA01899 = criarAluno("Sophia Ferreira Silva", "RA01899", r00000000900, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01880, aRA01881, aRA01882, aRA01883, aRA01884, aRA01885, aRA01886, aRA01887,
+                                                aRA01888,
+                                                aRA01889, aRA01890, aRA01891, aRA01892, aRA01893, aRA01894, aRA01895,
+                                                aRA01896, aRA01897,
+                                                aRA01898, aRA01899));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000000901 = criarResp("Bruno Ferreira Mendes", "00000000901");
+                Aluno aRA01900 = criarAluno("Vitoria Soares Souza", "RA01900", r00000000901, esc);
+                Responsavel r00000000902 = criarResp("Carlos Ferreira Mendes", "00000000902");
+                Aluno aRA01901 = criarAluno("Tiago Almeida Mendes", "RA01901", r00000000902, esc);
+                Responsavel r00000000903 = criarResp("Matheus Rodrigues Ribeiro", "00000000903");
+                Aluno aRA01902 = criarAluno("Camila Almeida Fernandes", "RA01902", r00000000903, esc);
+                Responsavel r00000000904 = criarResp("Ana Silva Lima", "00000000904");
+                Aluno aRA01903 = criarAluno("Eduardo Santos Barbosa", "RA01903", r00000000904, esc);
+                Responsavel r00000000905 = criarResp("Julia Lopes Santos", "00000000905");
+                Aluno aRA01904 = criarAluno("Fernanda Rodrigues Ferreira", "RA01904", r00000000905, esc);
+                Responsavel r00000000906 = criarResp("Nicolas Silva Santos", "00000000906");
+                Aluno aRA01905 = criarAluno("Eduardo Almeida Lima", "RA01905", r00000000906, esc);
+                Responsavel r00000000907 = criarResp("Margarida Lopes Almeida", "00000000907");
+                Aluno aRA01906 = criarAluno("Yuri Mendes Costa", "RA01906", r00000000907, esc);
+                Responsavel r00000000908 = criarResp("Larissa Ribeiro Silva", "00000000908");
+                Aluno aRA01907 = criarAluno("Gabriel Almeida Silva", "RA01907", r00000000908, esc);
+                Responsavel r00000000909 = criarResp("João Vieira Costa", "00000000909");
+                Aluno aRA01908 = criarAluno("Rafael Barbosa Ferreira", "RA01908", r00000000909, esc);
+                Responsavel r00000000910 = criarResp("Margarida Oliveira Mendes", "00000000910");
+                Aluno aRA01909 = criarAluno("Rafael Alves Rodrigues", "RA01909", r00000000910, esc);
+                Responsavel r00000000911 = criarResp("Bruno Mendes Rodrigues", "00000000911");
+                Aluno aRA01910 = criarAluno("Rafael Lima Almeida", "RA01910", r00000000911, esc);
+                Responsavel r00000000912 = criarResp("Julia Ribeiro Barbosa", "00000000912");
+                Aluno aRA01911 = criarAluno("Pedro Barbosa Alves", "RA01911", r00000000912, esc);
+                Responsavel r00000000913 = criarResp("Camila Gomes Ferreira", "00000000913");
+                Aluno aRA01912 = criarAluno("Maria Ferreira Ribeiro", "RA01912", r00000000913, esc);
+                Responsavel r00000000914 = criarResp("Matheus Rodrigues Mendes", "00000000914");
+                Aluno aRA01913 = criarAluno("Margarida Fernandes Santos", "RA01913", r00000000914, esc);
+                Responsavel r00000000915 = criarResp("Olivia Alves Souza", "00000000915");
+                Aluno aRA01914 = criarAluno("Eduardo Barbosa Martins", "RA01914", r00000000915, esc);
+                Responsavel r00000000916 = criarResp("Fernanda Souza Oliveira", "00000000916");
+                Aluno aRA01915 = criarAluno("Yuri Vieira Costa", "RA01915", r00000000916, esc);
+                Responsavel r00000000917 = criarResp("Sophia Mendes Martins", "00000000917");
+                Aluno aRA01916 = criarAluno("Gabriel Gomes Almeida", "RA01916", r00000000917, esc);
+                Responsavel r00000000918 = criarResp("Nicolas Gomes Fernandes", "00000000918");
+                Aluno aRA01917 = criarAluno("Maria Almeida Ribeiro", "RA01917", r00000000918, esc);
+                Responsavel r00000000919 = criarResp("Gabriel Pereira Silva", "00000000919");
+                Aluno aRA01918 = criarAluno("Fernanda Ribeiro Ferreira", "RA01918", r00000000919, esc);
+                Responsavel r00000000920 = criarResp("Inês Soares Gomes", "00000000920");
+                Aluno aRA01919 = criarAluno("Margarida Gomes Silva", "RA01919", r00000000920, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01900, aRA01901, aRA01902, aRA01903, aRA01904, aRA01905, aRA01906, aRA01907,
+                                                aRA01908,
+                                                aRA01909, aRA01910, aRA01911, aRA01912, aRA01913, aRA01914, aRA01915,
+                                                aRA01916, aRA01917,
+                                                aRA01918, aRA01919));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000000921 = criarResp("Tiago Fernandes Mendes", "00000000921");
+                Aluno aRA01920 = criarAluno("Fernanda Carvalho Vieira", "RA01920", r00000000921, esc);
+                Responsavel r00000000922 = criarResp("Eduardo Almeida Barbosa", "00000000922");
+                Aluno aRA01921 = criarAluno("Nicolas Lima Soares", "RA01921", r00000000922, esc);
+                Responsavel r00000000923 = criarResp("Julia Martins Pereira", "00000000923");
+                Aluno aRA01922 = criarAluno("Vitoria Costa Oliveira", "RA01922", r00000000923, esc);
+                Responsavel r00000000924 = criarResp("Lucas Santos Costa", "00000000924");
+                Aluno aRA01923 = criarAluno("Vitoria Soares Martins", "RA01923", r00000000924, esc);
+                Responsavel r00000000925 = criarResp("Beatriz Pereira Silva", "00000000925");
+                Aluno aRA01924 = criarAluno("Olivia Carvalho Martins", "RA01924", r00000000925, esc);
+                Responsavel r00000000926 = criarResp("Tiago Mendes Carvalho", "00000000926");
+                Aluno aRA01925 = criarAluno("Igor Cruz Vieira", "RA01925", r00000000926, esc);
+                Responsavel r00000000927 = criarResp("Guilherme Soares Souza", "00000000927");
+                Aluno aRA01926 = criarAluno("Diogo Ribeiro Carvalho", "RA01926", r00000000927, esc);
+                Responsavel r00000000928 = criarResp("Igor Rodrigues Mendes", "00000000928");
+                Aluno aRA01927 = criarAluno("Julia Lima Barbosa", "RA01927", r00000000928, esc);
+                Responsavel r00000000929 = criarResp("Ana Mendes Cruz", "00000000929");
+                Aluno aRA01928 = criarAluno("Camila Gomes Vieira", "RA01928", r00000000929, esc);
+                Responsavel r00000000930 = criarResp("Bruno Almeida Alves", "00000000930");
+                Aluno aRA01929 = criarAluno("Helena Alves Martins", "RA01929", r00000000930, esc);
+                Responsavel r00000000931 = criarResp("Beatriz Vieira Costa", "00000000931");
+                Aluno aRA01930 = criarAluno("Camila Costa Ferreira", "RA01930", r00000000931, esc);
+                Responsavel r00000000932 = criarResp("Guilherme Ribeiro Martins", "00000000932");
+                Aluno aRA01931 = criarAluno("Daniela Lima Alves", "RA01931", r00000000932, esc);
+                Responsavel r00000000933 = criarResp("Fernanda Soares Gomes", "00000000933");
+                Aluno aRA01932 = criarAluno("Thiago Ferreira Gomes", "RA01932", r00000000933, esc);
+                Responsavel r00000000934 = criarResp("Rafael Soares Rodrigues", "00000000934");
+                Aluno aRA01933 = criarAluno("Helena Rodrigues Gomes", "RA01933", r00000000934, esc);
+                Responsavel r00000000935 = criarResp("Olivia Ribeiro Silva", "00000000935");
+                Aluno aRA01934 = criarAluno("Mariana Pereira Gomes", "RA01934", r00000000935, esc);
+                Responsavel r00000000936 = criarResp("Julia Almeida Ferreira", "00000000936");
+                Aluno aRA01935 = criarAluno("Vitoria Martins Barbosa", "RA01935", r00000000936, esc);
+                Responsavel r00000000937 = criarResp("Diogo Costa Pereira", "00000000937");
+                Aluno aRA01936 = criarAluno("Olivia Vieira Oliveira", "RA01936", r00000000937, esc);
+                Responsavel r00000000938 = criarResp("Gabriel Cruz Soares", "00000000938");
+                Aluno aRA01937 = criarAluno("Lucas Lima Silva", "RA01937", r00000000938, esc);
+                Responsavel r00000000939 = criarResp("Rafael Martins Souza", "00000000939");
+                Aluno aRA01938 = criarAluno("Ana Ferreira Alves", "RA01938", r00000000939, esc);
+                Responsavel r00000000940 = criarResp("Nicolas Barbosa Lima", "00000000940");
+                Aluno aRA01939 = criarAluno("Pedro Lima Costa", "RA01939", r00000000940, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01920, aRA01921, aRA01922, aRA01923, aRA01924, aRA01925, aRA01926, aRA01927,
+                                                aRA01928,
+                                                aRA01929, aRA01930, aRA01931, aRA01932, aRA01933, aRA01934, aRA01935,
+                                                aRA01936, aRA01937,
+                                                aRA01938, aRA01939));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000000941 = criarResp("Bruno Souza Ribeiro", "00000000941");
+                Aluno aRA01940 = criarAluno("Maria Almeida Souza", "RA01940", r00000000941, esc);
+                Responsavel r00000000942 = criarResp("Nicolas Souza Ribeiro", "00000000942");
+                Aluno aRA01941 = criarAluno("Vitoria Silva Mendes", "RA01941", r00000000942, esc);
+                Responsavel r00000000943 = criarResp("Mariana Ferreira Lopes", "00000000943");
+                Aluno aRA01942 = criarAluno("Igor Vieira Costa", "RA01942", r00000000943, esc);
+                Responsavel r00000000944 = criarResp("Julia Cruz Rodrigues", "00000000944");
+                Aluno aRA01943 = criarAluno("Helena Barbosa Souza", "RA01943", r00000000944, esc);
+                Responsavel r00000000945 = criarResp("Ana Soares Mendes", "00000000945");
+                Aluno aRA01944 = criarAluno("Ana Rodrigues Silva", "RA01944", r00000000945, esc);
+                Responsavel r00000000946 = criarResp("Fernanda Oliveira Alves", "00000000946");
+                Aluno aRA01945 = criarAluno("João Fernandes Carvalho", "RA01945", r00000000946, esc);
+                Responsavel r00000000947 = criarResp("Daniela Costa Ribeiro", "00000000947");
+                Aluno aRA01946 = criarAluno("Fernanda Fernandes Silva", "RA01946", r00000000947, esc);
+                Responsavel r00000000948 = criarResp("Maria Ribeiro Barbosa", "00000000948");
+                Aluno aRA01947 = criarAluno("Lucas Costa Cruz", "RA01947", r00000000948, esc);
+                Responsavel r00000000949 = criarResp("Julia Lima Carvalho", "00000000949");
+                Aluno aRA01948 = criarAluno("Carlos Vieira Oliveira", "RA01948", r00000000949, esc);
+                Responsavel r00000000950 = criarResp("Daniela Gomes Lima", "00000000950");
+                Aluno aRA01949 = criarAluno("Julia Lopes Barbosa", "RA01949", r00000000950, esc);
+                Responsavel r00000000951 = criarResp("Nicolas Fernandes Martins", "00000000951");
+                Aluno aRA01950 = criarAluno("Maria Fernandes Lopes", "RA01950", r00000000951, esc);
+                Responsavel r00000000952 = criarResp("Nicolas Soares Barbosa", "00000000952");
+                Aluno aRA01951 = criarAluno("Igor Silva Alves", "RA01951", r00000000952, esc);
+                Responsavel r00000000953 = criarResp("Camila Pereira Vieira", "00000000953");
+                Aluno aRA01952 = criarAluno("Fernanda Vieira Gomes", "RA01952", r00000000953, esc);
+                Responsavel r00000000954 = criarResp("Diogo Santos Fernandes", "00000000954");
+                Aluno aRA01953 = criarAluno("Yuri Almeida Gomes", "RA01953", r00000000954, esc);
+                Responsavel r00000000955 = criarResp("Nicolas Cruz Silva", "00000000955");
+                Aluno aRA01954 = criarAluno("Eduardo Fernandes Oliveira", "RA01954", r00000000955, esc);
+                Responsavel r00000000956 = criarResp("Beatriz Gomes Vieira", "00000000956");
+                Aluno aRA01955 = criarAluno("João Costa Lopes", "RA01955", r00000000956, esc);
+                Responsavel r00000000957 = criarResp("João Alves Martins", "00000000957");
+                Aluno aRA01956 = criarAluno("Vitoria Gomes Fernandes", "RA01956", r00000000957, esc);
+                Responsavel r00000000958 = criarResp("Guilherme Ferreira Gomes", "00000000958");
+                Aluno aRA01957 = criarAluno("Fernanda Fernandes Lima", "RA01957", r00000000958, esc);
+                Responsavel r00000000959 = criarResp("Igor Almeida Souza", "00000000959");
+                Aluno aRA01958 = criarAluno("Mariana Rodrigues Pereira", "RA01958", r00000000959, esc);
+                Responsavel r00000000960 = criarResp("Bruno Oliveira Ferreira", "00000000960");
+                Aluno aRA01959 = criarAluno("Pedro Gomes Martins", "RA01959", r00000000960, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01940, aRA01941, aRA01942, aRA01943, aRA01944, aRA01945, aRA01946, aRA01947,
+                                                aRA01948,
+                                                aRA01949, aRA01950, aRA01951, aRA01952, aRA01953, aRA01954, aRA01955,
+                                                aRA01956, aRA01957,
+                                                aRA01958, aRA01959));
+
+        }
+
+        private void popularEscola7() {
+                Escola esc = escolaRepository.findById(7L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Tiago Oliveira Silva", "diretor@solnascente.com.br", Role.DIRETOR, Funcionario.Cargo.DIRETOR,
+                                esc);
+                criarFunc("Sophia Cruz Vieira", "secretaria@solnascente.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA,
+                                esc);
+                criarFunc("Carlos Costa Ferreira", "coordenador@solnascente.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Eduardo Alves Almeida", "professor@solnascente.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR,
+                                esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000000961 = criarResp("Yuri Fernandes Ribeiro", "00000000961");
+                Aluno aRA01960 = criarAluno("Eduardo Ferreira Mendes", "RA01960", r00000000961, esc);
+                Responsavel r00000000962 = criarResp("Fernanda Gomes Almeida", "00000000962");
+                Aluno aRA01961 = criarAluno("Maria Barbosa Alves", "RA01961", r00000000962, esc);
+                Responsavel r00000000963 = criarResp("Matheus Gomes Barbosa", "00000000963");
+                Aluno aRA01962 = criarAluno("Igor Alves Vieira", "RA01962", r00000000963, esc);
+                Responsavel r00000000964 = criarResp("Julia Souza Gomes", "00000000964");
+                Aluno aRA01963 = criarAluno("Mariana Santos Cruz", "RA01963", r00000000964, esc);
+                Responsavel r00000000965 = criarResp("Olivia Fernandes Carvalho", "00000000965");
+                Aluno aRA01964 = criarAluno("João Soares Gomes", "RA01964", r00000000965, esc);
+                Responsavel r00000000966 = criarResp("Mariana Martins Lima", "00000000966");
+                Aluno aRA01965 = criarAluno("Maria Souza Ferreira", "RA01965", r00000000966, esc);
+                Responsavel r00000000967 = criarResp("Tiago Fernandes Martins", "00000000967");
+                Aluno aRA01966 = criarAluno("Guilherme Mendes Martins", "RA01966", r00000000967, esc);
+                Responsavel r00000000968 = criarResp("Gabriel Soares Pereira", "00000000968");
+                Aluno aRA01967 = criarAluno("Inês Almeida Silva", "RA01967", r00000000968, esc);
+                Responsavel r00000000969 = criarResp("Bruno Martins Almeida", "00000000969");
+                Aluno aRA01968 = criarAluno("Maria Vieira Ribeiro", "RA01968", r00000000969, esc);
+                Responsavel r00000000970 = criarResp("Camila Rodrigues Carvalho", "00000000970");
+                Aluno aRA01969 = criarAluno("Tiago Fernandes Ribeiro", "RA01969", r00000000970, esc);
+                Responsavel r00000000971 = criarResp("Yuri Costa Lima", "00000000971");
+                Aluno aRA01970 = criarAluno("Thiago Fernandes Rodrigues", "RA01970", r00000000971, esc);
+                Responsavel r00000000972 = criarResp("Beatriz Carvalho Gomes", "00000000972");
+                Aluno aRA01971 = criarAluno("Camila Barbosa Ribeiro", "RA01971", r00000000972, esc);
+                Responsavel r00000000973 = criarResp("Eduardo Ribeiro Lima", "00000000973");
+                Aluno aRA01972 = criarAluno("Maria Rodrigues Ferreira", "RA01972", r00000000973, esc);
+                Responsavel r00000000974 = criarResp("Diogo Ribeiro Souza", "00000000974");
+                Aluno aRA01973 = criarAluno("Ana Almeida Gomes", "RA01973", r00000000974, esc);
+                Responsavel r00000000975 = criarResp("Lucas Rodrigues Mendes", "00000000975");
+                Aluno aRA01974 = criarAluno("Carlos Pereira Souza", "RA01974", r00000000975, esc);
+                Responsavel r00000000976 = criarResp("Maria Costa Carvalho", "00000000976");
+                Aluno aRA01975 = criarAluno("Guilherme Vieira Santos", "RA01975", r00000000976, esc);
+                Responsavel r00000000977 = criarResp("Rafael Gomes Santos", "00000000977");
+                Aluno aRA01976 = criarAluno("João Pereira Alves", "RA01976", r00000000977, esc);
+                Responsavel r00000000978 = criarResp("Vitoria Fernandes Lopes", "00000000978");
+                Aluno aRA01977 = criarAluno("Yuri Soares Barbosa", "RA01977", r00000000978, esc);
+                Responsavel r00000000979 = criarResp("Olivia Costa Ferreira", "00000000979");
+                Aluno aRA01978 = criarAluno("Olivia Alves Silva", "RA01978", r00000000979, esc);
+                Responsavel r00000000980 = criarResp("Maria Cruz Alves", "00000000980");
+                Aluno aRA01979 = criarAluno("Camila Souza Ferreira", "RA01979", r00000000980, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA01960, aRA01961, aRA01962, aRA01963, aRA01964, aRA01965, aRA01966, aRA01967,
+                                                aRA01968,
+                                                aRA01969, aRA01970, aRA01971, aRA01972, aRA01973, aRA01974, aRA01975,
+                                                aRA01976, aRA01977,
+                                                aRA01978, aRA01979));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000000981 = criarResp("Carlos Soares Santos", "00000000981");
+                Aluno aRA01980 = criarAluno("Tiago Rodrigues Barbosa", "RA01980", r00000000981, esc);
+                Responsavel r00000000982 = criarResp("Guilherme Gomes Pereira", "00000000982");
+                Aluno aRA01981 = criarAluno("Rafael Ferreira Oliveira", "RA01981", r00000000982, esc);
+                Responsavel r00000000983 = criarResp("Thiago Soares Costa", "00000000983");
+                Aluno aRA01982 = criarAluno("Vitoria Cruz Lima", "RA01982", r00000000983, esc);
+                Responsavel r00000000984 = criarResp("Carlos Ribeiro Mendes", "00000000984");
+                Aluno aRA01983 = criarAluno("Igor Souza Silva", "RA01983", r00000000984, esc);
+                Responsavel r00000000985 = criarResp("Larissa Rodrigues Gomes", "00000000985");
+                Aluno aRA01984 = criarAluno("Daniela Gomes Soares", "RA01984", r00000000985, esc);
+                Responsavel r00000000986 = criarResp("Larissa Ribeiro Ferreira", "00000000986");
+                Aluno aRA01985 = criarAluno("Yuri Almeida Mendes", "RA01985", r00000000986, esc);
+                Responsavel r00000000987 = criarResp("Maria Vieira Carvalho", "00000000987");
+                Aluno aRA01986 = criarAluno("Carlos Souza Pereira", "RA01986", r00000000987, esc);
+                Responsavel r00000000988 = criarResp("Julia Ribeiro Fernandes", "00000000988");
+                Aluno aRA01987 = criarAluno("Ana Ribeiro Oliveira", "RA01987", r00000000988, esc);
+                Responsavel r00000000989 = criarResp("Nicolas Rodrigues Vieira", "00000000989");
+                Aluno aRA01988 = criarAluno("Tiago Rodrigues Oliveira", "RA01988", r00000000989, esc);
+                Responsavel r00000000990 = criarResp("Igor Ferreira Fernandes", "00000000990");
+                Aluno aRA01989 = criarAluno("Gabriel Soares Lima", "RA01989", r00000000990, esc);
+                Responsavel r00000000991 = criarResp("Olivia Barbosa Ribeiro", "00000000991");
+                Aluno aRA01990 = criarAluno("Thiago Alves Lima", "RA01990", r00000000991, esc);
+                Responsavel r00000000992 = criarResp("Thiago Lima Ferreira", "00000000992");
+                Aluno aRA01991 = criarAluno("Tiago Vieira Fernandes", "RA01991", r00000000992, esc);
+                Responsavel r00000000993 = criarResp("Inês Alves Costa", "00000000993");
+                Aluno aRA01992 = criarAluno("Guilherme Mendes Gomes", "RA01992", r00000000993, esc);
+                Responsavel r00000000994 = criarResp("Matheus Oliveira Alves", "00000000994");
+                Aluno aRA01993 = criarAluno("Margarida Gomes Alves", "RA01993", r00000000994, esc);
+                Responsavel r00000000995 = criarResp("Nicolas Ribeiro Rodrigues", "00000000995");
+                Aluno aRA01994 = criarAluno("Eduardo Ribeiro Mendes", "RA01994", r00000000995, esc);
+                Responsavel r00000000996 = criarResp("Beatriz Fernandes Santos", "00000000996");
+                Aluno aRA01995 = criarAluno("Camila Almeida Vieira", "RA01995", r00000000996, esc);
+                Responsavel r00000000997 = criarResp("Beatriz Souza Soares", "00000000997");
+                Aluno aRA01996 = criarAluno("Igor Fernandes Soares", "RA01996", r00000000997, esc);
+                Responsavel r00000000998 = criarResp("Inês Lopes Pereira", "00000000998");
+                Aluno aRA01997 = criarAluno("Julia Santos Gomes", "RA01997", r00000000998, esc);
+                Responsavel r00000000999 = criarResp("Gabriel Santos Lima", "00000000999");
+                Aluno aRA01998 = criarAluno("Matheus Pereira Lima", "RA01998", r00000000999, esc);
+                Responsavel r00000001000 = criarResp("Guilherme Mendes Almeida", "00000001000");
+                Aluno aRA01999 = criarAluno("Inês Ribeiro Ferreira", "RA01999", r00000001000, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA01980, aRA01981, aRA01982, aRA01983, aRA01984, aRA01985, aRA01986, aRA01987,
+                                                aRA01988,
+                                                aRA01989, aRA01990, aRA01991, aRA01992, aRA01993, aRA01994, aRA01995,
+                                                aRA01996, aRA01997,
+                                                aRA01998, aRA01999));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000001001 = criarResp("Mariana Souza Vieira", "00000001001");
+                Aluno aRA02000 = criarAluno("Igor Costa Lopes", "RA02000", r00000001001, esc);
+                Responsavel r00000001002 = criarResp("Guilherme Cruz Barbosa", "00000001002");
+                Aluno aRA02001 = criarAluno("Matheus Ribeiro Ferreira", "RA02001", r00000001002, esc);
+                Responsavel r00000001003 = criarResp("Yuri Carvalho Santos", "00000001003");
+                Aluno aRA02002 = criarAluno("Daniela Mendes Gomes", "RA02002", r00000001003, esc);
+                Responsavel r00000001004 = criarResp("Inês Fernandes Vieira", "00000001004");
+                Aluno aRA02003 = criarAluno("Olivia Souza Barbosa", "RA02003", r00000001004, esc);
+                Responsavel r00000001005 = criarResp("Larissa Oliveira Alves", "00000001005");
+                Aluno aRA02004 = criarAluno("Margarida Ribeiro Oliveira", "RA02004", r00000001005, esc);
+                Responsavel r00000001006 = criarResp("Maria Oliveira Carvalho", "00000001006");
+                Aluno aRA02005 = criarAluno("Camila Pereira Barbosa", "RA02005", r00000001006, esc);
+                Responsavel r00000001007 = criarResp("Guilherme Cruz Carvalho", "00000001007");
+                Aluno aRA02006 = criarAluno("Thiago Costa Vieira", "RA02006", r00000001007, esc);
+                Responsavel r00000001008 = criarResp("Maria Carvalho Barbosa", "00000001008");
+                Aluno aRA02007 = criarAluno("João Barbosa Souza", "RA02007", r00000001008, esc);
+                Responsavel r00000001009 = criarResp("Maria Ferreira Soares", "00000001009");
+                Aluno aRA02008 = criarAluno("Margarida Alves Silva", "RA02008", r00000001009, esc);
+                Responsavel r00000001010 = criarResp("Bruno Vieira Ribeiro", "00000001010");
+                Aluno aRA02009 = criarAluno("Helena Soares Pereira", "RA02009", r00000001010, esc);
+                Responsavel r00000001011 = criarResp("Inês Costa Oliveira", "00000001011");
+                Aluno aRA02010 = criarAluno("Pedro Pereira Costa", "RA02010", r00000001011, esc);
+                Responsavel r00000001012 = criarResp("Sophia Lopes Oliveira", "00000001012");
+                Aluno aRA02011 = criarAluno("Helena Oliveira Gomes", "RA02011", r00000001012, esc);
+                Responsavel r00000001013 = criarResp("Mariana Pereira Vieira", "00000001013");
+                Aluno aRA02012 = criarAluno("Inês Alves Carvalho", "RA02012", r00000001013, esc);
+                Responsavel r00000001014 = criarResp("Helena Carvalho Santos", "00000001014");
+                Aluno aRA02013 = criarAluno("Margarida Cruz Alves", "RA02013", r00000001014, esc);
+                Responsavel r00000001015 = criarResp("Julia Pereira Mendes", "00000001015");
+                Aluno aRA02014 = criarAluno("Beatriz Mendes Almeida", "RA02014", r00000001015, esc);
+                Responsavel r00000001016 = criarResp("Diogo Lopes Carvalho", "00000001016");
+                Aluno aRA02015 = criarAluno("Pedro Rodrigues Lopes", "RA02015", r00000001016, esc);
+                Responsavel r00000001017 = criarResp("Camila Souza Vieira", "00000001017");
+                Aluno aRA02016 = criarAluno("Vitoria Lima Ferreira", "RA02016", r00000001017, esc);
+                Responsavel r00000001018 = criarResp("João Gomes Oliveira", "00000001018");
+                Aluno aRA02017 = criarAluno("Maria Cruz Ferreira", "RA02017", r00000001018, esc);
+                Responsavel r00000001019 = criarResp("Nicolas Barbosa Almeida", "00000001019");
+                Aluno aRA02018 = criarAluno("Guilherme Costa Alves", "RA02018", r00000001019, esc);
+                Responsavel r00000001020 = criarResp("Olivia Silva Lima", "00000001020");
+                Aluno aRA02019 = criarAluno("Daniela Gomes Lima", "RA02019", r00000001020, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02000, aRA02001, aRA02002, aRA02003, aRA02004, aRA02005, aRA02006, aRA02007,
+                                                aRA02008,
+                                                aRA02009, aRA02010, aRA02011, aRA02012, aRA02013, aRA02014, aRA02015,
+                                                aRA02016, aRA02017,
+                                                aRA02018, aRA02019));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000001021 = criarResp("Lucas Ferreira Fernandes", "00000001021");
+                Aluno aRA02020 = criarAluno("Matheus Souza Cruz", "RA02020", r00000001021, esc);
+                Responsavel r00000001022 = criarResp("Julia Mendes Lima", "00000001022");
+                Aluno aRA02021 = criarAluno("Thiago Martins Oliveira", "RA02021", r00000001022, esc);
+                Responsavel r00000001023 = criarResp("Bruno Fernandes Cruz", "00000001023");
+                Aluno aRA02022 = criarAluno("Daniela Barbosa Cruz", "RA02022", r00000001023, esc);
+                Responsavel r00000001024 = criarResp("Helena Martins Ferreira", "00000001024");
+                Aluno aRA02023 = criarAluno("Daniela Lopes Souza", "RA02023", r00000001024, esc);
+                Responsavel r00000001025 = criarResp("Rafael Oliveira Alves", "00000001025");
+                Aluno aRA02024 = criarAluno("Yuri Mendes Carvalho", "RA02024", r00000001025, esc);
+                Responsavel r00000001026 = criarResp("Pedro Souza Santos", "00000001026");
+                Aluno aRA02025 = criarAluno("Matheus Silva Ferreira", "RA02025", r00000001026, esc);
+                Responsavel r00000001027 = criarResp("Fernanda Almeida Souza", "00000001027");
+                Aluno aRA02026 = criarAluno("Daniela Almeida Cruz", "RA02026", r00000001027, esc);
+                Responsavel r00000001028 = criarResp("Carlos Cruz Ribeiro", "00000001028");
+                Aluno aRA02027 = criarAluno("Matheus Silva Fernandes", "RA02027", r00000001028, esc);
+                Responsavel r00000001029 = criarResp("Thiago Mendes Soares", "00000001029");
+                Aluno aRA02028 = criarAluno("Sophia Vieira Carvalho", "RA02028", r00000001029, esc);
+                Responsavel r00000001030 = criarResp("Daniela Pereira Alves", "00000001030");
+                Aluno aRA02029 = criarAluno("Yuri Lima Ferreira", "RA02029", r00000001030, esc);
+                Responsavel r00000001031 = criarResp("Maria Gomes Oliveira", "00000001031");
+                Aluno aRA02030 = criarAluno("Tiago Silva Costa", "RA02030", r00000001031, esc);
+                Responsavel r00000001032 = criarResp("Tiago Pereira Ribeiro", "00000001032");
+                Aluno aRA02031 = criarAluno("Larissa Fernandes Carvalho", "RA02031", r00000001032, esc);
+                Responsavel r00000001033 = criarResp("Ana Almeida Alves", "00000001033");
+                Aluno aRA02032 = criarAluno("Tiago Vieira Soares", "RA02032", r00000001033, esc);
+                Responsavel r00000001034 = criarResp("Ana Mendes Souza", "00000001034");
+                Aluno aRA02033 = criarAluno("Olivia Lopes Soares", "RA02033", r00000001034, esc);
+                Responsavel r00000001035 = criarResp("Inês Pereira Souza", "00000001035");
+                Aluno aRA02034 = criarAluno("Tiago Martins Gomes", "RA02034", r00000001035, esc);
+                Responsavel r00000001036 = criarResp("Daniela Vieira Pereira", "00000001036");
+                Aluno aRA02035 = criarAluno("Maria Cruz Vieira", "RA02035", r00000001036, esc);
+                Responsavel r00000001037 = criarResp("Bruno Souza Alves", "00000001037");
+                Aluno aRA02036 = criarAluno("Beatriz Rodrigues Vieira", "RA02036", r00000001037, esc);
+                Responsavel r00000001038 = criarResp("Carlos Gomes Ferreira", "00000001038");
+                Aluno aRA02037 = criarAluno("Igor Almeida Pereira", "RA02037", r00000001038, esc);
+                Responsavel r00000001039 = criarResp("Carlos Fernandes Mendes", "00000001039");
+                Aluno aRA02038 = criarAluno("Mariana Soares Fernandes", "RA02038", r00000001039, esc);
+                Responsavel r00000001040 = criarResp("Yuri Barbosa Costa", "00000001040");
+                Aluno aRA02039 = criarAluno("Bruno Ferreira Lima", "RA02039", r00000001040, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02020, aRA02021, aRA02022, aRA02023, aRA02024, aRA02025, aRA02026, aRA02027,
+                                                aRA02028,
+                                                aRA02029, aRA02030, aRA02031, aRA02032, aRA02033, aRA02034, aRA02035,
+                                                aRA02036, aRA02037,
+                                                aRA02038, aRA02039));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000001041 = criarResp("Diogo Alves Soares", "00000001041");
+                Aluno aRA02040 = criarAluno("Nicolas Ribeiro Vieira", "RA02040", r00000001041, esc);
+                Responsavel r00000001042 = criarResp("Ana Soares Fernandes", "00000001042");
+                Aluno aRA02041 = criarAluno("Lucas Gomes Pereira", "RA02041", r00000001042, esc);
+                Responsavel r00000001043 = criarResp("Guilherme Santos Pereira", "00000001043");
+                Aluno aRA02042 = criarAluno("Rafael Rodrigues Ribeiro", "RA02042", r00000001043, esc);
+                Responsavel r00000001044 = criarResp("Mariana Carvalho Alves", "00000001044");
+                Aluno aRA02043 = criarAluno("Guilherme Costa Alves", "RA02043", r00000001044, esc);
+                Responsavel r00000001045 = criarResp("Yuri Oliveira Almeida", "00000001045");
+                Aluno aRA02044 = criarAluno("João Mendes Soares", "RA02044", r00000001045, esc);
+                Responsavel r00000001046 = criarResp("Julia Silva Rodrigues", "00000001046");
+                Aluno aRA02045 = criarAluno("Thiago Gomes Oliveira", "RA02045", r00000001046, esc);
+                Responsavel r00000001047 = criarResp("Olivia Souza Ribeiro", "00000001047");
+                Aluno aRA02046 = criarAluno("Guilherme Silva Ribeiro", "RA02046", r00000001047, esc);
+                Responsavel r00000001048 = criarResp("Carlos Rodrigues Santos", "00000001048");
+                Aluno aRA02047 = criarAluno("Yuri Vieira Ribeiro", "RA02047", r00000001048, esc);
+                Responsavel r00000001049 = criarResp("Nicolas Ribeiro Fernandes", "00000001049");
+                Aluno aRA02048 = criarAluno("Sophia Souza Mendes", "RA02048", r00000001049, esc);
+                Responsavel r00000001050 = criarResp("Tiago Ribeiro Lopes", "00000001050");
+                Aluno aRA02049 = criarAluno("Gabriel Carvalho Soares", "RA02049", r00000001050, esc);
+                Responsavel r00000001051 = criarResp("Guilherme Ribeiro Cruz", "00000001051");
+                Aluno aRA02050 = criarAluno("Gabriel Costa Pereira", "RA02050", r00000001051, esc);
+                Responsavel r00000001052 = criarResp("Ana Soares Lopes", "00000001052");
+                Aluno aRA02051 = criarAluno("Diogo Costa Barbosa", "RA02051", r00000001052, esc);
+                Responsavel r00000001053 = criarResp("Rafael Almeida Carvalho", "00000001053");
+                Aluno aRA02052 = criarAluno("Helena Fernandes Lopes", "RA02052", r00000001053, esc);
+                Responsavel r00000001054 = criarResp("Nicolas Barbosa Ribeiro", "00000001054");
+                Aluno aRA02053 = criarAluno("João Ferreira Lima", "RA02053", r00000001054, esc);
+                Responsavel r00000001055 = criarResp("Larissa Lima Cruz", "00000001055");
+                Aluno aRA02054 = criarAluno("Maria Silva Rodrigues", "RA02054", r00000001055, esc);
+                Responsavel r00000001056 = criarResp("Carlos Ferreira Mendes", "00000001056");
+                Aluno aRA02055 = criarAluno("Fernanda Pereira Cruz", "RA02055", r00000001056, esc);
+                Responsavel r00000001057 = criarResp("Tiago Martins Mendes", "00000001057");
+                Aluno aRA02056 = criarAluno("Ana Carvalho Costa", "RA02056", r00000001057, esc);
+                Responsavel r00000001058 = criarResp("Lucas Vieira Martins", "00000001058");
+                Aluno aRA02057 = criarAluno("Olivia Costa Souza", "RA02057", r00000001058, esc);
+                Responsavel r00000001059 = criarResp("Julia Lima Alves", "00000001059");
+                Aluno aRA02058 = criarAluno("Igor Mendes Barbosa", "RA02058", r00000001059, esc);
+                Responsavel r00000001060 = criarResp("Olivia Mendes Ferreira", "00000001060");
+                Aluno aRA02059 = criarAluno("Sophia Rodrigues Silva", "RA02059", r00000001060, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02040, aRA02041, aRA02042, aRA02043, aRA02044, aRA02045, aRA02046, aRA02047,
+                                                aRA02048,
+                                                aRA02049, aRA02050, aRA02051, aRA02052, aRA02053, aRA02054, aRA02055,
+                                                aRA02056, aRA02057,
+                                                aRA02058, aRA02059));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000001061 = criarResp("Margarida Ferreira Lima", "00000001061");
+                Aluno aRA02060 = criarAluno("Daniela Alves Soares", "RA02060", r00000001061, esc);
+                Responsavel r00000001062 = criarResp("Nicolas Lima Santos", "00000001062");
+                Aluno aRA02061 = criarAluno("João Ribeiro Oliveira", "RA02061", r00000001062, esc);
+                Responsavel r00000001063 = criarResp("Helena Rodrigues Lima", "00000001063");
+                Aluno aRA02062 = criarAluno("Julia Souza Soares", "RA02062", r00000001063, esc);
+                Responsavel r00000001064 = criarResp("Yuri Gomes Vieira", "00000001064");
+                Aluno aRA02063 = criarAluno("Rafael Oliveira Alves", "RA02063", r00000001064, esc);
+                Responsavel r00000001065 = criarResp("Carlos Ribeiro Almeida", "00000001065");
+                Aluno aRA02064 = criarAluno("Rafael Alves Lopes", "RA02064", r00000001065, esc);
+                Responsavel r00000001066 = criarResp("Diogo Gomes Fernandes", "00000001066");
+                Aluno aRA02065 = criarAluno("Matheus Barbosa Alves", "RA02065", r00000001066, esc);
+                Responsavel r00000001067 = criarResp("Igor Ferreira Costa", "00000001067");
+                Aluno aRA02066 = criarAluno("Tiago Alves Ferreira", "RA02066", r00000001067, esc);
+                Responsavel r00000001068 = criarResp("Carlos Souza Vieira", "00000001068");
+                Aluno aRA02067 = criarAluno("Igor Cruz Silva", "RA02067", r00000001068, esc);
+                Responsavel r00000001069 = criarResp("Vitoria Cruz Soares", "00000001069");
+                Aluno aRA02068 = criarAluno("Matheus Barbosa Souza", "RA02068", r00000001069, esc);
+                Responsavel r00000001070 = criarResp("Fernanda Almeida Lopes", "00000001070");
+                Aluno aRA02069 = criarAluno("Lucas Gomes Ferreira", "RA02069", r00000001070, esc);
+                Responsavel r00000001071 = criarResp("Margarida Silva Lopes", "00000001071");
+                Aluno aRA02070 = criarAluno("Gabriel Cruz Pereira", "RA02070", r00000001071, esc);
+                Responsavel r00000001072 = criarResp("Nicolas Martins Carvalho", "00000001072");
+                Aluno aRA02071 = criarAluno("Olivia Costa Santos", "RA02071", r00000001072, esc);
+                Responsavel r00000001073 = criarResp("Matheus Martins Ferreira", "00000001073");
+                Aluno aRA02072 = criarAluno("Carlos Alves Oliveira", "RA02072", r00000001073, esc);
+                Responsavel r00000001074 = criarResp("Fernanda Souza Costa", "00000001074");
+                Aluno aRA02073 = criarAluno("Gabriel Santos Cruz", "RA02073", r00000001074, esc);
+                Responsavel r00000001075 = criarResp("Beatriz Ribeiro Lima", "00000001075");
+                Aluno aRA02074 = criarAluno("Ana Ferreira Souza", "RA02074", r00000001075, esc);
+                Responsavel r00000001076 = criarResp("Larissa Gomes Santos", "00000001076");
+                Aluno aRA02075 = criarAluno("Mariana Lima Soares", "RA02075", r00000001076, esc);
+                Responsavel r00000001077 = criarResp("Lucas Souza Carvalho", "00000001077");
+                Aluno aRA02076 = criarAluno("Rafael Pereira Ribeiro", "RA02076", r00000001077, esc);
+                Responsavel r00000001078 = criarResp("Bruno Lima Soares", "00000001078");
+                Aluno aRA02077 = criarAluno("Rafael Martins Silva", "RA02077", r00000001078, esc);
+                Responsavel r00000001079 = criarResp("Daniela Soares Costa", "00000001079");
+                Aluno aRA02078 = criarAluno("Beatriz Silva Martins", "RA02078", r00000001079, esc);
+                Responsavel r00000001080 = criarResp("Beatriz Oliveira Almeida", "00000001080");
+                Aluno aRA02079 = criarAluno("Larissa Martins Cruz", "RA02079", r00000001080, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02060, aRA02061, aRA02062, aRA02063, aRA02064, aRA02065, aRA02066, aRA02067,
+                                                aRA02068,
+                                                aRA02069, aRA02070, aRA02071, aRA02072, aRA02073, aRA02074, aRA02075,
+                                                aRA02076, aRA02077,
+                                                aRA02078, aRA02079));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000001081 = criarResp("Lucas Martins Rodrigues", "00000001081");
+                Aluno aRA02080 = criarAluno("Bruno Souza Mendes", "RA02080", r00000001081, esc);
+                Responsavel r00000001082 = criarResp("Bruno Ribeiro Silva", "00000001082");
+                Aluno aRA02081 = criarAluno("Inês Carvalho Mendes", "RA02081", r00000001082, esc);
+                Responsavel r00000001083 = criarResp("Carlos Ferreira Pereira", "00000001083");
+                Aluno aRA02082 = criarAluno("Carlos Costa Silva", "RA02082", r00000001083, esc);
+                Responsavel r00000001084 = criarResp("Nicolas Soares Cruz", "00000001084");
+                Aluno aRA02083 = criarAluno("Diogo Gomes Martins", "RA02083", r00000001084, esc);
+                Responsavel r00000001085 = criarResp("Camila Mendes Lopes", "00000001085");
+                Aluno aRA02084 = criarAluno("Sophia Santos Carvalho", "RA02084", r00000001085, esc);
+                Responsavel r00000001086 = criarResp("Thiago Santos Cruz", "00000001086");
+                Aluno aRA02085 = criarAluno("Lucas Lopes Gomes", "RA02085", r00000001086, esc);
+                Responsavel r00000001087 = criarResp("Maria Costa Souza", "00000001087");
+                Aluno aRA02086 = criarAluno("Eduardo Lima Santos", "RA02086", r00000001087, esc);
+                Responsavel r00000001088 = criarResp("João Carvalho Lopes", "00000001088");
+                Aluno aRA02087 = criarAluno("Fernanda Ferreira Santos", "RA02087", r00000001088, esc);
+                Responsavel r00000001089 = criarResp("Daniela Lopes Carvalho", "00000001089");
+                Aluno aRA02088 = criarAluno("Lucas Martins Ferreira", "RA02088", r00000001089, esc);
+                Responsavel r00000001090 = criarResp("Tiago Carvalho Alves", "00000001090");
+                Aluno aRA02089 = criarAluno("Thiago Souza Cruz", "RA02089", r00000001090, esc);
+                Responsavel r00000001091 = criarResp("Camila Santos Ferreira", "00000001091");
+                Aluno aRA02090 = criarAluno("Gabriel Carvalho Oliveira", "RA02090", r00000001091, esc);
+                Responsavel r00000001092 = criarResp("Guilherme Martins Lima", "00000001092");
+                Aluno aRA02091 = criarAluno("Helena Martins Ferreira", "RA02091", r00000001092, esc);
+                Responsavel r00000001093 = criarResp("Vitoria Alves Mendes", "00000001093");
+                Aluno aRA02092 = criarAluno("Sophia Oliveira Ribeiro", "RA02092", r00000001093, esc);
+                Responsavel r00000001094 = criarResp("Nicolas Silva Gomes", "00000001094");
+                Aluno aRA02093 = criarAluno("Vitoria Martins Lima", "RA02093", r00000001094, esc);
+                Responsavel r00000001095 = criarResp("João Fernandes Ribeiro", "00000001095");
+                Aluno aRA02094 = criarAluno("Julia Santos Mendes", "RA02094", r00000001095, esc);
+                Responsavel r00000001096 = criarResp("Yuri Soares Pereira", "00000001096");
+                Aluno aRA02095 = criarAluno("Diogo Santos Oliveira", "RA02095", r00000001096, esc);
+                Responsavel r00000001097 = criarResp("Fernanda Rodrigues Souza", "00000001097");
+                Aluno aRA02096 = criarAluno("Julia Vieira Gomes", "RA02096", r00000001097, esc);
+                Responsavel r00000001098 = criarResp("Julia Costa Silva", "00000001098");
+                Aluno aRA02097 = criarAluno("Helena Alves Oliveira", "RA02097", r00000001098, esc);
+                Responsavel r00000001099 = criarResp("Matheus Vieira Fernandes", "00000001099");
+                Aluno aRA02098 = criarAluno("Eduardo Gomes Rodrigues", "RA02098", r00000001099, esc);
+                Responsavel r00000001100 = criarResp("Maria Lopes Martins", "00000001100");
+                Aluno aRA02099 = criarAluno("Helena Martins Lopes", "RA02099", r00000001100, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02080, aRA02081, aRA02082, aRA02083, aRA02084, aRA02085, aRA02086, aRA02087,
+                                                aRA02088,
+                                                aRA02089, aRA02090, aRA02091, aRA02092, aRA02093, aRA02094, aRA02095,
+                                                aRA02096, aRA02097,
+                                                aRA02098, aRA02099));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000001101 = criarResp("Margarida Souza Santos", "00000001101");
+                Aluno aRA02100 = criarAluno("Vitoria Carvalho Barbosa", "RA02100", r00000001101, esc);
+                Responsavel r00000001102 = criarResp("Pedro Alves Lopes", "00000001102");
+                Aluno aRA02101 = criarAluno("Maria Lima Ferreira", "RA02101", r00000001102, esc);
+                Responsavel r00000001103 = criarResp("Eduardo Lima Lopes", "00000001103");
+                Aluno aRA02102 = criarAluno("Margarida Carvalho Gomes", "RA02102", r00000001103, esc);
+                Responsavel r00000001104 = criarResp("Bruno Silva Mendes", "00000001104");
+                Aluno aRA02103 = criarAluno("Vitoria Rodrigues Soares", "RA02103", r00000001104, esc);
+                Responsavel r00000001105 = criarResp("João Martins Soares", "00000001105");
+                Aluno aRA02104 = criarAluno("Daniela Souza Alves", "RA02104", r00000001105, esc);
+                Responsavel r00000001106 = criarResp("Guilherme Lima Santos", "00000001106");
+                Aluno aRA02105 = criarAluno("Igor Martins Pereira", "RA02105", r00000001106, esc);
+                Responsavel r00000001107 = criarResp("Maria Costa Rodrigues", "00000001107");
+                Aluno aRA02106 = criarAluno("Diogo Vieira Fernandes", "RA02106", r00000001107, esc);
+                Responsavel r00000001108 = criarResp("Diogo Cruz Soares", "00000001108");
+                Aluno aRA02107 = criarAluno("Maria Gomes Silva", "RA02107", r00000001108, esc);
+                Responsavel r00000001109 = criarResp("Margarida Costa Mendes", "00000001109");
+                Aluno aRA02108 = criarAluno("Rafael Vieira Ferreira", "RA02108", r00000001109, esc);
+                Responsavel r00000001110 = criarResp("Tiago Lopes Rodrigues", "00000001110");
+                Aluno aRA02109 = criarAluno("Ana Lima Santos", "RA02109", r00000001110, esc);
+                Responsavel r00000001111 = criarResp("Pedro Costa Vieira", "00000001111");
+                Aluno aRA02110 = criarAluno("Tiago Martins Carvalho", "RA02110", r00000001111, esc);
+                Responsavel r00000001112 = criarResp("Eduardo Costa Pereira", "00000001112");
+                Aluno aRA02111 = criarAluno("Sophia Alves Cruz", "RA02111", r00000001112, esc);
+                Responsavel r00000001113 = criarResp("Helena Ribeiro Almeida", "00000001113");
+                Aluno aRA02112 = criarAluno("Daniela Gomes Silva", "RA02112", r00000001113, esc);
+                Responsavel r00000001114 = criarResp("Gabriel Martins Barbosa", "00000001114");
+                Aluno aRA02113 = criarAluno("Margarida Lima Cruz", "RA02113", r00000001114, esc);
+                Responsavel r00000001115 = criarResp("Camila Oliveira Souza", "00000001115");
+                Aluno aRA02114 = criarAluno("Pedro Ribeiro Alves", "RA02114", r00000001115, esc);
+                Responsavel r00000001116 = criarResp("Matheus Gomes Rodrigues", "00000001116");
+                Aluno aRA02115 = criarAluno("Olivia Souza Mendes", "RA02115", r00000001116, esc);
+                Responsavel r00000001117 = criarResp("João Oliveira Barbosa", "00000001117");
+                Aluno aRA02116 = criarAluno("Matheus Oliveira Fernandes", "RA02116", r00000001117, esc);
+                Responsavel r00000001118 = criarResp("Yuri Lima Souza", "00000001118");
+                Aluno aRA02117 = criarAluno("Vitoria Mendes Pereira", "RA02117", r00000001118, esc);
+                Responsavel r00000001119 = criarResp("Gabriel Costa Martins", "00000001119");
+                Aluno aRA02118 = criarAluno("Vitoria Soares Souza", "RA02118", r00000001119, esc);
+                Responsavel r00000001120 = criarResp("João Pereira Ribeiro", "00000001120");
+                Aluno aRA02119 = criarAluno("Matheus Soares Mendes", "RA02119", r00000001120, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02100, aRA02101, aRA02102, aRA02103, aRA02104, aRA02105, aRA02106, aRA02107,
+                                                aRA02108,
+                                                aRA02109, aRA02110, aRA02111, aRA02112, aRA02113, aRA02114, aRA02115,
+                                                aRA02116, aRA02117,
+                                                aRA02118, aRA02119));
+
+        }
+
+        private void popularEscola8() {
+                Escola esc = escolaRepository.findById(8L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Larissa Cruz Lopes", "diretor@objetivo.com.br", Role.DIRETOR, Funcionario.Cargo.DIRETOR,
+                                esc);
+                criarFunc("Guilherme Lima Ribeiro", "secretaria@objetivo.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA,
+                                esc);
+                criarFunc("Daniela Gomes Cruz", "coordenador@objetivo.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR,
+                                esc);
+                criarFunc("Daniela Ferreira Vieira", "professor@objetivo.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR,
+                                esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000001121 = criarResp("Guilherme Pereira Vieira", "00000001121");
+                Aluno aRA02120 = criarAluno("Larissa Cruz Costa", "RA02120", r00000001121, esc);
+                Responsavel r00000001122 = criarResp("Pedro Lopes Santos", "00000001122");
+                Aluno aRA02121 = criarAluno("Inês Costa Mendes", "RA02121", r00000001122, esc);
+                Responsavel r00000001123 = criarResp("Sophia Fernandes Souza", "00000001123");
+                Aluno aRA02122 = criarAluno("João Lima Mendes", "RA02122", r00000001123, esc);
+                Responsavel r00000001124 = criarResp("Vitoria Souza Almeida", "00000001124");
+                Aluno aRA02123 = criarAluno("Beatriz Santos Souza", "RA02123", r00000001124, esc);
+                Responsavel r00000001125 = criarResp("Bruno Soares Carvalho", "00000001125");
+                Aluno aRA02124 = criarAluno("Gabriel Silva Costa", "RA02124", r00000001125, esc);
+                Responsavel r00000001126 = criarResp("João Silva Santos", "00000001126");
+                Aluno aRA02125 = criarAluno("Tiago Cruz Vieira", "RA02125", r00000001126, esc);
+                Responsavel r00000001127 = criarResp("Margarida Barbosa Lima", "00000001127");
+                Aluno aRA02126 = criarAluno("Mariana Silva Gomes", "RA02126", r00000001127, esc);
+                Responsavel r00000001128 = criarResp("Pedro Silva Mendes", "00000001128");
+                Aluno aRA02127 = criarAluno("Larissa Souza Cruz", "RA02127", r00000001128, esc);
+                Responsavel r00000001129 = criarResp("Olivia Martins Gomes", "00000001129");
+                Aluno aRA02128 = criarAluno("Gabriel Barbosa Martins", "RA02128", r00000001129, esc);
+                Responsavel r00000001130 = criarResp("Sophia Mendes Ferreira", "00000001130");
+                Aluno aRA02129 = criarAluno("Nicolas Ferreira Barbosa", "RA02129", r00000001130, esc);
+                Responsavel r00000001131 = criarResp("Inês Lopes Alves", "00000001131");
+                Aluno aRA02130 = criarAluno("Helena Silva Soares", "RA02130", r00000001131, esc);
+                Responsavel r00000001132 = criarResp("Ana Almeida Silva", "00000001132");
+                Aluno aRA02131 = criarAluno("Guilherme Lopes Lima", "RA02131", r00000001132, esc);
+                Responsavel r00000001133 = criarResp("Diogo Rodrigues Cruz", "00000001133");
+                Aluno aRA02132 = criarAluno("Ana Martins Gomes", "RA02132", r00000001133, esc);
+                Responsavel r00000001134 = criarResp("Daniela Martins Silva", "00000001134");
+                Aluno aRA02133 = criarAluno("Larissa Alves Lopes", "RA02133", r00000001134, esc);
+                Responsavel r00000001135 = criarResp("Beatriz Martins Silva", "00000001135");
+                Aluno aRA02134 = criarAluno("Eduardo Barbosa Santos", "RA02134", r00000001135, esc);
+                Responsavel r00000001136 = criarResp("Vitoria Almeida Lopes", "00000001136");
+                Aluno aRA02135 = criarAluno("Eduardo Almeida Lima", "RA02135", r00000001136, esc);
+                Responsavel r00000001137 = criarResp("Guilherme Fernandes Oliveira", "00000001137");
+                Aluno aRA02136 = criarAluno("Mariana Soares Mendes", "RA02136", r00000001137, esc);
+                Responsavel r00000001138 = criarResp("João Santos Lima", "00000001138");
+                Aluno aRA02137 = criarAluno("Mariana Mendes Fernandes", "RA02137", r00000001138, esc);
+                Responsavel r00000001139 = criarResp("Fernanda Vieira Rodrigues", "00000001139");
+                Aluno aRA02138 = criarAluno("Beatriz Silva Pereira", "RA02138", r00000001139, esc);
+                Responsavel r00000001140 = criarResp("Olivia Fernandes Soares", "00000001140");
+                Aluno aRA02139 = criarAluno("Inês Almeida Gomes", "RA02139", r00000001140, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02120, aRA02121, aRA02122, aRA02123, aRA02124, aRA02125, aRA02126, aRA02127,
+                                                aRA02128,
+                                                aRA02129, aRA02130, aRA02131, aRA02132, aRA02133, aRA02134, aRA02135,
+                                                aRA02136, aRA02137,
+                                                aRA02138, aRA02139));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000001141 = criarResp("Thiago Ferreira Lima", "00000001141");
+                Aluno aRA02140 = criarAluno("Olivia Barbosa Lima", "RA02140", r00000001141, esc);
+                Responsavel r00000001142 = criarResp("Maria Costa Carvalho", "00000001142");
+                Aluno aRA02141 = criarAluno("Guilherme Barbosa Almeida", "RA02141", r00000001142, esc);
+                Responsavel r00000001143 = criarResp("Tiago Ribeiro Martins", "00000001143");
+                Aluno aRA02142 = criarAluno("Carlos Mendes Gomes", "RA02142", r00000001143, esc);
+                Responsavel r00000001144 = criarResp("Rafael Martins Souza", "00000001144");
+                Aluno aRA02143 = criarAluno("Sophia Oliveira Mendes", "RA02143", r00000001144, esc);
+                Responsavel r00000001145 = criarResp("Yuri Almeida Cruz", "00000001145");
+                Aluno aRA02144 = criarAluno("Sophia Gomes Souza", "RA02144", r00000001145, esc);
+                Responsavel r00000001146 = criarResp("Beatriz Pereira Mendes", "00000001146");
+                Aluno aRA02145 = criarAluno("Olivia Ferreira Carvalho", "RA02145", r00000001146, esc);
+                Responsavel r00000001147 = criarResp("Gabriel Martins Santos", "00000001147");
+                Aluno aRA02146 = criarAluno("Sophia Vieira Soares", "RA02146", r00000001147, esc);
+                Responsavel r00000001148 = criarResp("Pedro Vieira Costa", "00000001148");
+                Aluno aRA02147 = criarAluno("Ana Costa Vieira", "RA02147", r00000001148, esc);
+                Responsavel r00000001149 = criarResp("Fernanda Vieira Ferreira", "00000001149");
+                Aluno aRA02148 = criarAluno("Yuri Barbosa Costa", "RA02148", r00000001149, esc);
+                Responsavel r00000001150 = criarResp("Maria Alves Oliveira", "00000001150");
+                Aluno aRA02149 = criarAluno("Bruno Santos Carvalho", "RA02149", r00000001150, esc);
+                Responsavel r00000001151 = criarResp("Yuri Mendes Almeida", "00000001151");
+                Aluno aRA02150 = criarAluno("Pedro Lima Oliveira", "RA02150", r00000001151, esc);
+                Responsavel r00000001152 = criarResp("Bruno Souza Cruz", "00000001152");
+                Aluno aRA02151 = criarAluno("Maria Lopes Vieira", "RA02151", r00000001152, esc);
+                Responsavel r00000001153 = criarResp("Igor Almeida Gomes", "00000001153");
+                Aluno aRA02152 = criarAluno("Margarida Alves Carvalho", "RA02152", r00000001153, esc);
+                Responsavel r00000001154 = criarResp("Vitoria Cruz Lopes", "00000001154");
+                Aluno aRA02153 = criarAluno("Lucas Costa Souza", "RA02153", r00000001154, esc);
+                Responsavel r00000001155 = criarResp("Yuri Rodrigues Alves", "00000001155");
+                Aluno aRA02154 = criarAluno("Tiago Rodrigues Ribeiro", "RA02154", r00000001155, esc);
+                Responsavel r00000001156 = criarResp("Tiago Silva Souza", "00000001156");
+                Aluno aRA02155 = criarAluno("Bruno Costa Lima", "RA02155", r00000001156, esc);
+                Responsavel r00000001157 = criarResp("Rafael Pereira Souza", "00000001157");
+                Aluno aRA02156 = criarAluno("Pedro Alves Martins", "RA02156", r00000001157, esc);
+                Responsavel r00000001158 = criarResp("Helena Santos Rodrigues", "00000001158");
+                Aluno aRA02157 = criarAluno("Matheus Martins Ribeiro", "RA02157", r00000001158, esc);
+                Responsavel r00000001159 = criarResp("Tiago Santos Silva", "00000001159");
+                Aluno aRA02158 = criarAluno("Julia Costa Mendes", "RA02158", r00000001159, esc);
+                Responsavel r00000001160 = criarResp("Julia Gomes Fernandes", "00000001160");
+                Aluno aRA02159 = criarAluno("Diogo Ferreira Alves", "RA02159", r00000001160, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02140, aRA02141, aRA02142, aRA02143, aRA02144, aRA02145, aRA02146, aRA02147,
+                                                aRA02148,
+                                                aRA02149, aRA02150, aRA02151, aRA02152, aRA02153, aRA02154, aRA02155,
+                                                aRA02156, aRA02157,
+                                                aRA02158, aRA02159));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000001161 = criarResp("Inês Mendes Souza", "00000001161");
+                Aluno aRA02160 = criarAluno("Diogo Rodrigues Costa", "RA02160", r00000001161, esc);
+                Responsavel r00000001162 = criarResp("Fernanda Alves Almeida", "00000001162");
+                Aluno aRA02161 = criarAluno("Thiago Alves Soares", "RA02161", r00000001162, esc);
+                Responsavel r00000001163 = criarResp("Tiago Rodrigues Pereira", "00000001163");
+                Aluno aRA02162 = criarAluno("Thiago Alves Fernandes", "RA02162", r00000001163, esc);
+                Responsavel r00000001164 = criarResp("Matheus Costa Almeida", "00000001164");
+                Aluno aRA02163 = criarAluno("Ana Rodrigues Almeida", "RA02163", r00000001164, esc);
+                Responsavel r00000001165 = criarResp("Lucas Fernandes Soares", "00000001165");
+                Aluno aRA02164 = criarAluno("Eduardo Vieira Martins", "RA02164", r00000001165, esc);
+                Responsavel r00000001166 = criarResp("Gabriel Lima Ferreira", "00000001166");
+                Aluno aRA02165 = criarAluno("Inês Costa Silva", "RA02165", r00000001166, esc);
+                Responsavel r00000001167 = criarResp("Tiago Barbosa Mendes", "00000001167");
+                Aluno aRA02166 = criarAluno("Yuri Cruz Fernandes", "RA02166", r00000001167, esc);
+                Responsavel r00000001168 = criarResp("Pedro Cruz Souza", "00000001168");
+                Aluno aRA02167 = criarAluno("João Lopes Soares", "RA02167", r00000001168, esc);
+                Responsavel r00000001169 = criarResp("João Lima Rodrigues", "00000001169");
+                Aluno aRA02168 = criarAluno("Rafael Lima Gomes", "RA02168", r00000001169, esc);
+                Responsavel r00000001170 = criarResp("Fernanda Lopes Pereira", "00000001170");
+                Aluno aRA02169 = criarAluno("Igor Oliveira Fernandes", "RA02169", r00000001170, esc);
+                Responsavel r00000001171 = criarResp("Bruno Gomes Lopes", "00000001171");
+                Aluno aRA02170 = criarAluno("Pedro Martins Almeida", "RA02170", r00000001171, esc);
+                Responsavel r00000001172 = criarResp("Diogo Ribeiro Soares", "00000001172");
+                Aluno aRA02171 = criarAluno("Nicolas Ribeiro Carvalho", "RA02171", r00000001172, esc);
+                Responsavel r00000001173 = criarResp("Camila Pereira Fernandes", "00000001173");
+                Aluno aRA02172 = criarAluno("Yuri Soares Souza", "RA02172", r00000001173, esc);
+                Responsavel r00000001174 = criarResp("Fernanda Souza Alves", "00000001174");
+                Aluno aRA02173 = criarAluno("Mariana Mendes Lima", "RA02173", r00000001174, esc);
+                Responsavel r00000001175 = criarResp("Beatriz Barbosa Soares", "00000001175");
+                Aluno aRA02174 = criarAluno("Rafael Oliveira Martins", "RA02174", r00000001175, esc);
+                Responsavel r00000001176 = criarResp("Fernanda Carvalho Lima", "00000001176");
+                Aluno aRA02175 = criarAluno("Margarida Fernandes Almeida", "RA02175", r00000001176, esc);
+                Responsavel r00000001177 = criarResp("Margarida Gomes Carvalho", "00000001177");
+                Aluno aRA02176 = criarAluno("Carlos Almeida Martins", "RA02176", r00000001177, esc);
+                Responsavel r00000001178 = criarResp("Mariana Costa Rodrigues", "00000001178");
+                Aluno aRA02177 = criarAluno("Rafael Fernandes Soares", "RA02177", r00000001178, esc);
+                Responsavel r00000001179 = criarResp("Olivia Alves Barbosa", "00000001179");
+                Aluno aRA02178 = criarAluno("Rafael Costa Fernandes", "RA02178", r00000001179, esc);
+                Responsavel r00000001180 = criarResp("Nicolas Alves Pereira", "00000001180");
+                Aluno aRA02179 = criarAluno("Camila Santos Ribeiro", "RA02179", r00000001180, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02160, aRA02161, aRA02162, aRA02163, aRA02164, aRA02165, aRA02166, aRA02167,
+                                                aRA02168,
+                                                aRA02169, aRA02170, aRA02171, aRA02172, aRA02173, aRA02174, aRA02175,
+                                                aRA02176, aRA02177,
+                                                aRA02178, aRA02179));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000001181 = criarResp("Yuri Oliveira Fernandes", "00000001181");
+                Aluno aRA02180 = criarAluno("Diogo Rodrigues Gomes", "RA02180", r00000001181, esc);
+                Responsavel r00000001182 = criarResp("Carlos Oliveira Fernandes", "00000001182");
+                Aluno aRA02181 = criarAluno("Lucas Costa Silva", "RA02181", r00000001182, esc);
+                Responsavel r00000001183 = criarResp("Larissa Pereira Costa", "00000001183");
+                Aluno aRA02182 = criarAluno("Maria Oliveira Alves", "RA02182", r00000001183, esc);
+                Responsavel r00000001184 = criarResp("Sophia Lopes Oliveira", "00000001184");
+                Aluno aRA02183 = criarAluno("Thiago Lopes Fernandes", "RA02183", r00000001184, esc);
+                Responsavel r00000001185 = criarResp("Guilherme Mendes Souza", "00000001185");
+                Aluno aRA02184 = criarAluno("Sophia Lopes Martins", "RA02184", r00000001185, esc);
+                Responsavel r00000001186 = criarResp("Yuri Fernandes Rodrigues", "00000001186");
+                Aluno aRA02185 = criarAluno("Guilherme Santos Pereira", "RA02185", r00000001186, esc);
+                Responsavel r00000001187 = criarResp("Eduardo Gomes Souza", "00000001187");
+                Aluno aRA02186 = criarAluno("Lucas Vieira Lopes", "RA02186", r00000001187, esc);
+                Responsavel r00000001188 = criarResp("Daniela Ferreira Ribeiro", "00000001188");
+                Aluno aRA02187 = criarAluno("Guilherme Alves Almeida", "RA02187", r00000001188, esc);
+                Responsavel r00000001189 = criarResp("Igor Oliveira Vieira", "00000001189");
+                Aluno aRA02188 = criarAluno("Fernanda Fernandes Almeida", "RA02188", r00000001189, esc);
+                Responsavel r00000001190 = criarResp("Thiago Cruz Silva", "00000001190");
+                Aluno aRA02189 = criarAluno("Sophia Ribeiro Barbosa", "RA02189", r00000001190, esc);
+                Responsavel r00000001191 = criarResp("Camila Gomes Fernandes", "00000001191");
+                Aluno aRA02190 = criarAluno("Nicolas Alves Ribeiro", "RA02190", r00000001191, esc);
+                Responsavel r00000001192 = criarResp("João Pereira Mendes", "00000001192");
+                Aluno aRA02191 = criarAluno("Olivia Vieira Souza", "RA02191", r00000001192, esc);
+                Responsavel r00000001193 = criarResp("Igor Santos Carvalho", "00000001193");
+                Aluno aRA02192 = criarAluno("Julia Ribeiro Lopes", "RA02192", r00000001193, esc);
+                Responsavel r00000001194 = criarResp("Fernanda Ferreira Soares", "00000001194");
+                Aluno aRA02193 = criarAluno("Camila Barbosa Oliveira", "RA02193", r00000001194, esc);
+                Responsavel r00000001195 = criarResp("Pedro Ribeiro Costa", "00000001195");
+                Aluno aRA02194 = criarAluno("Thiago Pereira Cruz", "RA02194", r00000001195, esc);
+                Responsavel r00000001196 = criarResp("Inês Soares Ribeiro", "00000001196");
+                Aluno aRA02195 = criarAluno("Yuri Lima Cruz", "RA02195", r00000001196, esc);
+                Responsavel r00000001197 = criarResp("Larissa Silva Souza", "00000001197");
+                Aluno aRA02196 = criarAluno("Mariana Ribeiro Barbosa", "RA02196", r00000001197, esc);
+                Responsavel r00000001198 = criarResp("Inês Fernandes Cruz", "00000001198");
+                Aluno aRA02197 = criarAluno("Thiago Ribeiro Alves", "RA02197", r00000001198, esc);
+                Responsavel r00000001199 = criarResp("Margarida Carvalho Ferreira", "00000001199");
+                Aluno aRA02198 = criarAluno("Sophia Oliveira Lima", "RA02198", r00000001199, esc);
+                Responsavel r00000001200 = criarResp("Eduardo Cruz Souza", "00000001200");
+                Aluno aRA02199 = criarAluno("Tiago Alves Ferreira", "RA02199", r00000001200, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02180, aRA02181, aRA02182, aRA02183, aRA02184, aRA02185, aRA02186, aRA02187,
+                                                aRA02188,
+                                                aRA02189, aRA02190, aRA02191, aRA02192, aRA02193, aRA02194, aRA02195,
+                                                aRA02196, aRA02197,
+                                                aRA02198, aRA02199));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000001201 = criarResp("Eduardo Rodrigues Gomes", "00000001201");
+                Aluno aRA02200 = criarAluno("Inês Ribeiro Barbosa", "RA02200", r00000001201, esc);
+                Responsavel r00000001202 = criarResp("Gabriel Vieira Lopes", "00000001202");
+                Aluno aRA02201 = criarAluno("Ana Lopes Mendes", "RA02201", r00000001202, esc);
+                Responsavel r00000001203 = criarResp("Diogo Souza Lima", "00000001203");
+                Aluno aRA02202 = criarAluno("Nicolas Santos Ribeiro", "RA02202", r00000001203, esc);
+                Responsavel r00000001204 = criarResp("Pedro Lopes Silva", "00000001204");
+                Aluno aRA02203 = criarAluno("Margarida Cruz Souza", "RA02203", r00000001204, esc);
+                Responsavel r00000001205 = criarResp("Olivia Lopes Oliveira", "00000001205");
+                Aluno aRA02204 = criarAluno("Inês Silva Martins", "RA02204", r00000001205, esc);
+                Responsavel r00000001206 = criarResp("Pedro Pereira Rodrigues", "00000001206");
+                Aluno aRA02205 = criarAluno("Fernanda Costa Martins", "RA02205", r00000001206, esc);
+                Responsavel r00000001207 = criarResp("Sophia Lopes Rodrigues", "00000001207");
+                Aluno aRA02206 = criarAluno("Carlos Gomes Pereira", "RA02206", r00000001207, esc);
+                Responsavel r00000001208 = criarResp("Camila Barbosa Carvalho", "00000001208");
+                Aluno aRA02207 = criarAluno("Helena Soares Oliveira", "RA02207", r00000001208, esc);
+                Responsavel r00000001209 = criarResp("Nicolas Souza Ferreira", "00000001209");
+                Aluno aRA02208 = criarAluno("Daniela Soares Fernandes", "RA02208", r00000001209, esc);
+                Responsavel r00000001210 = criarResp("Camila Ferreira Lima", "00000001210");
+                Aluno aRA02209 = criarAluno("Carlos Alves Martins", "RA02209", r00000001210, esc);
+                Responsavel r00000001211 = criarResp("Julia Lopes Fernandes", "00000001211");
+                Aluno aRA02210 = criarAluno("Thiago Rodrigues Alves", "RA02210", r00000001211, esc);
+                Responsavel r00000001212 = criarResp("Lucas Mendes Costa", "00000001212");
+                Aluno aRA02211 = criarAluno("Diogo Carvalho Lopes", "RA02211", r00000001212, esc);
+                Responsavel r00000001213 = criarResp("Ana Soares Vieira", "00000001213");
+                Aluno aRA02212 = criarAluno("Bruno Fernandes Lima", "RA02212", r00000001213, esc);
+                Responsavel r00000001214 = criarResp("Nicolas Silva Rodrigues", "00000001214");
+                Aluno aRA02213 = criarAluno("Julia Ferreira Cruz", "RA02213", r00000001214, esc);
+                Responsavel r00000001215 = criarResp("Bruno Costa Lima", "00000001215");
+                Aluno aRA02214 = criarAluno("Vitoria Alves Santos", "RA02214", r00000001215, esc);
+                Responsavel r00000001216 = criarResp("Ana Souza Carvalho", "00000001216");
+                Aluno aRA02215 = criarAluno("Guilherme Rodrigues Barbosa", "RA02215", r00000001216, esc);
+                Responsavel r00000001217 = criarResp("Maria Costa Martins", "00000001217");
+                Aluno aRA02216 = criarAluno("Sophia Cruz Carvalho", "RA02216", r00000001217, esc);
+                Responsavel r00000001218 = criarResp("Matheus Cruz Fernandes", "00000001218");
+                Aluno aRA02217 = criarAluno("Lucas Costa Vieira", "RA02217", r00000001218, esc);
+                Responsavel r00000001219 = criarResp("Lucas Alves Carvalho", "00000001219");
+                Aluno aRA02218 = criarAluno("Nicolas Vieira Oliveira", "RA02218", r00000001219, esc);
+                Responsavel r00000001220 = criarResp("Thiago Soares Vieira", "00000001220");
+                Aluno aRA02219 = criarAluno("Vitoria Ribeiro Cruz", "RA02219", r00000001220, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02200, aRA02201, aRA02202, aRA02203, aRA02204, aRA02205, aRA02206, aRA02207,
+                                                aRA02208,
+                                                aRA02209, aRA02210, aRA02211, aRA02212, aRA02213, aRA02214, aRA02215,
+                                                aRA02216, aRA02217,
+                                                aRA02218, aRA02219));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000001221 = criarResp("Eduardo Ribeiro Lima", "00000001221");
+                Aluno aRA02220 = criarAluno("Tiago Alves Fernandes", "RA02220", r00000001221, esc);
+                Responsavel r00000001222 = criarResp("Daniela Gomes Lima", "00000001222");
+                Aluno aRA02221 = criarAluno("Margarida Soares Gomes", "RA02221", r00000001222, esc);
+                Responsavel r00000001223 = criarResp("Guilherme Vieira Gomes", "00000001223");
+                Aluno aRA02222 = criarAluno("Bruno Lima Lopes", "RA02222", r00000001223, esc);
+                Responsavel r00000001224 = criarResp("Olivia Souza Gomes", "00000001224");
+                Aluno aRA02223 = criarAluno("Lucas Fernandes Almeida", "RA02223", r00000001224, esc);
+                Responsavel r00000001225 = criarResp("Mariana Santos Carvalho", "00000001225");
+                Aluno aRA02224 = criarAluno("Margarida Rodrigues Vieira", "RA02224", r00000001225, esc);
+                Responsavel r00000001226 = criarResp("Vitoria Barbosa Alves", "00000001226");
+                Aluno aRA02225 = criarAluno("Nicolas Oliveira Fernandes", "RA02225", r00000001226, esc);
+                Responsavel r00000001227 = criarResp("Maria Almeida Ribeiro", "00000001227");
+                Aluno aRA02226 = criarAluno("Gabriel Silva Lopes", "RA02226", r00000001227, esc);
+                Responsavel r00000001228 = criarResp("Igor Ribeiro Martins", "00000001228");
+                Aluno aRA02227 = criarAluno("Ana Carvalho Almeida", "RA02227", r00000001228, esc);
+                Responsavel r00000001229 = criarResp("Mariana Almeida Oliveira", "00000001229");
+                Aluno aRA02228 = criarAluno("Diogo Soares Pereira", "RA02228", r00000001229, esc);
+                Responsavel r00000001230 = criarResp("Pedro Souza Ferreira", "00000001230");
+                Aluno aRA02229 = criarAluno("João Pereira Ribeiro", "RA02229", r00000001230, esc);
+                Responsavel r00000001231 = criarResp("Igor Mendes Lopes", "00000001231");
+                Aluno aRA02230 = criarAluno("Igor Soares Rodrigues", "RA02230", r00000001231, esc);
+                Responsavel r00000001232 = criarResp("Diogo Lopes Silva", "00000001232");
+                Aluno aRA02231 = criarAluno("João Lopes Ferreira", "RA02231", r00000001232, esc);
+                Responsavel r00000001233 = criarResp("Igor Ribeiro Pereira", "00000001233");
+                Aluno aRA02232 = criarAluno("Pedro Rodrigues Carvalho", "RA02232", r00000001233, esc);
+                Responsavel r00000001234 = criarResp("Fernanda Fernandes Souza", "00000001234");
+                Aluno aRA02233 = criarAluno("Carlos Souza Gomes", "RA02233", r00000001234, esc);
+                Responsavel r00000001235 = criarResp("Rafael Carvalho Soares", "00000001235");
+                Aluno aRA02234 = criarAluno("Beatriz Soares Carvalho", "RA02234", r00000001235, esc);
+                Responsavel r00000001236 = criarResp("João Rodrigues Silva", "00000001236");
+                Aluno aRA02235 = criarAluno("Tiago Pereira Vieira", "RA02235", r00000001236, esc);
+                Responsavel r00000001237 = criarResp("Thiago Martins Almeida", "00000001237");
+                Aluno aRA02236 = criarAluno("Thiago Rodrigues Gomes", "RA02236", r00000001237, esc);
+                Responsavel r00000001238 = criarResp("Helena Pereira Costa", "00000001238");
+                Aluno aRA02237 = criarAluno("Daniela Ribeiro Carvalho", "RA02237", r00000001238, esc);
+                Responsavel r00000001239 = criarResp("Tiago Souza Barbosa", "00000001239");
+                Aluno aRA02238 = criarAluno("Igor Soares Vieira", "RA02238", r00000001239, esc);
+                Responsavel r00000001240 = criarResp("Yuri Fernandes Ribeiro", "00000001240");
+                Aluno aRA02239 = criarAluno("Tiago Gomes Ferreira", "RA02239", r00000001240, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02220, aRA02221, aRA02222, aRA02223, aRA02224, aRA02225, aRA02226, aRA02227,
+                                                aRA02228,
+                                                aRA02229, aRA02230, aRA02231, aRA02232, aRA02233, aRA02234, aRA02235,
+                                                aRA02236, aRA02237,
+                                                aRA02238, aRA02239));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000001241 = criarResp("Mariana Pereira Almeida", "00000001241");
+                Aluno aRA02240 = criarAluno("Olivia Costa Ribeiro", "RA02240", r00000001241, esc);
+                Responsavel r00000001242 = criarResp("Matheus Fernandes Ribeiro", "00000001242");
+                Aluno aRA02241 = criarAluno("Guilherme Pereira Oliveira", "RA02241", r00000001242, esc);
+                Responsavel r00000001243 = criarResp("Tiago Alves Carvalho", "00000001243");
+                Aluno aRA02242 = criarAluno("Mariana Santos Souza", "RA02242", r00000001243, esc);
+                Responsavel r00000001244 = criarResp("João Mendes Lima", "00000001244");
+                Aluno aRA02243 = criarAluno("Beatriz Barbosa Costa", "RA02243", r00000001244, esc);
+                Responsavel r00000001245 = criarResp("Sophia Ferreira Lopes", "00000001245");
+                Aluno aRA02244 = criarAluno("Gabriel Costa Silva", "RA02244", r00000001245, esc);
+                Responsavel r00000001246 = criarResp("Matheus Gomes Oliveira", "00000001246");
+                Aluno aRA02245 = criarAluno("Julia Barbosa Gomes", "RA02245", r00000001246, esc);
+                Responsavel r00000001247 = criarResp("Nicolas Soares Ferreira", "00000001247");
+                Aluno aRA02246 = criarAluno("Bruno Martins Almeida", "RA02246", r00000001247, esc);
+                Responsavel r00000001248 = criarResp("Rafael Ribeiro Barbosa", "00000001248");
+                Aluno aRA02247 = criarAluno("Rafael Gomes Almeida", "RA02247", r00000001248, esc);
+                Responsavel r00000001249 = criarResp("Beatriz Ribeiro Mendes", "00000001249");
+                Aluno aRA02248 = criarAluno("Matheus Soares Carvalho", "RA02248", r00000001249, esc);
+                Responsavel r00000001250 = criarResp("Diogo Carvalho Lopes", "00000001250");
+                Aluno aRA02249 = criarAluno("Bruno Vieira Oliveira", "RA02249", r00000001250, esc);
+                Responsavel r00000001251 = criarResp("Guilherme Oliveira Santos", "00000001251");
+                Aluno aRA02250 = criarAluno("Daniela Soares Alves", "RA02250", r00000001251, esc);
+                Responsavel r00000001252 = criarResp("Bruno Ribeiro Martins", "00000001252");
+                Aluno aRA02251 = criarAluno("Ana Ferreira Alves", "RA02251", r00000001252, esc);
+                Responsavel r00000001253 = criarResp("Nicolas Almeida Cruz", "00000001253");
+                Aluno aRA02252 = criarAluno("Mariana Cruz Oliveira", "RA02252", r00000001253, esc);
+                Responsavel r00000001254 = criarResp("João Lima Almeida", "00000001254");
+                Aluno aRA02253 = criarAluno("Maria Fernandes Martins", "RA02253", r00000001254, esc);
+                Responsavel r00000001255 = criarResp("Bruno Ribeiro Costa", "00000001255");
+                Aluno aRA02254 = criarAluno("Pedro Martins Rodrigues", "RA02254", r00000001255, esc);
+                Responsavel r00000001256 = criarResp("Helena Santos Barbosa", "00000001256");
+                Aluno aRA02255 = criarAluno("Tiago Gomes Oliveira", "RA02255", r00000001256, esc);
+                Responsavel r00000001257 = criarResp("Pedro Ferreira Alves", "00000001257");
+                Aluno aRA02256 = criarAluno("Ana Rodrigues Alves", "RA02256", r00000001257, esc);
+                Responsavel r00000001258 = criarResp("Beatriz Lima Soares", "00000001258");
+                Aluno aRA02257 = criarAluno("Margarida Oliveira Vieira", "RA02257", r00000001258, esc);
+                Responsavel r00000001259 = criarResp("Julia Souza Fernandes", "00000001259");
+                Aluno aRA02258 = criarAluno("Matheus Cruz Almeida", "RA02258", r00000001259, esc);
+                Responsavel r00000001260 = criarResp("Eduardo Santos Souza", "00000001260");
+                Aluno aRA02259 = criarAluno("Ana Almeida Lopes", "RA02259", r00000001260, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02240, aRA02241, aRA02242, aRA02243, aRA02244, aRA02245, aRA02246, aRA02247,
+                                                aRA02248,
+                                                aRA02249, aRA02250, aRA02251, aRA02252, aRA02253, aRA02254, aRA02255,
+                                                aRA02256, aRA02257,
+                                                aRA02258, aRA02259));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000001261 = criarResp("Camila Vieira Gomes", "00000001261");
+                Aluno aRA02260 = criarAluno("Vitoria Vieira Fernandes", "RA02260", r00000001261, esc);
+                Responsavel r00000001262 = criarResp("Bruno Ferreira Cruz", "00000001262");
+                Aluno aRA02261 = criarAluno("Guilherme Martins Souza", "RA02261", r00000001262, esc);
+                Responsavel r00000001263 = criarResp("Vitoria Costa Santos", "00000001263");
+                Aluno aRA02262 = criarAluno("Larissa Silva Vieira", "RA02262", r00000001263, esc);
+                Responsavel r00000001264 = criarResp("Bruno Pereira Vieira", "00000001264");
+                Aluno aRA02263 = criarAluno("Eduardo Rodrigues Alves", "RA02263", r00000001264, esc);
+                Responsavel r00000001265 = criarResp("Yuri Vieira Ribeiro", "00000001265");
+                Aluno aRA02264 = criarAluno("Eduardo Vieira Ribeiro", "RA02264", r00000001265, esc);
+                Responsavel r00000001266 = criarResp("Vitoria Lopes Souza", "00000001266");
+                Aluno aRA02265 = criarAluno("Inês Soares Silva", "RA02265", r00000001266, esc);
+                Responsavel r00000001267 = criarResp("Diogo Lopes Costa", "00000001267");
+                Aluno aRA02266 = criarAluno("Matheus Alves Ferreira", "RA02266", r00000001267, esc);
+                Responsavel r00000001268 = criarResp("Camila Mendes Soares", "00000001268");
+                Aluno aRA02267 = criarAluno("João Fernandes Barbosa", "RA02267", r00000001268, esc);
+                Responsavel r00000001269 = criarResp("Lucas Carvalho Mendes", "00000001269");
+                Aluno aRA02268 = criarAluno("Mariana Ferreira Rodrigues", "RA02268", r00000001269, esc);
+                Responsavel r00000001270 = criarResp("Matheus Martins Silva", "00000001270");
+                Aluno aRA02269 = criarAluno("Lucas Costa Fernandes", "RA02269", r00000001270, esc);
+                Responsavel r00000001271 = criarResp("Larissa Vieira Souza", "00000001271");
+                Aluno aRA02270 = criarAluno("Diogo Oliveira Pereira", "RA02270", r00000001271, esc);
+                Responsavel r00000001272 = criarResp("Thiago Carvalho Cruz", "00000001272");
+                Aluno aRA02271 = criarAluno("Olivia Alves Santos", "RA02271", r00000001272, esc);
+                Responsavel r00000001273 = criarResp("João Lima Cruz", "00000001273");
+                Aluno aRA02272 = criarAluno("Matheus Rodrigues Ribeiro", "RA02272", r00000001273, esc);
+                Responsavel r00000001274 = criarResp("Nicolas Barbosa Pereira", "00000001274");
+                Aluno aRA02273 = criarAluno("Ana Ferreira Costa", "RA02273", r00000001274, esc);
+                Responsavel r00000001275 = criarResp("Nicolas Carvalho Lopes", "00000001275");
+                Aluno aRA02274 = criarAluno("Vitoria Ribeiro Soares", "RA02274", r00000001275, esc);
+                Responsavel r00000001276 = criarResp("Larissa Ribeiro Pereira", "00000001276");
+                Aluno aRA02275 = criarAluno("Margarida Pereira Rodrigues", "RA02275", r00000001276, esc);
+                Responsavel r00000001277 = criarResp("Tiago Oliveira Almeida", "00000001277");
+                Aluno aRA02276 = criarAluno("Lucas Soares Martins", "RA02276", r00000001277, esc);
+                Responsavel r00000001278 = criarResp("Bruno Lima Ribeiro", "00000001278");
+                Aluno aRA02277 = criarAluno("Gabriel Pereira Ribeiro", "RA02277", r00000001278, esc);
+                Responsavel r00000001279 = criarResp("Maria Soares Silva", "00000001279");
+                Aluno aRA02278 = criarAluno("Larissa Barbosa Mendes", "RA02278", r00000001279, esc);
+                Responsavel r00000001280 = criarResp("Pedro Santos Lopes", "00000001280");
+                Aluno aRA02279 = criarAluno("Gabriel Vieira Ferreira", "RA02279", r00000001280, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02260, aRA02261, aRA02262, aRA02263, aRA02264, aRA02265, aRA02266, aRA02267,
+                                                aRA02268,
+                                                aRA02269, aRA02270, aRA02271, aRA02272, aRA02273, aRA02274, aRA02275,
+                                                aRA02276, aRA02277,
+                                                aRA02278, aRA02279));
+
+        }
+
+        private void popularEscola9() {
+                Escola esc = escolaRepository.findById(9L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Igor Martins Carvalho", "diretor@novageracao.com.br", Role.DIRETOR,
+                                Funcionario.Cargo.DIRETOR, esc);
+                criarFunc("Olivia Ferreira Costa", "secretaria@novageracao.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA, esc);
+                criarFunc("Olivia Ribeiro Costa", "coordenador@novageracao.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Olivia Martins Silva", "professor@novageracao.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR,
+                                esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000001281 = criarResp("Inês Silva Fernandes", "00000001281");
+                Aluno aRA02280 = criarAluno("Inês Cruz Alves", "RA02280", r00000001281, esc);
+                Responsavel r00000001282 = criarResp("Mariana Gomes Costa", "00000001282");
+                Aluno aRA02281 = criarAluno("Carlos Costa Vieira", "RA02281", r00000001282, esc);
+                Responsavel r00000001283 = criarResp("Eduardo Barbosa Silva", "00000001283");
+                Aluno aRA02282 = criarAluno("Helena Lima Rodrigues", "RA02282", r00000001283, esc);
+                Responsavel r00000001284 = criarResp("Camila Almeida Santos", "00000001284");
+                Aluno aRA02283 = criarAluno("João Almeida Cruz", "RA02283", r00000001284, esc);
+                Responsavel r00000001285 = criarResp("João Martins Rodrigues", "00000001285");
+                Aluno aRA02284 = criarAluno("Carlos Santos Rodrigues", "RA02284", r00000001285, esc);
+                Responsavel r00000001286 = criarResp("Igor Soares Mendes", "00000001286");
+                Aluno aRA02285 = criarAluno("Matheus Mendes Rodrigues", "RA02285", r00000001286, esc);
+                Responsavel r00000001287 = criarResp("Pedro Oliveira Alves", "00000001287");
+                Aluno aRA02286 = criarAluno("João Lima Ribeiro", "RA02286", r00000001287, esc);
+                Responsavel r00000001288 = criarResp("Margarida Barbosa Alves", "00000001288");
+                Aluno aRA02287 = criarAluno("Mariana Silva Gomes", "RA02287", r00000001288, esc);
+                Responsavel r00000001289 = criarResp("Gabriel Pereira Souza", "00000001289");
+                Aluno aRA02288 = criarAluno("Julia Silva Carvalho", "RA02288", r00000001289, esc);
+                Responsavel r00000001290 = criarResp("Daniela Soares Pereira", "00000001290");
+                Aluno aRA02289 = criarAluno("Matheus Martins Costa", "RA02289", r00000001290, esc);
+                Responsavel r00000001291 = criarResp("Julia Fernandes Ribeiro", "00000001291");
+                Aluno aRA02290 = criarAluno("Larissa Barbosa Lima", "RA02290", r00000001291, esc);
+                Responsavel r00000001292 = criarResp("Rafael Ferreira Vieira", "00000001292");
+                Aluno aRA02291 = criarAluno("Margarida Lopes Oliveira", "RA02291", r00000001292, esc);
+                Responsavel r00000001293 = criarResp("Eduardo Silva Martins", "00000001293");
+                Aluno aRA02292 = criarAluno("Pedro Soares Ferreira", "RA02292", r00000001293, esc);
+                Responsavel r00000001294 = criarResp("Diogo Oliveira Pereira", "00000001294");
+                Aluno aRA02293 = criarAluno("Helena Lima Pereira", "RA02293", r00000001294, esc);
+                Responsavel r00000001295 = criarResp("Sophia Oliveira Ribeiro", "00000001295");
+                Aluno aRA02294 = criarAluno("Larissa Ribeiro Costa", "RA02294", r00000001295, esc);
+                Responsavel r00000001296 = criarResp("Fernanda Gomes Oliveira", "00000001296");
+                Aluno aRA02295 = criarAluno("Maria Silva Almeida", "RA02295", r00000001296, esc);
+                Responsavel r00000001297 = criarResp("Olivia Fernandes Ribeiro", "00000001297");
+                Aluno aRA02296 = criarAluno("Beatriz Alves Lopes", "RA02296", r00000001297, esc);
+                Responsavel r00000001298 = criarResp("Beatriz Gomes Oliveira", "00000001298");
+                Aluno aRA02297 = criarAluno("João Costa Ferreira", "RA02297", r00000001298, esc);
+                Responsavel r00000001299 = criarResp("Ana Carvalho Almeida", "00000001299");
+                Aluno aRA02298 = criarAluno("Larissa Cruz Lopes", "RA02298", r00000001299, esc);
+                Responsavel r00000001300 = criarResp("Mariana Fernandes Souza", "00000001300");
+                Aluno aRA02299 = criarAluno("Margarida Gomes Costa", "RA02299", r00000001300, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02280, aRA02281, aRA02282, aRA02283, aRA02284, aRA02285, aRA02286, aRA02287,
+                                                aRA02288,
+                                                aRA02289, aRA02290, aRA02291, aRA02292, aRA02293, aRA02294, aRA02295,
+                                                aRA02296, aRA02297,
+                                                aRA02298, aRA02299));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000001301 = criarResp("Mariana Costa Gomes", "00000001301");
+                Aluno aRA02300 = criarAluno("Diogo Fernandes Martins", "RA02300", r00000001301, esc);
+                Responsavel r00000001302 = criarResp("Mariana Santos Mendes", "00000001302");
+                Aluno aRA02301 = criarAluno("Pedro Costa Almeida", "RA02301", r00000001302, esc);
+                Responsavel r00000001303 = criarResp("Julia Martins Costa", "00000001303");
+                Aluno aRA02302 = criarAluno("Ana Fernandes Lopes", "RA02302", r00000001303, esc);
+                Responsavel r00000001304 = criarResp("João Fernandes Cruz", "00000001304");
+                Aluno aRA02303 = criarAluno("Diogo Oliveira Carvalho", "RA02303", r00000001304, esc);
+                Responsavel r00000001305 = criarResp("Matheus Costa Oliveira", "00000001305");
+                Aluno aRA02304 = criarAluno("Vitoria Martins Vieira", "RA02304", r00000001305, esc);
+                Responsavel r00000001306 = criarResp("Beatriz Costa Lima", "00000001306");
+                Aluno aRA02305 = criarAluno("Thiago Costa Gomes", "RA02305", r00000001306, esc);
+                Responsavel r00000001307 = criarResp("Eduardo Alves Soares", "00000001307");
+                Aluno aRA02306 = criarAluno("Carlos Cruz Silva", "RA02306", r00000001307, esc);
+                Responsavel r00000001308 = criarResp("Eduardo Vieira Martins", "00000001308");
+                Aluno aRA02307 = criarAluno("Olivia Pereira Barbosa", "RA02307", r00000001308, esc);
+                Responsavel r00000001309 = criarResp("Guilherme Souza Vieira", "00000001309");
+                Aluno aRA02308 = criarAluno("Beatriz Mendes Cruz", "RA02308", r00000001309, esc);
+                Responsavel r00000001310 = criarResp("Ana Cruz Mendes", "00000001310");
+                Aluno aRA02309 = criarAluno("Tiago Barbosa Carvalho", "RA02309", r00000001310, esc);
+                Responsavel r00000001311 = criarResp("Camila Carvalho Vieira", "00000001311");
+                Aluno aRA02310 = criarAluno("Pedro Mendes Cruz", "RA02310", r00000001311, esc);
+                Responsavel r00000001312 = criarResp("Inês Souza Fernandes", "00000001312");
+                Aluno aRA02311 = criarAluno("Julia Martins Vieira", "RA02311", r00000001312, esc);
+                Responsavel r00000001313 = criarResp("Sophia Ribeiro Fernandes", "00000001313");
+                Aluno aRA02312 = criarAluno("Tiago Cruz Souza", "RA02312", r00000001313, esc);
+                Responsavel r00000001314 = criarResp("Guilherme Lopes Fernandes", "00000001314");
+                Aluno aRA02313 = criarAluno("João Vieira Barbosa", "RA02313", r00000001314, esc);
+                Responsavel r00000001315 = criarResp("Carlos Ribeiro Fernandes", "00000001315");
+                Aluno aRA02314 = criarAluno("Helena Martins Souza", "RA02314", r00000001315, esc);
+                Responsavel r00000001316 = criarResp("Bruno Carvalho Gomes", "00000001316");
+                Aluno aRA02315 = criarAluno("Maria Mendes Lima", "RA02315", r00000001316, esc);
+                Responsavel r00000001317 = criarResp("Guilherme Ferreira Santos", "00000001317");
+                Aluno aRA02316 = criarAluno("Larissa Gomes Pereira", "RA02316", r00000001317, esc);
+                Responsavel r00000001318 = criarResp("Gabriel Carvalho Souza", "00000001318");
+                Aluno aRA02317 = criarAluno("Carlos Ribeiro Fernandes", "RA02317", r00000001318, esc);
+                Responsavel r00000001319 = criarResp("Eduardo Fernandes Soares", "00000001319");
+                Aluno aRA02318 = criarAluno("Camila Alves Cruz", "RA02318", r00000001319, esc);
+                Responsavel r00000001320 = criarResp("Margarida Ribeiro Gomes", "00000001320");
+                Aluno aRA02319 = criarAluno("Fernanda Lopes Oliveira", "RA02319", r00000001320, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02300, aRA02301, aRA02302, aRA02303, aRA02304, aRA02305, aRA02306, aRA02307,
+                                                aRA02308,
+                                                aRA02309, aRA02310, aRA02311, aRA02312, aRA02313, aRA02314, aRA02315,
+                                                aRA02316, aRA02317,
+                                                aRA02318, aRA02319));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000001321 = criarResp("Lucas Costa Fernandes", "00000001321");
+                Aluno aRA02320 = criarAluno("Thiago Vieira Barbosa", "RA02320", r00000001321, esc);
+                Responsavel r00000001322 = criarResp("Pedro Mendes Soares", "00000001322");
+                Aluno aRA02321 = criarAluno("Julia Carvalho Lopes", "RA02321", r00000001322, esc);
+                Responsavel r00000001323 = criarResp("Sophia Lopes Mendes", "00000001323");
+                Aluno aRA02322 = criarAluno("Guilherme Soares Santos", "RA02322", r00000001323, esc);
+                Responsavel r00000001324 = criarResp("Guilherme Santos Souza", "00000001324");
+                Aluno aRA02323 = criarAluno("Thiago Oliveira Martins", "RA02323", r00000001324, esc);
+                Responsavel r00000001325 = criarResp("Eduardo Gomes Fernandes", "00000001325");
+                Aluno aRA02324 = criarAluno("Ana Cruz Fernandes", "RA02324", r00000001325, esc);
+                Responsavel r00000001326 = criarResp("Ana Soares Ribeiro", "00000001326");
+                Aluno aRA02325 = criarAluno("Margarida Souza Lopes", "RA02325", r00000001326, esc);
+                Responsavel r00000001327 = criarResp("Vitoria Cruz Mendes", "00000001327");
+                Aluno aRA02326 = criarAluno("Pedro Rodrigues Vieira", "RA02326", r00000001327, esc);
+                Responsavel r00000001328 = criarResp("Camila Gomes Soares", "00000001328");
+                Aluno aRA02327 = criarAluno("Vitoria Mendes Oliveira", "RA02327", r00000001328, esc);
+                Responsavel r00000001329 = criarResp("Beatriz Pereira Silva", "00000001329");
+                Aluno aRA02328 = criarAluno("Gabriel Soares Vieira", "RA02328", r00000001329, esc);
+                Responsavel r00000001330 = criarResp("Daniela Cruz Barbosa", "00000001330");
+                Aluno aRA02329 = criarAluno("Mariana Martins Soares", "RA02329", r00000001330, esc);
+                Responsavel r00000001331 = criarResp("Maria Lopes Silva", "00000001331");
+                Aluno aRA02330 = criarAluno("Helena Silva Costa", "RA02330", r00000001331, esc);
+                Responsavel r00000001332 = criarResp("Thiago Fernandes Gomes", "00000001332");
+                Aluno aRA02331 = criarAluno("Ana Mendes Gomes", "RA02331", r00000001332, esc);
+                Responsavel r00000001333 = criarResp("Bruno Souza Rodrigues", "00000001333");
+                Aluno aRA02332 = criarAluno("Lucas Almeida Barbosa", "RA02332", r00000001333, esc);
+                Responsavel r00000001334 = criarResp("Pedro Martins Souza", "00000001334");
+                Aluno aRA02333 = criarAluno("Beatriz Carvalho Soares", "RA02333", r00000001334, esc);
+                Responsavel r00000001335 = criarResp("Beatriz Fernandes Ribeiro", "00000001335");
+                Aluno aRA02334 = criarAluno("Ana Lima Santos", "RA02334", r00000001335, esc);
+                Responsavel r00000001336 = criarResp("Ana Costa Alves", "00000001336");
+                Aluno aRA02335 = criarAluno("Margarida Ferreira Fernandes", "RA02335", r00000001336, esc);
+                Responsavel r00000001337 = criarResp("Sophia Soares Vieira", "00000001337");
+                Aluno aRA02336 = criarAluno("Bruno Alves Ferreira", "RA02336", r00000001337, esc);
+                Responsavel r00000001338 = criarResp("Pedro Lima Barbosa", "00000001338");
+                Aluno aRA02337 = criarAluno("Daniela Gomes Soares", "RA02337", r00000001338, esc);
+                Responsavel r00000001339 = criarResp("Sophia Barbosa Cruz", "00000001339");
+                Aluno aRA02338 = criarAluno("Tiago Ferreira Cruz", "RA02338", r00000001339, esc);
+                Responsavel r00000001340 = criarResp("Maria Costa Carvalho", "00000001340");
+                Aluno aRA02339 = criarAluno("Thiago Mendes Souza", "RA02339", r00000001340, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02320, aRA02321, aRA02322, aRA02323, aRA02324, aRA02325, aRA02326, aRA02327,
+                                                aRA02328,
+                                                aRA02329, aRA02330, aRA02331, aRA02332, aRA02333, aRA02334, aRA02335,
+                                                aRA02336, aRA02337,
+                                                aRA02338, aRA02339));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000001341 = criarResp("Julia Ribeiro Barbosa", "00000001341");
+                Aluno aRA02340 = criarAluno("Julia Fernandes Santos", "RA02340", r00000001341, esc);
+                Responsavel r00000001342 = criarResp("Olivia Oliveira Fernandes", "00000001342");
+                Aluno aRA02341 = criarAluno("Thiago Lopes Costa", "RA02341", r00000001342, esc);
+                Responsavel r00000001343 = criarResp("Mariana Fernandes Mendes", "00000001343");
+                Aluno aRA02342 = criarAluno("Inês Carvalho Martins", "RA02342", r00000001343, esc);
+                Responsavel r00000001344 = criarResp("Bruno Martins Almeida", "00000001344");
+                Aluno aRA02343 = criarAluno("João Lopes Ribeiro", "RA02343", r00000001344, esc);
+                Responsavel r00000001345 = criarResp("Mariana Vieira Rodrigues", "00000001345");
+                Aluno aRA02344 = criarAluno("Nicolas Silva Souza", "RA02344", r00000001345, esc);
+                Responsavel r00000001346 = criarResp("Gabriel Mendes Fernandes", "00000001346");
+                Aluno aRA02345 = criarAluno("João Ribeiro Pereira", "RA02345", r00000001346, esc);
+                Responsavel r00000001347 = criarResp("Yuri Alves Silva", "00000001347");
+                Aluno aRA02346 = criarAluno("Mariana Barbosa Carvalho", "RA02346", r00000001347, esc);
+                Responsavel r00000001348 = criarResp("Beatriz Ferreira Ribeiro", "00000001348");
+                Aluno aRA02347 = criarAluno("Sophia Ribeiro Martins", "RA02347", r00000001348, esc);
+                Responsavel r00000001349 = criarResp("Rafael Mendes Alves", "00000001349");
+                Aluno aRA02348 = criarAluno("Bruno Rodrigues Silva", "RA02348", r00000001349, esc);
+                Responsavel r00000001350 = criarResp("Inês Pereira Barbosa", "00000001350");
+                Aluno aRA02349 = criarAluno("Carlos Martins Vieira", "RA02349", r00000001350, esc);
+                Responsavel r00000001351 = criarResp("Gabriel Gomes Silva", "00000001351");
+                Aluno aRA02350 = criarAluno("Margarida Ribeiro Soares", "RA02350", r00000001351, esc);
+                Responsavel r00000001352 = criarResp("Helena Alves Gomes", "00000001352");
+                Aluno aRA02351 = criarAluno("Yuri Soares Ribeiro", "RA02351", r00000001352, esc);
+                Responsavel r00000001353 = criarResp("Rafael Alves Soares", "00000001353");
+                Aluno aRA02352 = criarAluno("Inês Gomes Cruz", "RA02352", r00000001353, esc);
+                Responsavel r00000001354 = criarResp("Tiago Soares Martins", "00000001354");
+                Aluno aRA02353 = criarAluno("João Martins Barbosa", "RA02353", r00000001354, esc);
+                Responsavel r00000001355 = criarResp("Margarida Rodrigues Ribeiro", "00000001355");
+                Aluno aRA02354 = criarAluno("Sophia Ribeiro Lima", "RA02354", r00000001355, esc);
+                Responsavel r00000001356 = criarResp("Camila Vieira Barbosa", "00000001356");
+                Aluno aRA02355 = criarAluno("Beatriz Rodrigues Ribeiro", "RA02355", r00000001356, esc);
+                Responsavel r00000001357 = criarResp("Beatriz Fernandes Ribeiro", "00000001357");
+                Aluno aRA02356 = criarAluno("Beatriz Martins Barbosa", "RA02356", r00000001357, esc);
+                Responsavel r00000001358 = criarResp("João Pereira Costa", "00000001358");
+                Aluno aRA02357 = criarAluno("Pedro Silva Santos", "RA02357", r00000001358, esc);
+                Responsavel r00000001359 = criarResp("Nicolas Soares Carvalho", "00000001359");
+                Aluno aRA02358 = criarAluno("Guilherme Almeida Rodrigues", "RA02358", r00000001359, esc);
+                Responsavel r00000001360 = criarResp("Margarida Lima Costa", "00000001360");
+                Aluno aRA02359 = criarAluno("Carlos Cruz Mendes", "RA02359", r00000001360, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02340, aRA02341, aRA02342, aRA02343, aRA02344, aRA02345, aRA02346, aRA02347,
+                                                aRA02348,
+                                                aRA02349, aRA02350, aRA02351, aRA02352, aRA02353, aRA02354, aRA02355,
+                                                aRA02356, aRA02357,
+                                                aRA02358, aRA02359));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000001361 = criarResp("Fernanda Martins Barbosa", "00000001361");
+                Aluno aRA02360 = criarAluno("Igor Santos Fernandes", "RA02360", r00000001361, esc);
+                Responsavel r00000001362 = criarResp("Ana Almeida Gomes", "00000001362");
+                Aluno aRA02361 = criarAluno("Julia Ribeiro Vieira", "RA02361", r00000001362, esc);
+                Responsavel r00000001363 = criarResp("Yuri Fernandes Carvalho", "00000001363");
+                Aluno aRA02362 = criarAluno("Margarida Silva Gomes", "RA02362", r00000001363, esc);
+                Responsavel r00000001364 = criarResp("Igor Fernandes Souza", "00000001364");
+                Aluno aRA02363 = criarAluno("Bruno Martins Lopes", "RA02363", r00000001364, esc);
+                Responsavel r00000001365 = criarResp("Inês Soares Alves", "00000001365");
+                Aluno aRA02364 = criarAluno("João Martins Costa", "RA02364", r00000001365, esc);
+                Responsavel r00000001366 = criarResp("Guilherme Soares Santos", "00000001366");
+                Aluno aRA02365 = criarAluno("Fernanda Almeida Mendes", "RA02365", r00000001366, esc);
+                Responsavel r00000001367 = criarResp("Fernanda Mendes Cruz", "00000001367");
+                Aluno aRA02366 = criarAluno("Julia Ferreira Barbosa", "RA02366", r00000001367, esc);
+                Responsavel r00000001368 = criarResp("Pedro Silva Souza", "00000001368");
+                Aluno aRA02367 = criarAluno("Pedro Vieira Lopes", "RA02367", r00000001368, esc);
+                Responsavel r00000001369 = criarResp("Daniela Santos Alves", "00000001369");
+                Aluno aRA02368 = criarAluno("Tiago Santos Ribeiro", "RA02368", r00000001369, esc);
+                Responsavel r00000001370 = criarResp("Gabriel Almeida Costa", "00000001370");
+                Aluno aRA02369 = criarAluno("Bruno Almeida Martins", "RA02369", r00000001370, esc);
+                Responsavel r00000001371 = criarResp("Yuri Fernandes Barbosa", "00000001371");
+                Aluno aRA02370 = criarAluno("Thiago Gomes Barbosa", "RA02370", r00000001371, esc);
+                Responsavel r00000001372 = criarResp("Margarida Cruz Silva", "00000001372");
+                Aluno aRA02371 = criarAluno("Bruno Carvalho Martins", "RA02371", r00000001372, esc);
+                Responsavel r00000001373 = criarResp("Beatriz Gomes Almeida", "00000001373");
+                Aluno aRA02372 = criarAluno("Matheus Souza Lopes", "RA02372", r00000001373, esc);
+                Responsavel r00000001374 = criarResp("Nicolas Barbosa Costa", "00000001374");
+                Aluno aRA02373 = criarAluno("Tiago Cruz Costa", "RA02373", r00000001374, esc);
+                Responsavel r00000001375 = criarResp("Maria Souza Rodrigues", "00000001375");
+                Aluno aRA02374 = criarAluno("Margarida Mendes Soares", "RA02374", r00000001375, esc);
+                Responsavel r00000001376 = criarResp("Helena Silva Rodrigues", "00000001376");
+                Aluno aRA02375 = criarAluno("Ana Soares Souza", "RA02375", r00000001376, esc);
+                Responsavel r00000001377 = criarResp("Rafael Santos Gomes", "00000001377");
+                Aluno aRA02376 = criarAluno("Camila Almeida Souza", "RA02376", r00000001377, esc);
+                Responsavel r00000001378 = criarResp("Eduardo Fernandes Ribeiro", "00000001378");
+                Aluno aRA02377 = criarAluno("Julia Oliveira Barbosa", "RA02377", r00000001378, esc);
+                Responsavel r00000001379 = criarResp("Tiago Fernandes Santos", "00000001379");
+                Aluno aRA02378 = criarAluno("Yuri Soares Lopes", "RA02378", r00000001379, esc);
+                Responsavel r00000001380 = criarResp("Inês Alves Souza", "00000001380");
+                Aluno aRA02379 = criarAluno("Matheus Gomes Ferreira", "RA02379", r00000001380, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02360, aRA02361, aRA02362, aRA02363, aRA02364, aRA02365, aRA02366, aRA02367,
+                                                aRA02368,
+                                                aRA02369, aRA02370, aRA02371, aRA02372, aRA02373, aRA02374, aRA02375,
+                                                aRA02376, aRA02377,
+                                                aRA02378, aRA02379));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000001381 = criarResp("João Alves Pereira", "00000001381");
+                Aluno aRA02380 = criarAluno("Julia Fernandes Pereira", "RA02380", r00000001381, esc);
+                Responsavel r00000001382 = criarResp("Rafael Santos Lima", "00000001382");
+                Aluno aRA02381 = criarAluno("Tiago Gomes Ferreira", "RA02381", r00000001382, esc);
+                Responsavel r00000001383 = criarResp("Camila Carvalho Lopes", "00000001383");
+                Aluno aRA02382 = criarAluno("Larissa Silva Ribeiro", "RA02382", r00000001383, esc);
+                Responsavel r00000001384 = criarResp("Matheus Barbosa Pereira", "00000001384");
+                Aluno aRA02383 = criarAluno("Gabriel Mendes Carvalho", "RA02383", r00000001384, esc);
+                Responsavel r00000001385 = criarResp("Beatriz Silva Mendes", "00000001385");
+                Aluno aRA02384 = criarAluno("Helena Ribeiro Alves", "RA02384", r00000001385, esc);
+                Responsavel r00000001386 = criarResp("Matheus Souza Barbosa", "00000001386");
+                Aluno aRA02385 = criarAluno("Eduardo Costa Alves", "RA02385", r00000001386, esc);
+                Responsavel r00000001387 = criarResp("Matheus Costa Oliveira", "00000001387");
+                Aluno aRA02386 = criarAluno("Olivia Martins Oliveira", "RA02386", r00000001387, esc);
+                Responsavel r00000001388 = criarResp("Rafael Almeida Souza", "00000001388");
+                Aluno aRA02387 = criarAluno("Rafael Alves Barbosa", "RA02387", r00000001388, esc);
+                Responsavel r00000001389 = criarResp("Olivia Almeida Barbosa", "00000001389");
+                Aluno aRA02388 = criarAluno("Diogo Lopes Lima", "RA02388", r00000001389, esc);
+                Responsavel r00000001390 = criarResp("Maria Soares Gomes", "00000001390");
+                Aluno aRA02389 = criarAluno("Diogo Mendes Vieira", "RA02389", r00000001390, esc);
+                Responsavel r00000001391 = criarResp("Margarida Almeida Costa", "00000001391");
+                Aluno aRA02390 = criarAluno("Lucas Oliveira Fernandes", "RA02390", r00000001391, esc);
+                Responsavel r00000001392 = criarResp("Sophia Costa Soares", "00000001392");
+                Aluno aRA02391 = criarAluno("Matheus Almeida Gomes", "RA02391", r00000001392, esc);
+                Responsavel r00000001393 = criarResp("Helena Pereira Souza", "00000001393");
+                Aluno aRA02392 = criarAluno("Tiago Almeida Rodrigues", "RA02392", r00000001393, esc);
+                Responsavel r00000001394 = criarResp("Guilherme Silva Costa", "00000001394");
+                Aluno aRA02393 = criarAluno("Daniela Alves Almeida", "RA02393", r00000001394, esc);
+                Responsavel r00000001395 = criarResp("Tiago Cruz Santos", "00000001395");
+                Aluno aRA02394 = criarAluno("Igor Lopes Mendes", "RA02394", r00000001395, esc);
+                Responsavel r00000001396 = criarResp("Nicolas Cruz Ribeiro", "00000001396");
+                Aluno aRA02395 = criarAluno("Tiago Costa Cruz", "RA02395", r00000001396, esc);
+                Responsavel r00000001397 = criarResp("Fernanda Vieira Santos", "00000001397");
+                Aluno aRA02396 = criarAluno("Matheus Lima Pereira", "RA02396", r00000001397, esc);
+                Responsavel r00000001398 = criarResp("Rafael Lopes Soares", "00000001398");
+                Aluno aRA02397 = criarAluno("Inês Gomes Carvalho", "RA02397", r00000001398, esc);
+                Responsavel r00000001399 = criarResp("Igor Ribeiro Barbosa", "00000001399");
+                Aluno aRA02398 = criarAluno("Mariana Barbosa Cruz", "RA02398", r00000001399, esc);
+                Responsavel r00000001400 = criarResp("Margarida Soares Carvalho", "00000001400");
+                Aluno aRA02399 = criarAluno("Carlos Lopes Fernandes", "RA02399", r00000001400, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02380, aRA02381, aRA02382, aRA02383, aRA02384, aRA02385, aRA02386, aRA02387,
+                                                aRA02388,
+                                                aRA02389, aRA02390, aRA02391, aRA02392, aRA02393, aRA02394, aRA02395,
+                                                aRA02396, aRA02397,
+                                                aRA02398, aRA02399));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000001401 = criarResp("Sophia Rodrigues Ferreira", "00000001401");
+                Aluno aRA02400 = criarAluno("Yuri Rodrigues Soares", "RA02400", r00000001401, esc);
+                Responsavel r00000001402 = criarResp("Bruno Vieira Pereira", "00000001402");
+                Aluno aRA02401 = criarAluno("Helena Martins Barbosa", "RA02401", r00000001402, esc);
+                Responsavel r00000001403 = criarResp("Maria Lima Cruz", "00000001403");
+                Aluno aRA02402 = criarAluno("Inês Silva Carvalho", "RA02402", r00000001403, esc);
+                Responsavel r00000001404 = criarResp("Rafael Rodrigues Lima", "00000001404");
+                Aluno aRA02403 = criarAluno("Yuri Mendes Lopes", "RA02403", r00000001404, esc);
+                Responsavel r00000001405 = criarResp("Eduardo Lopes Cruz", "00000001405");
+                Aluno aRA02404 = criarAluno("Lucas Almeida Cruz", "RA02404", r00000001405, esc);
+                Responsavel r00000001406 = criarResp("Larissa Lopes Cruz", "00000001406");
+                Aluno aRA02405 = criarAluno("Daniela Lopes Rodrigues", "RA02405", r00000001406, esc);
+                Responsavel r00000001407 = criarResp("João Lopes Santos", "00000001407");
+                Aluno aRA02406 = criarAluno("Beatriz Costa Vieira", "RA02406", r00000001407, esc);
+                Responsavel r00000001408 = criarResp("Margarida Cruz Ferreira", "00000001408");
+                Aluno aRA02407 = criarAluno("Bruno Gomes Carvalho", "RA02407", r00000001408, esc);
+                Responsavel r00000001409 = criarResp("Inês Pereira Cruz", "00000001409");
+                Aluno aRA02408 = criarAluno("Ana Costa Ribeiro", "RA02408", r00000001409, esc);
+                Responsavel r00000001410 = criarResp("Tiago Barbosa Mendes", "00000001410");
+                Aluno aRA02409 = criarAluno("Diogo Vieira Gomes", "RA02409", r00000001410, esc);
+                Responsavel r00000001411 = criarResp("Nicolas Cruz Costa", "00000001411");
+                Aluno aRA02410 = criarAluno("Olivia Alves Cruz", "RA02410", r00000001411, esc);
+                Responsavel r00000001412 = criarResp("Igor Barbosa Cruz", "00000001412");
+                Aluno aRA02411 = criarAluno("Thiago Vieira Santos", "RA02411", r00000001412, esc);
+                Responsavel r00000001413 = criarResp("Bruno Soares Martins", "00000001413");
+                Aluno aRA02412 = criarAluno("Daniela Cruz Ferreira", "RA02412", r00000001413, esc);
+                Responsavel r00000001414 = criarResp("Margarida Rodrigues Oliveira", "00000001414");
+                Aluno aRA02413 = criarAluno("Daniela Alves Silva", "RA02413", r00000001414, esc);
+                Responsavel r00000001415 = criarResp("Vitoria Martins Vieira", "00000001415");
+                Aluno aRA02414 = criarAluno("Inês Alves Cruz", "RA02414", r00000001415, esc);
+                Responsavel r00000001416 = criarResp("Julia Gomes Pereira", "00000001416");
+                Aluno aRA02415 = criarAluno("Margarida Carvalho Soares", "RA02415", r00000001416, esc);
+                Responsavel r00000001417 = criarResp("Matheus Ferreira Pereira", "00000001417");
+                Aluno aRA02416 = criarAluno("Beatriz Oliveira Souza", "RA02416", r00000001417, esc);
+                Responsavel r00000001418 = criarResp("Inês Gomes Fernandes", "00000001418");
+                Aluno aRA02417 = criarAluno("Tiago Lopes Oliveira", "RA02417", r00000001418, esc);
+                Responsavel r00000001419 = criarResp("Maria Martins Pereira", "00000001419");
+                Aluno aRA02418 = criarAluno("Maria Lopes Lima", "RA02418", r00000001419, esc);
+                Responsavel r00000001420 = criarResp("Igor Gomes Martins", "00000001420");
+                Aluno aRA02419 = criarAluno("Nicolas Ferreira Rodrigues", "RA02419", r00000001420, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02400, aRA02401, aRA02402, aRA02403, aRA02404, aRA02405, aRA02406, aRA02407,
+                                                aRA02408,
+                                                aRA02409, aRA02410, aRA02411, aRA02412, aRA02413, aRA02414, aRA02415,
+                                                aRA02416, aRA02417,
+                                                aRA02418, aRA02419));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000001421 = criarResp("Gabriel Mendes Carvalho", "00000001421");
+                Aluno aRA02420 = criarAluno("Carlos Carvalho Gomes", "RA02420", r00000001421, esc);
+                Responsavel r00000001422 = criarResp("Sophia Cruz Oliveira", "00000001422");
+                Aluno aRA02421 = criarAluno("Rafael Cruz Alves", "RA02421", r00000001422, esc);
+                Responsavel r00000001423 = criarResp("Maria Pereira Barbosa", "00000001423");
+                Aluno aRA02422 = criarAluno("Igor Alves Carvalho", "RA02422", r00000001423, esc);
+                Responsavel r00000001424 = criarResp("Matheus Soares Cruz", "00000001424");
+                Aluno aRA02423 = criarAluno("Inês Silva Mendes", "RA02423", r00000001424, esc);
+                Responsavel r00000001425 = criarResp("Beatriz Oliveira Rodrigues", "00000001425");
+                Aluno aRA02424 = criarAluno("Eduardo Oliveira Ribeiro", "RA02424", r00000001425, esc);
+                Responsavel r00000001426 = criarResp("Vitoria Soares Pereira", "00000001426");
+                Aluno aRA02425 = criarAluno("Fernanda Lima Rodrigues", "RA02425", r00000001426, esc);
+                Responsavel r00000001427 = criarResp("Daniela Lima Ferreira", "00000001427");
+                Aluno aRA02426 = criarAluno("Pedro Cruz Lopes", "RA02426", r00000001427, esc);
+                Responsavel r00000001428 = criarResp("Fernanda Lima Souza", "00000001428");
+                Aluno aRA02427 = criarAluno("Mariana Souza Pereira", "RA02427", r00000001428, esc);
+                Responsavel r00000001429 = criarResp("Pedro Martins Lopes", "00000001429");
+                Aluno aRA02428 = criarAluno("Julia Cruz Vieira", "RA02428", r00000001429, esc);
+                Responsavel r00000001430 = criarResp("Olivia Lima Martins", "00000001430");
+                Aluno aRA02429 = criarAluno("Nicolas Lima Oliveira", "RA02429", r00000001430, esc);
+                Responsavel r00000001431 = criarResp("Daniela Lima Carvalho", "00000001431");
+                Aluno aRA02430 = criarAluno("Nicolas Soares Lopes", "RA02430", r00000001431, esc);
+                Responsavel r00000001432 = criarResp("Nicolas Silva Santos", "00000001432");
+                Aluno aRA02431 = criarAluno("Lucas Martins Lima", "RA02431", r00000001432, esc);
+                Responsavel r00000001433 = criarResp("Beatriz Ferreira Lima", "00000001433");
+                Aluno aRA02432 = criarAluno("Pedro Carvalho Cruz", "RA02432", r00000001433, esc);
+                Responsavel r00000001434 = criarResp("Helena Pereira Lopes", "00000001434");
+                Aluno aRA02433 = criarAluno("Daniela Gomes Cruz", "RA02433", r00000001434, esc);
+                Responsavel r00000001435 = criarResp("Eduardo Oliveira Santos", "00000001435");
+                Aluno aRA02434 = criarAluno("Nicolas Souza Costa", "RA02434", r00000001435, esc);
+                Responsavel r00000001436 = criarResp("Daniela Fernandes Martins", "00000001436");
+                Aluno aRA02435 = criarAluno("Tiago Ferreira Carvalho", "RA02435", r00000001436, esc);
+                Responsavel r00000001437 = criarResp("Carlos Cruz Silva", "00000001437");
+                Aluno aRA02436 = criarAluno("Helena Costa Santos", "RA02436", r00000001437, esc);
+                Responsavel r00000001438 = criarResp("Larissa Ferreira Oliveira", "00000001438");
+                Aluno aRA02437 = criarAluno("Lucas Martins Silva", "RA02437", r00000001438, esc);
+                Responsavel r00000001439 = criarResp("Fernanda Gomes Martins", "00000001439");
+                Aluno aRA02438 = criarAluno("Helena Almeida Costa", "RA02438", r00000001439, esc);
+                Responsavel r00000001440 = criarResp("Nicolas Vieira Pereira", "00000001440");
+                Aluno aRA02439 = criarAluno("Bruno Gomes Lopes", "RA02439", r00000001440, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02420, aRA02421, aRA02422, aRA02423, aRA02424, aRA02425, aRA02426, aRA02427,
+                                                aRA02428,
+                                                aRA02429, aRA02430, aRA02431, aRA02432, aRA02433, aRA02434, aRA02435,
+                                                aRA02436, aRA02437,
+                                                aRA02438, aRA02439));
+
+        }
+
+        private void popularEscola10() {
+                Escola esc = escolaRepository.findById(10L).orElseThrow();
+
+                // --- Funcionários ---
+                criarFunc("Maria Lopes Mendes", "diretor@centrointegrado.com.br", Role.DIRETOR,
+                                Funcionario.Cargo.DIRETOR, esc);
+                criarFunc("Rafael Lima Cruz", "secretaria@centrointegrado.com.br", Role.SECRETARIA,
+                                Funcionario.Cargo.SECRETARIA, esc);
+                criarFunc("Mariana Lima Carvalho", "coordenador@centrointegrado.com.br", Role.COORDENADOR,
+                                Funcionario.Cargo.COORDENADOR, esc);
+                criarFunc("Helena Martins Oliveira", "professor@centrointegrado.com.br", Role.PROFESSOR,
+                                Funcionario.Cargo.PROFESSOR, esc);
+
+                // --- 6º Ano - Manhã ---
+                Responsavel r00000001441 = criarResp("Fernanda Cruz Fernandes", "00000001441");
+                Aluno aRA02440 = criarAluno("Eduardo Gomes Almeida", "RA02440", r00000001441, esc);
+                Responsavel r00000001442 = criarResp("Maria Almeida Barbosa", "00000001442");
+                Aluno aRA02441 = criarAluno("Nicolas Lima Cruz", "RA02441", r00000001442, esc);
+                Responsavel r00000001443 = criarResp("Mariana Vieira Ribeiro", "00000001443");
+                Aluno aRA02442 = criarAluno("Matheus Soares Vieira", "RA02442", r00000001443, esc);
+                Responsavel r00000001444 = criarResp("Nicolas Martins Cruz", "00000001444");
+                Aluno aRA02443 = criarAluno("Bruno Ribeiro Almeida", "RA02443", r00000001444, esc);
+                Responsavel r00000001445 = criarResp("Nicolas Gomes Alves", "00000001445");
+                Aluno aRA02444 = criarAluno("Julia Souza Pereira", "RA02444", r00000001445, esc);
+                Responsavel r00000001446 = criarResp("Tiago Vieira Soares", "00000001446");
+                Aluno aRA02445 = criarAluno("Camila Almeida Vieira", "RA02445", r00000001446, esc);
+                Responsavel r00000001447 = criarResp("João Ribeiro Pereira", "00000001447");
+                Aluno aRA02446 = criarAluno("Beatriz Soares Oliveira", "RA02446", r00000001447, esc);
+                Responsavel r00000001448 = criarResp("Helena Mendes Souza", "00000001448");
+                Aluno aRA02447 = criarAluno("Beatriz Fernandes Souza", "RA02447", r00000001448, esc);
+                Responsavel r00000001449 = criarResp("Daniela Soares Silva", "00000001449");
+                Aluno aRA02448 = criarAluno("Carlos Ribeiro Fernandes", "RA02448", r00000001449, esc);
+                Responsavel r00000001450 = criarResp("Tiago Martins Costa", "00000001450");
+                Aluno aRA02449 = criarAluno("Vitoria Soares Cruz", "RA02449", r00000001450, esc);
+                Responsavel r00000001451 = criarResp("Camila Carvalho Barbosa", "00000001451");
+                Aluno aRA02450 = criarAluno("Tiago Souza Almeida", "RA02450", r00000001451, esc);
+                Responsavel r00000001452 = criarResp("Guilherme Ribeiro Martins", "00000001452");
+                Aluno aRA02451 = criarAluno("Eduardo Cruz Alves", "RA02451", r00000001452, esc);
+                Responsavel r00000001453 = criarResp("Olivia Carvalho Rodrigues", "00000001453");
+                Aluno aRA02452 = criarAluno("Daniela Lima Souza", "RA02452", r00000001453, esc);
+                Responsavel r00000001454 = criarResp("Larissa Ferreira Vieira", "00000001454");
+                Aluno aRA02453 = criarAluno("Lucas Rodrigues Soares", "RA02453", r00000001454, esc);
+                Responsavel r00000001455 = criarResp("Vitoria Souza Alves", "00000001455");
+                Aluno aRA02454 = criarAluno("Lucas Santos Lopes", "RA02454", r00000001455, esc);
+                Responsavel r00000001456 = criarResp("Camila Oliveira Gomes", "00000001456");
+                Aluno aRA02455 = criarAluno("Maria Pereira Santos", "RA02455", r00000001456, esc);
+                Responsavel r00000001457 = criarResp("João Carvalho Santos", "00000001457");
+                Aluno aRA02456 = criarAluno("Guilherme Santos Gomes", "RA02456", r00000001457, esc);
+                Responsavel r00000001458 = criarResp("Tiago Souza Almeida", "00000001458");
+                Aluno aRA02457 = criarAluno("Bruno Soares Silva", "RA02457", r00000001458, esc);
+                Responsavel r00000001459 = criarResp("Beatriz Carvalho Ferreira", "00000001459");
+                Aluno aRA02458 = criarAluno("Nicolas Carvalho Gomes", "RA02458", r00000001459, esc);
+                Responsavel r00000001460 = criarResp("Carlos Cruz Pereira", "00000001460");
+                Aluno aRA02459 = criarAluno("Fernanda Ribeiro Vieira", "RA02459", r00000001460, esc);
+
+                criarTurma(esc, "6º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02440, aRA02441, aRA02442, aRA02443, aRA02444, aRA02445, aRA02446, aRA02447,
+                                                aRA02448,
+                                                aRA02449, aRA02450, aRA02451, aRA02452, aRA02453, aRA02454, aRA02455,
+                                                aRA02456, aRA02457,
+                                                aRA02458, aRA02459));
+
+                // --- 6º Ano - Tarde ---
+                Responsavel r00000001461 = criarResp("Vitoria Oliveira Almeida", "00000001461");
+                Aluno aRA02460 = criarAluno("João Costa Gomes", "RA02460", r00000001461, esc);
+                Responsavel r00000001462 = criarResp("Igor Martins Carvalho", "00000001462");
+                Aluno aRA02461 = criarAluno("Larissa Souza Barbosa", "RA02461", r00000001462, esc);
+                Responsavel r00000001463 = criarResp("Yuri Rodrigues Lima", "00000001463");
+                Aluno aRA02462 = criarAluno("Vitoria Costa Santos", "RA02462", r00000001463, esc);
+                Responsavel r00000001464 = criarResp("Ana Martins Rodrigues", "00000001464");
+                Aluno aRA02463 = criarAluno("Vitoria Lima Alves", "RA02463", r00000001464, esc);
+                Responsavel r00000001465 = criarResp("Ana Mendes Cruz", "00000001465");
+                Aluno aRA02464 = criarAluno("Helena Costa Cruz", "RA02464", r00000001465, esc);
+                Responsavel r00000001466 = criarResp("Tiago Souza Lima", "00000001466");
+                Aluno aRA02465 = criarAluno("Pedro Silva Lopes", "RA02465", r00000001466, esc);
+                Responsavel r00000001467 = criarResp("Yuri Soares Martins", "00000001467");
+                Aluno aRA02466 = criarAluno("Tiago Rodrigues Lopes", "RA02466", r00000001467, esc);
+                Responsavel r00000001468 = criarResp("Eduardo Soares Fernandes", "00000001468");
+                Aluno aRA02467 = criarAluno("Yuri Soares Silva", "RA02467", r00000001468, esc);
+                Responsavel r00000001469 = criarResp("Lucas Alves Martins", "00000001469");
+                Aluno aRA02468 = criarAluno("Carlos Pereira Ribeiro", "RA02468", r00000001469, esc);
+                Responsavel r00000001470 = criarResp("Guilherme Silva Rodrigues", "00000001470");
+                Aluno aRA02469 = criarAluno("Lucas Soares Santos", "RA02469", r00000001470, esc);
+                Responsavel r00000001471 = criarResp("Larissa Vieira Martins", "00000001471");
+                Aluno aRA02470 = criarAluno("Lucas Ribeiro Silva", "RA02470", r00000001471, esc);
+                Responsavel r00000001472 = criarResp("Sophia Carvalho Gomes", "00000001472");
+                Aluno aRA02471 = criarAluno("Vitoria Gomes Mendes", "RA02471", r00000001472, esc);
+                Responsavel r00000001473 = criarResp("Thiago Lima Gomes", "00000001473");
+                Aluno aRA02472 = criarAluno("Guilherme Vieira Almeida", "RA02472", r00000001473, esc);
+                Responsavel r00000001474 = criarResp("Camila Alves Soares", "00000001474");
+                Aluno aRA02473 = criarAluno("Olivia Costa Silva", "RA02473", r00000001474, esc);
+                Responsavel r00000001475 = criarResp("Carlos Almeida Lima", "00000001475");
+                Aluno aRA02474 = criarAluno("Lucas Fernandes Cruz", "RA02474", r00000001475, esc);
+                Responsavel r00000001476 = criarResp("Inês Cruz Almeida", "00000001476");
+                Aluno aRA02475 = criarAluno("Inês Almeida Vieira", "RA02475", r00000001476, esc);
+                Responsavel r00000001477 = criarResp("Fernanda Almeida Oliveira", "00000001477");
+                Aluno aRA02476 = criarAluno("Larissa Pereira Lopes", "RA02476", r00000001477, esc);
+                Responsavel r00000001478 = criarResp("Maria Santos Costa", "00000001478");
+                Aluno aRA02477 = criarAluno("Thiago Silva Lima", "RA02477", r00000001478, esc);
+                Responsavel r00000001479 = criarResp("Inês Cruz Fernandes", "00000001479");
+                Aluno aRA02478 = criarAluno("Julia Pereira Ferreira", "RA02478", r00000001479, esc);
+                Responsavel r00000001480 = criarResp("Daniela Barbosa Carvalho", "00000001480");
+                Aluno aRA02479 = criarAluno("Thiago Vieira Pereira", "RA02479", r00000001480, esc);
+
+                criarTurma(esc, "6º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02460, aRA02461, aRA02462, aRA02463, aRA02464, aRA02465, aRA02466, aRA02467,
+                                                aRA02468,
+                                                aRA02469, aRA02470, aRA02471, aRA02472, aRA02473, aRA02474, aRA02475,
+                                                aRA02476, aRA02477,
+                                                aRA02478, aRA02479));
+
+                // --- 7º Ano - Manhã ---
+                Responsavel r00000001481 = criarResp("Tiago Souza Rodrigues", "00000001481");
+                Aluno aRA02480 = criarAluno("Thiago Costa Pereira", "RA02480", r00000001481, esc);
+                Responsavel r00000001482 = criarResp("Carlos Mendes Lopes", "00000001482");
+                Aluno aRA02481 = criarAluno("Igor Santos Oliveira", "RA02481", r00000001482, esc);
+                Responsavel r00000001483 = criarResp("Carlos Mendes Cruz", "00000001483");
+                Aluno aRA02482 = criarAluno("Olivia Oliveira Silva", "RA02482", r00000001483, esc);
+                Responsavel r00000001484 = criarResp("Thiago Alves Carvalho", "00000001484");
+                Aluno aRA02483 = criarAluno("Julia Silva Cruz", "RA02483", r00000001484, esc);
+                Responsavel r00000001485 = criarResp("Vitoria Lopes Soares", "00000001485");
+                Aluno aRA02484 = criarAluno("Vitoria Carvalho Soares", "RA02484", r00000001485, esc);
+                Responsavel r00000001486 = criarResp("Helena Costa Pereira", "00000001486");
+                Aluno aRA02485 = criarAluno("Matheus Barbosa Lima", "RA02485", r00000001486, esc);
+                Responsavel r00000001487 = criarResp("Inês Ferreira Gomes", "00000001487");
+                Aluno aRA02486 = criarAluno("Fernanda Lima Fernandes", "RA02486", r00000001487, esc);
+                Responsavel r00000001488 = criarResp("Pedro Ribeiro Cruz", "00000001488");
+                Aluno aRA02487 = criarAluno("Carlos Souza Gomes", "RA02487", r00000001488, esc);
+                Responsavel r00000001489 = criarResp("Eduardo Costa Barbosa", "00000001489");
+                Aluno aRA02488 = criarAluno("Gabriel Gomes Silva", "RA02488", r00000001489, esc);
+                Responsavel r00000001490 = criarResp("Yuri Oliveira Gomes", "00000001490");
+                Aluno aRA02489 = criarAluno("Sophia Cruz Oliveira", "RA02489", r00000001490, esc);
+                Responsavel r00000001491 = criarResp("Tiago Ferreira Ribeiro", "00000001491");
+                Aluno aRA02490 = criarAluno("Camila Santos Carvalho", "RA02490", r00000001491, esc);
+                Responsavel r00000001492 = criarResp("Diogo Martins Fernandes", "00000001492");
+                Aluno aRA02491 = criarAluno("Sophia Santos Carvalho", "RA02491", r00000001492, esc);
+                Responsavel r00000001493 = criarResp("Thiago Lima Soares", "00000001493");
+                Aluno aRA02492 = criarAluno("Yuri Lopes Souza", "RA02492", r00000001493, esc);
+                Responsavel r00000001494 = criarResp("Yuri Pereira Fernandes", "00000001494");
+                Aluno aRA02493 = criarAluno("Matheus Lopes Barbosa", "RA02493", r00000001494, esc);
+                Responsavel r00000001495 = criarResp("Fernanda Cruz Santos", "00000001495");
+                Aluno aRA02494 = criarAluno("Pedro Souza Almeida", "RA02494", r00000001495, esc);
+                Responsavel r00000001496 = criarResp("Gabriel Rodrigues Silva", "00000001496");
+                Aluno aRA02495 = criarAluno("Matheus Almeida Gomes", "RA02495", r00000001496, esc);
+                Responsavel r00000001497 = criarResp("Tiago Costa Barbosa", "00000001497");
+                Aluno aRA02496 = criarAluno("Helena Fernandes Souza", "RA02496", r00000001497, esc);
+                Responsavel r00000001498 = criarResp("Larissa Martins Soares", "00000001498");
+                Aluno aRA02497 = criarAluno("Gabriel Alves Lopes", "RA02497", r00000001498, esc);
+                Responsavel r00000001499 = criarResp("Olivia Mendes Vieira", "00000001499");
+                Aluno aRA02498 = criarAluno("Larissa Ferreira Souza", "RA02498", r00000001499, esc);
+                Responsavel r00000001500 = criarResp("Sophia Barbosa Mendes", "00000001500");
+                Aluno aRA02499 = criarAluno("Camila Gomes Ribeiro", "RA02499", r00000001500, esc);
+
+                criarTurma(esc, "7º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02480, aRA02481, aRA02482, aRA02483, aRA02484, aRA02485, aRA02486, aRA02487,
+                                                aRA02488,
+                                                aRA02489, aRA02490, aRA02491, aRA02492, aRA02493, aRA02494, aRA02495,
+                                                aRA02496, aRA02497,
+                                                aRA02498, aRA02499));
+
+                // --- 7º Ano - Tarde ---
+                Responsavel r00000001501 = criarResp("Inês Lima Silva", "00000001501");
+                Aluno aRA02500 = criarAluno("Tiago Oliveira Soares", "RA02500", r00000001501, esc);
+                Responsavel r00000001502 = criarResp("Guilherme Lopes Alves", "00000001502");
+                Aluno aRA02501 = criarAluno("Gabriel Carvalho Ribeiro", "RA02501", r00000001502, esc);
+                Responsavel r00000001503 = criarResp("Bruno Cruz Souza", "00000001503");
+                Aluno aRA02502 = criarAluno("Julia Pereira Ribeiro", "RA02502", r00000001503, esc);
+                Responsavel r00000001504 = criarResp("Sophia Oliveira Silva", "00000001504");
+                Aluno aRA02503 = criarAluno("Helena Martins Ferreira", "RA02503", r00000001504, esc);
+                Responsavel r00000001505 = criarResp("Fernanda Costa Pereira", "00000001505");
+                Aluno aRA02504 = criarAluno("Diogo Martins Costa", "RA02504", r00000001505, esc);
+                Responsavel r00000001506 = criarResp("Rafael Rodrigues Silva", "00000001506");
+                Aluno aRA02505 = criarAluno("Yuri Lima Ribeiro", "RA02505", r00000001506, esc);
+                Responsavel r00000001507 = criarResp("Carlos Rodrigues Lima", "00000001507");
+                Aluno aRA02506 = criarAluno("Pedro Pereira Alves", "RA02506", r00000001507, esc);
+                Responsavel r00000001508 = criarResp("Fernanda Soares Pereira", "00000001508");
+                Aluno aRA02507 = criarAluno("Maria Cruz Pereira", "RA02507", r00000001508, esc);
+                Responsavel r00000001509 = criarResp("Olivia Lima Rodrigues", "00000001509");
+                Aluno aRA02508 = criarAluno("Eduardo Carvalho Almeida", "RA02508", r00000001509, esc);
+                Responsavel r00000001510 = criarResp("Vitoria Barbosa Ferreira", "00000001510");
+                Aluno aRA02509 = criarAluno("Maria Barbosa Oliveira", "RA02509", r00000001510, esc);
+                Responsavel r00000001511 = criarResp("Matheus Santos Carvalho", "00000001511");
+                Aluno aRA02510 = criarAluno("Igor Mendes Lopes", "RA02510", r00000001511, esc);
+                Responsavel r00000001512 = criarResp("Larissa Lopes Pereira", "00000001512");
+                Aluno aRA02511 = criarAluno("Pedro Almeida Lopes", "RA02511", r00000001512, esc);
+                Responsavel r00000001513 = criarResp("Igor Souza Almeida", "00000001513");
+                Aluno aRA02512 = criarAluno("Daniela Barbosa Gomes", "RA02512", r00000001513, esc);
+                Responsavel r00000001514 = criarResp("Daniela Barbosa Carvalho", "00000001514");
+                Aluno aRA02513 = criarAluno("Lucas Silva Pereira", "RA02513", r00000001514, esc);
+                Responsavel r00000001515 = criarResp("Larissa Oliveira Alves", "00000001515");
+                Aluno aRA02514 = criarAluno("Daniela Rodrigues Ribeiro", "RA02514", r00000001515, esc);
+                Responsavel r00000001516 = criarResp("Ana Barbosa Ferreira", "00000001516");
+                Aluno aRA02515 = criarAluno("Gabriel Costa Ribeiro", "RA02515", r00000001516, esc);
+                Responsavel r00000001517 = criarResp("Daniela Costa Alves", "00000001517");
+                Aluno aRA02516 = criarAluno("Yuri Costa Rodrigues", "RA02516", r00000001517, esc);
+                Responsavel r00000001518 = criarResp("Rafael Rodrigues Santos", "00000001518");
+                Aluno aRA02517 = criarAluno("Margarida Alves Carvalho", "RA02517", r00000001518, esc);
+                Responsavel r00000001519 = criarResp("Camila Fernandes Oliveira", "00000001519");
+                Aluno aRA02518 = criarAluno("Eduardo Lopes Santos", "RA02518", r00000001519, esc);
+                Responsavel r00000001520 = criarResp("Maria Soares Almeida", "00000001520");
+                Aluno aRA02519 = criarAluno("Thiago Carvalho Souza", "RA02519", r00000001520, esc);
+
+                criarTurma(esc, "7º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02500, aRA02501, aRA02502, aRA02503, aRA02504, aRA02505, aRA02506, aRA02507,
+                                                aRA02508,
+                                                aRA02509, aRA02510, aRA02511, aRA02512, aRA02513, aRA02514, aRA02515,
+                                                aRA02516, aRA02517,
+                                                aRA02518, aRA02519));
+
+                // --- 8º Ano - Manhã ---
+                Responsavel r00000001521 = criarResp("Eduardo Mendes Almeida", "00000001521");
+                Aluno aRA02520 = criarAluno("Daniela Soares Silva", "RA02520", r00000001521, esc);
+                Responsavel r00000001522 = criarResp("Tiago Cruz Pereira", "00000001522");
+                Aluno aRA02521 = criarAluno("Lucas Souza Pereira", "RA02521", r00000001522, esc);
+                Responsavel r00000001523 = criarResp("Camila Silva Souza", "00000001523");
+                Aluno aRA02522 = criarAluno("Guilherme Ferreira Silva", "RA02522", r00000001523, esc);
+                Responsavel r00000001524 = criarResp("Fernanda Fernandes Gomes", "00000001524");
+                Aluno aRA02523 = criarAluno("Eduardo Oliveira Cruz", "RA02523", r00000001524, esc);
+                Responsavel r00000001525 = criarResp("Rafael Lopes Oliveira", "00000001525");
+                Aluno aRA02524 = criarAluno("Inês Barbosa Vieira", "RA02524", r00000001525, esc);
+                Responsavel r00000001526 = criarResp("Diogo Souza Soares", "00000001526");
+                Aluno aRA02525 = criarAluno("Thiago Pereira Ribeiro", "RA02525", r00000001526, esc);
+                Responsavel r00000001527 = criarResp("Lucas Souza Mendes", "00000001527");
+                Aluno aRA02526 = criarAluno("Helena Ribeiro Oliveira", "RA02526", r00000001527, esc);
+                Responsavel r00000001528 = criarResp("Beatriz Mendes Costa", "00000001528");
+                Aluno aRA02527 = criarAluno("Julia Ribeiro Ferreira", "RA02527", r00000001528, esc);
+                Responsavel r00000001529 = criarResp("Tiago Santos Fernandes", "00000001529");
+                Aluno aRA02528 = criarAluno("Daniela Oliveira Silva", "RA02528", r00000001529, esc);
+                Responsavel r00000001530 = criarResp("Camila Mendes Ribeiro", "00000001530");
+                Aluno aRA02529 = criarAluno("Sophia Souza Pereira", "RA02529", r00000001530, esc);
+                Responsavel r00000001531 = criarResp("Helena Lopes Fernandes", "00000001531");
+                Aluno aRA02530 = criarAluno("Vitoria Soares Cruz", "RA02530", r00000001531, esc);
+                Responsavel r00000001532 = criarResp("Pedro Santos Rodrigues", "00000001532");
+                Aluno aRA02531 = criarAluno("Gabriel Costa Almeida", "RA02531", r00000001532, esc);
+                Responsavel r00000001533 = criarResp("Igor Ribeiro Carvalho", "00000001533");
+                Aluno aRA02532 = criarAluno("Julia Costa Martins", "RA02532", r00000001533, esc);
+                Responsavel r00000001534 = criarResp("Lucas Gomes Silva", "00000001534");
+                Aluno aRA02533 = criarAluno("Mariana Silva Vieira", "RA02533", r00000001534, esc);
+                Responsavel r00000001535 = criarResp("Lucas Pereira Ribeiro", "00000001535");
+                Aluno aRA02534 = criarAluno("Margarida Ferreira Martins", "RA02534", r00000001535, esc);
+                Responsavel r00000001536 = criarResp("Helena Lopes Ribeiro", "00000001536");
+                Aluno aRA02535 = criarAluno("Nicolas Gomes Costa", "RA02535", r00000001536, esc);
+                Responsavel r00000001537 = criarResp("Beatriz Mendes Souza", "00000001537");
+                Aluno aRA02536 = criarAluno("Carlos Costa Lopes", "RA02536", r00000001537, esc);
+                Responsavel r00000001538 = criarResp("Matheus Martins Souza", "00000001538");
+                Aluno aRA02537 = criarAluno("Olivia Pereira Cruz", "RA02537", r00000001538, esc);
+                Responsavel r00000001539 = criarResp("Igor Mendes Santos", "00000001539");
+                Aluno aRA02538 = criarAluno("Eduardo Almeida Soares", "RA02538", r00000001539, esc);
+                Responsavel r00000001540 = criarResp("Vitoria Almeida Lopes", "00000001540");
+                Aluno aRA02539 = criarAluno("Eduardo Costa Cruz", "RA02539", r00000001540, esc);
+
+                criarTurma(esc, "8º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02520, aRA02521, aRA02522, aRA02523, aRA02524, aRA02525, aRA02526, aRA02527,
+                                                aRA02528,
+                                                aRA02529, aRA02530, aRA02531, aRA02532, aRA02533, aRA02534, aRA02535,
+                                                aRA02536, aRA02537,
+                                                aRA02538, aRA02539));
+
+                // --- 8º Ano - Tarde ---
+                Responsavel r00000001541 = criarResp("Tiago Cruz Ferreira", "00000001541");
+                Aluno aRA02540 = criarAluno("Helena Fernandes Carvalho", "RA02540", r00000001541, esc);
+                Responsavel r00000001542 = criarResp("Fernanda Barbosa Martins", "00000001542");
+                Aluno aRA02541 = criarAluno("Beatriz Vieira Soares", "RA02541", r00000001542, esc);
+                Responsavel r00000001543 = criarResp("João Soares Pereira", "00000001543");
+                Aluno aRA02542 = criarAluno("Olivia Souza Costa", "RA02542", r00000001543, esc);
+                Responsavel r00000001544 = criarResp("Igor Cruz Costa", "00000001544");
+                Aluno aRA02543 = criarAluno("Gabriel Martins Gomes", "RA02543", r00000001544, esc);
+                Responsavel r00000001545 = criarResp("Beatriz Soares Oliveira", "00000001545");
+                Aluno aRA02544 = criarAluno("Igor Soares Silva", "RA02544", r00000001545, esc);
+                Responsavel r00000001546 = criarResp("Pedro Ferreira Lopes", "00000001546");
+                Aluno aRA02545 = criarAluno("Igor Silva Ribeiro", "RA02545", r00000001546, esc);
+                Responsavel r00000001547 = criarResp("Bruno Mendes Gomes", "00000001547");
+                Aluno aRA02546 = criarAluno("Camila Silva Oliveira", "RA02546", r00000001547, esc);
+                Responsavel r00000001548 = criarResp("Camila Gomes Barbosa", "00000001548");
+                Aluno aRA02547 = criarAluno("Nicolas Costa Martins", "RA02547", r00000001548, esc);
+                Responsavel r00000001549 = criarResp("Nicolas Lima Santos", "00000001549");
+                Aluno aRA02548 = criarAluno("Lucas Soares Fernandes", "RA02548", r00000001549, esc);
+                Responsavel r00000001550 = criarResp("Bruno Vieira Santos", "00000001550");
+                Aluno aRA02549 = criarAluno("Guilherme Oliveira Almeida", "RA02549", r00000001550, esc);
+                Responsavel r00000001551 = criarResp("Tiago Fernandes Pereira", "00000001551");
+                Aluno aRA02550 = criarAluno("Larissa Gomes Ferreira", "RA02550", r00000001551, esc);
+                Responsavel r00000001552 = criarResp("Nicolas Martins Rodrigues", "00000001552");
+                Aluno aRA02551 = criarAluno("Julia Rodrigues Oliveira", "RA02551", r00000001552, esc);
+                Responsavel r00000001553 = criarResp("João Oliveira Vieira", "00000001553");
+                Aluno aRA02552 = criarAluno("Julia Alves Ribeiro", "RA02552", r00000001553, esc);
+                Responsavel r00000001554 = criarResp("Camila Rodrigues Soares", "00000001554");
+                Aluno aRA02553 = criarAluno("Tiago Vieira Lima", "RA02553", r00000001554, esc);
+                Responsavel r00000001555 = criarResp("Rafael Barbosa Pereira", "00000001555");
+                Aluno aRA02554 = criarAluno("Guilherme Vieira Ribeiro", "RA02554", r00000001555, esc);
+                Responsavel r00000001556 = criarResp("Nicolas Fernandes Soares", "00000001556");
+                Aluno aRA02555 = criarAluno("Matheus Cruz Alves", "RA02555", r00000001556, esc);
+                Responsavel r00000001557 = criarResp("Maria Vieira Pereira", "00000001557");
+                Aluno aRA02556 = criarAluno("Thiago Costa Fernandes", "RA02556", r00000001557, esc);
+                Responsavel r00000001558 = criarResp("Beatriz Pereira Alves", "00000001558");
+                Aluno aRA02557 = criarAluno("Beatriz Cruz Ferreira", "RA02557", r00000001558, esc);
+                Responsavel r00000001559 = criarResp("Larissa Ferreira Santos", "00000001559");
+                Aluno aRA02558 = criarAluno("Fernanda Cruz Rodrigues", "RA02558", r00000001559, esc);
+                Responsavel r00000001560 = criarResp("João Mendes Cruz", "00000001560");
+                Aluno aRA02559 = criarAluno("Matheus Cruz Mendes", "RA02559", r00000001560, esc);
+
+                criarTurma(esc, "8º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02540, aRA02541, aRA02542, aRA02543, aRA02544, aRA02545, aRA02546, aRA02547,
+                                                aRA02548,
+                                                aRA02549, aRA02550, aRA02551, aRA02552, aRA02553, aRA02554, aRA02555,
+                                                aRA02556, aRA02557,
+                                                aRA02558, aRA02559));
+
+                // --- 9º Ano - Manhã ---
+                Responsavel r00000001561 = criarResp("Inês Rodrigues Carvalho", "00000001561");
+                Aluno aRA02560 = criarAluno("Rafael Oliveira Fernandes", "RA02560", r00000001561, esc);
+                Responsavel r00000001562 = criarResp("Margarida Santos Souza", "00000001562");
+                Aluno aRA02561 = criarAluno("Beatriz Lopes Costa", "RA02561", r00000001562, esc);
+                Responsavel r00000001563 = criarResp("Lucas Martins Fernandes", "00000001563");
+                Aluno aRA02562 = criarAluno("Pedro Almeida Ferreira", "RA02562", r00000001563, esc);
+                Responsavel r00000001564 = criarResp("Daniela Mendes Alves", "00000001564");
+                Aluno aRA02563 = criarAluno("Sophia Lopes Souza", "RA02563", r00000001564, esc);
+                Responsavel r00000001565 = criarResp("Bruno Santos Lima", "00000001565");
+                Aluno aRA02564 = criarAluno("Vitoria Santos Carvalho", "RA02564", r00000001565, esc);
+                Responsavel r00000001566 = criarResp("Vitoria Lima Ribeiro", "00000001566");
+                Aluno aRA02565 = criarAluno("Mariana Alves Silva", "RA02565", r00000001566, esc);
+                Responsavel r00000001567 = criarResp("Bruno Mendes Souza", "00000001567");
+                Aluno aRA02566 = criarAluno("Camila Costa Alves", "RA02566", r00000001567, esc);
+                Responsavel r00000001568 = criarResp("Vitoria Oliveira Soares", "00000001568");
+                Aluno aRA02567 = criarAluno("Rafael Barbosa Rodrigues", "RA02567", r00000001568, esc);
+                Responsavel r00000001569 = criarResp("Helena Gomes Ferreira", "00000001569");
+                Aluno aRA02568 = criarAluno("Gabriel Almeida Silva", "RA02568", r00000001569, esc);
+                Responsavel r00000001570 = criarResp("Rafael Oliveira Silva", "00000001570");
+                Aluno aRA02569 = criarAluno("Bruno Soares Alves", "RA02569", r00000001570, esc);
+                Responsavel r00000001571 = criarResp("Margarida Carvalho Cruz", "00000001571");
+                Aluno aRA02570 = criarAluno("Eduardo Almeida Santos", "RA02570", r00000001571, esc);
+                Responsavel r00000001572 = criarResp("Ana Santos Lopes", "00000001572");
+                Aluno aRA02571 = criarAluno("Rafael Carvalho Fernandes", "RA02571", r00000001572, esc);
+                Responsavel r00000001573 = criarResp("Igor Cruz Soares", "00000001573");
+                Aluno aRA02572 = criarAluno("Rafael Alves Santos", "RA02572", r00000001573, esc);
+                Responsavel r00000001574 = criarResp("Camila Fernandes Lima", "00000001574");
+                Aluno aRA02573 = criarAluno("Mariana Ribeiro Souza", "RA02573", r00000001574, esc);
+                Responsavel r00000001575 = criarResp("Diogo Ferreira Barbosa", "00000001575");
+                Aluno aRA02574 = criarAluno("Rafael Alves Pereira", "RA02574", r00000001575, esc);
+                Responsavel r00000001576 = criarResp("Yuri Oliveira Lima", "00000001576");
+                Aluno aRA02575 = criarAluno("Guilherme Pereira Gomes", "RA02575", r00000001576, esc);
+                Responsavel r00000001577 = criarResp("Helena Souza Oliveira", "00000001577");
+                Aluno aRA02576 = criarAluno("Pedro Alves Silva", "RA02576", r00000001577, esc);
+                Responsavel r00000001578 = criarResp("Daniela Lopes Cruz", "00000001578");
+                Aluno aRA02577 = criarAluno("Ana Alves Lima", "RA02577", r00000001578, esc);
+                Responsavel r00000001579 = criarResp("Carlos Carvalho Souza", "00000001579");
+                Aluno aRA02578 = criarAluno("Tiago Ribeiro Costa", "RA02578", r00000001579, esc);
+                Responsavel r00000001580 = criarResp("Helena Gomes Lopes", "00000001580");
+                Aluno aRA02579 = criarAluno("Lucas Barbosa Cruz", "RA02579", r00000001580, esc);
+
+                criarTurma(esc, "9º Ano", "A", "Manhã", 2026,
+                                List.of(aRA02560, aRA02561, aRA02562, aRA02563, aRA02564, aRA02565, aRA02566, aRA02567,
+                                                aRA02568,
+                                                aRA02569, aRA02570, aRA02571, aRA02572, aRA02573, aRA02574, aRA02575,
+                                                aRA02576, aRA02577,
+                                                aRA02578, aRA02579));
+
+                // --- 9º Ano - Tarde ---
+                Responsavel r00000001581 = criarResp("Thiago Carvalho Santos", "00000001581");
+                Aluno aRA02580 = criarAluno("Ana Soares Rodrigues", "RA02580", r00000001581, esc);
+                Responsavel r00000001582 = criarResp("João Lopes Ribeiro", "00000001582");
+                Aluno aRA02581 = criarAluno("Fernanda Ferreira Costa", "RA02581", r00000001582, esc);
+                Responsavel r00000001583 = criarResp("Matheus Silva Almeida", "00000001583");
+                Aluno aRA02582 = criarAluno("Margarida Barbosa Fernandes", "RA02582", r00000001583, esc);
+                Responsavel r00000001584 = criarResp("Tiago Ferreira Santos", "00000001584");
+                Aluno aRA02583 = criarAluno("Daniela Barbosa Silva", "RA02583", r00000001584, esc);
+                Responsavel r00000001585 = criarResp("Yuri Ribeiro Cruz", "00000001585");
+                Aluno aRA02584 = criarAluno("Larissa Pereira Rodrigues", "RA02584", r00000001585, esc);
+                Responsavel r00000001586 = criarResp("Sophia Almeida Barbosa", "00000001586");
+                Aluno aRA02585 = criarAluno("Igor Lima Rodrigues", "RA02585", r00000001586, esc);
+                Responsavel r00000001587 = criarResp("Camila Carvalho Lima", "00000001587");
+                Aluno aRA02586 = criarAluno("Yuri Alves Almeida", "RA02586", r00000001587, esc);
+                Responsavel r00000001588 = criarResp("Matheus Mendes Lopes", "00000001588");
+                Aluno aRA02587 = criarAluno("Julia Oliveira Vieira", "RA02587", r00000001588, esc);
+                Responsavel r00000001589 = criarResp("Mariana Souza Lopes", "00000001589");
+                Aluno aRA02588 = criarAluno("João Pereira Almeida", "RA02588", r00000001589, esc);
+                Responsavel r00000001590 = criarResp("Ana Carvalho Barbosa", "00000001590");
+                Aluno aRA02589 = criarAluno("Gabriel Costa Rodrigues", "RA02589", r00000001590, esc);
+                Responsavel r00000001591 = criarResp("Nicolas Lima Alves", "00000001591");
+                Aluno aRA02590 = criarAluno("Tiago Santos Fernandes", "RA02590", r00000001591, esc);
+                Responsavel r00000001592 = criarResp("Diogo Soares Oliveira", "00000001592");
+                Aluno aRA02591 = criarAluno("Tiago Barbosa Ribeiro", "RA02591", r00000001592, esc);
+                Responsavel r00000001593 = criarResp("João Fernandes Mendes", "00000001593");
+                Aluno aRA02592 = criarAluno("Tiago Costa Ribeiro", "RA02592", r00000001593, esc);
+                Responsavel r00000001594 = criarResp("Vitoria Souza Costa", "00000001594");
+                Aluno aRA02593 = criarAluno("Diogo Ribeiro Gomes", "RA02593", r00000001594, esc);
+                Responsavel r00000001595 = criarResp("Diogo Costa Souza", "00000001595");
+                Aluno aRA02594 = criarAluno("Sophia Alves Vieira", "RA02594", r00000001595, esc);
+                Responsavel r00000001596 = criarResp("Julia Almeida Alves", "00000001596");
+                Aluno aRA02595 = criarAluno("Gabriel Vieira Almeida", "RA02595", r00000001596, esc);
+                Responsavel r00000001597 = criarResp("Margarida Costa Ribeiro", "00000001597");
+                Aluno aRA02596 = criarAluno("Mariana Barbosa Martins", "RA02596", r00000001597, esc);
+                Responsavel r00000001598 = criarResp("Olivia Carvalho Rodrigues", "00000001598");
+                Aluno aRA02597 = criarAluno("Bruno Souza Ferreira", "RA02597", r00000001598, esc);
+                Responsavel r00000001599 = criarResp("Eduardo Carvalho Costa", "00000001599");
+                Aluno aRA02598 = criarAluno("Vitoria Costa Gomes", "RA02598", r00000001599, esc);
+                Responsavel r00000001600 = criarResp("Yuri Lima Silva", "00000001600");
+                Aluno aRA02599 = criarAluno("Camila Almeida Oliveira", "RA02599", r00000001600, esc);
+
+                criarTurma(esc, "9º Ano", "B", "Tarde", 2026,
+                                List.of(aRA02580, aRA02581, aRA02582, aRA02583, aRA02584, aRA02585, aRA02586, aRA02587,
+                                                aRA02588,
+                                                aRA02589, aRA02590, aRA02591, aRA02592, aRA02593, aRA02594, aRA02595,
+                                                aRA02596, aRA02597,
+                                                aRA02598, aRA02599));
+
+        }
+
+        // =====================================================================================
+        // MÉTODOS AUXILIARES (HELPERS)
+        // =====================================================================================
+
+        @Transactional
+        private void criarMatriz(Turma turma, Disciplina disciplina, Funcionario professor, int cargaHoraria) {
+                if (matrizCurricularRepository.existsByTurmaIdAndDisciplinaIdAndAno(
+                                turma.getId(), disciplina.getId(), 2026))
+                        return;
+
+                MatrizCurricular m = new MatrizCurricular();
+                m.setTurma(turma);
+                m.setDisciplina(disciplina);
+                m.setProfessor(professor);
+                m.setAno(2026);
+                m.setCargaHorariaTotal(cargaHoraria);
+                m.setStatus(StatusMatriz.ATIVA);
+                matrizCurricularRepository.save(m);
+        }
+
+        private Responsavel criarResp(String nome, String cpf) {
+                String email = "resp." + cpf + "@email.com";
+                Responsavel r = new Responsavel(null, nome, email, passwordEncoder.encode("123456"), true,
+                                LocalDateTime.now(),
+                                cpf, "11999999999", null);
+                return responsavelRepository.save(r);
+        }
+
+        private Aluno criarAluno(String nome, String ra, Responsavel r, Escola e) {
+                String email = ra.toLowerCase() + "@aluno.com";
+                Aluno a = new Aluno(null, nome, email, passwordEncoder.encode("aluno123"), true, LocalDateTime.now(),
+                                ra,
+                                LocalDate.of(2010, 5, 15), e, r, null);
+                return alunoRepository.save(a);
+        }
+
+        private Turma criarTurma(Escola escola, String serie, String letra, String turno, Integer ano,
+                        List<Aluno> alunos) {
+                String chave = escola.getId() + "-" + serie + "-" + ano;
+
+                char letraAtual = controleLetrasTurma.getOrDefault(chave, 'A');
+
+                controleLetrasTurma.put(chave, (char) (letraAtual + 1));
+
+                String serieComLetra = serie + " " + letraAtual;
+
+                Turma t = new Turma(null, ano, serieComLetra, turno, alunos);
+                return turmaRepository.save(t);
+        }
+
+        private Funcionario criarFunc(String nome, String email, Role role, Funcionario.Cargo cargo, Escola escola) {
+                if (usuarioRepository.findByEmail(email).isPresent()) {
+                        return funcionarioRepository.findAll().stream()
+                                        .filter(f -> f.getEmail().equals(email))
+                                        .findFirst()
+                                        .orElseThrow();
+                }
+                Funcionario f = new Funcionario();
+                f.setNome(nome);
+                f.setEmail(email);
+                f.setSenha(passwordEncoder.encode("123456"));
+                f.setRole(role);
+                f.setCargo(cargo);
+                f.setEscola(escola);
+                f.setAtivo(true);
+                f.setDataCriacao(LocalDateTime.now());
+                return funcionarioRepository.save(f);
+        }
+
+        private void seedEscolas() {
+                List<Escola> escolas = List.of(
+                                new Escola(null, "ESC001", "Colégio Viver", "11111111000101", "Rua das Flores, 123"),
+                                new Escola(null, "ESC002", "Escola Aprender Mais", "11111111000102",
+                                                "Av. Principal, 456"),
+                                new Escola(null, "ESC003", "Centro Educacional Saber", "11111111000103",
+                                                "Praça da Árvore, 789"),
+                                new Escola(null, "ESC004", "Escola Municipal Pingo de Gente", "11111111000104",
+                                                "Rua do Meio, 101"),
+                                new Escola(null, "ESC005", "Colégio Bandeirantes", "11111111000105",
+                                                "Av. das Nações, 202"),
+                                new Escola(null, "ESC006", "Instituto de Ensino Raio de Luz", "11111111000106",
+                                                "Rua Sete, 303"),
+                                new Escola(null, "ESC007", "Escola Estadual Sol Nascente", "11111111000107",
+                                                "Alameda dos Anjos, 404"),
+                                new Escola(null, "ESC008", "Colégio Objetivo", "11111111000108", "Rua Oito, 505"),
+                                new Escola(null, "ESC009", "Escola Nova Geração", "11111111000109", "Av. Brasil, 606"),
+                                new Escola(null, "ESC010", "Centro Integrado de Educação", "11111111000110",
+                                                "Rua Dez, 707"));
+                escolaRepository.saveAll(escolas);
+        }
+
+        private void seedDisciplinas() {
+                List<Disciplina> disciplinas = List.of(
+                                new Disciplina(null, "POR", "Português", "Leitura e gramática", 5.0, 100),
+                                new Disciplina(null, "MAT", "Matemática", "Álgebra e geometria", 5.0, 100),
+                                new Disciplina(null, "HIS", "História", "História do Brasil e Geral", 5.0, 80),
+                                new Disciplina(null, "GEO", "Geografia", "Geografia física e política", 5.0, 80),
+                                new Disciplina(null, "CIE", "Ciências", "Biologia, física e química", 6.0, 100),
+                                new Disciplina(null, "ING", "Inglês", "Leitura e conversação", 5.0, 60),
+                                new Disciplina(null, "EDF", "Educação Física", "Prática de esportes", 5.0, 40),
+                                new Disciplina(null, "ART", "Artes", "História da arte e prática", 5.0, 40),
+                                new Disciplina(null, "FIL", "Filosofia", "Pensadores e correntes filosóficas", 6.0, 60),
+                                new Disciplina(null, "SOC", "Sociologia", "Estudo da sociedade", 6.0, 60));
+                disciplinaRepository.saveAll(disciplinas);
+        }
+
+        protected void vincularMatrizesParaTodasAsTurmas() {
+                if (matrizCurricularRepository.count() > 0)
+                        return;
+
+                // 1. Carrega todas as disciplinas no Map
+                List<Disciplina> disciplinas = disciplinaRepository.findAll();
+                Map<String, Disciplina> discMap = new HashMap<>();
+                for (Disciplina d : disciplinas) {
+                        discMap.put(d.getCodigo(), d);
+                }
+
+                // 2. Mapeia pelo menos um professor por Escola
+                Map<Long, Funcionario> professorPorEscola = new HashMap<>();
+                for (Funcionario f : funcionarioRepository.findAll()) {
+                        if (f.getRole() == Role.PROFESSOR && f.getEscola() != null) {
+                                // Guarda o primeiro professor que encontrar para aquela escola
+                                professorPorEscola.putIfAbsent(f.getEscola().getId(), f);
+                        }
+                }
+
+                // 3. Itera sobre TODAS as turmas do banco e aplica as matrizes
+                List<Turma> todasTurmas = turmaRepository.findAll();
+                for (Turma turma : todasTurmas) {
+
+                        // Descobre a escola dessa turma baseada no primeiro aluno
+                        if (turma.getAlunos() == null || turma.getAlunos().isEmpty())
+                                continue;
+                        Escola escolaDaTurma = turma.getAlunos().get(0).getEscola();
+
+                        // Pega o professor correspondente à escola
+                        Funcionario professor = professorPorEscola.get(escolaDaTurma.getId());
+                        if (professor == null)
+                                continue;
+
+                        // --- Disciplinas Padrão (Para todas as turmas) ---
+                        if (discMap.containsKey("POR"))
+                                criarMatriz(turma, discMap.get("POR"), professor, 100);
+                        if (discMap.containsKey("MAT"))
+                                criarMatriz(turma, discMap.get("MAT"), professor, 100);
+                        if (discMap.containsKey("CIE"))
+                                criarMatriz(turma, discMap.get("CIE"), professor, 100);
+                        if (discMap.containsKey("HIS"))
+                                criarMatriz(turma, discMap.get("HIS"), professor, 80);
+                        if (discMap.containsKey("GEO"))
+                                criarMatriz(turma, discMap.get("GEO"), professor, 80);
+                        if (discMap.containsKey("EDF"))
+                                criarMatriz(turma, discMap.get("EDF"), professor, 40);
+                        if (discMap.containsKey("ART"))
+                                criarMatriz(turma, discMap.get("ART"), professor, 40);
+
+                        // --- Disciplinas Específicas (Exemplo de controle por nome da série) ---
+                        if (turma.getSerie().contains("7º Ano") || turma.getSerie().contains("8º Ano")
+                                        || turma.getSerie().contains("9º Ano")) {
+                                if (discMap.containsKey("ING"))
+                                        criarMatriz(turma, discMap.get("ING"), professor, 60);
+                                if (discMap.containsKey("FIL"))
+                                        criarMatriz(turma, discMap.get("FIL"), professor, 60);
+                                if (discMap.containsKey("SOC"))
+                                        criarMatriz(turma, discMap.get("SOC"), professor, 60);
+                        }
+                }
+        }
 }

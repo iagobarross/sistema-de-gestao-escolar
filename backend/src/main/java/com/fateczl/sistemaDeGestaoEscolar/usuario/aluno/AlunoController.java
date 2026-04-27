@@ -21,14 +21,15 @@ public class AlunoController {
     private AlunoMapper alunoMapper;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA','COORDENADOR', 'PROFESSOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA','COORDENADOR', 'PROFESSOR', 'RESPONSAVEL')")
     public ResponseEntity<Page<AlunoResponseDTO>> listarTodosAlunos(
             @PageableDefault(page = 0, size = 10, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String matricula,
-            @RequestParam(required = false) Long escolaId
+            @RequestParam(required = false) Long escolaId,
+            @RequestParam(required = false) Long responsavelId
     ) {
-        Page<Aluno> pageAlunos = alunoService.findAll(pageable, nome, matricula, escolaId);
+        Page<Aluno> pageAlunos = alunoService.findAll(pageable, nome, matricula, escolaId, responsavelId);
         Page<AlunoResponseDTO> pageDTO = pageAlunos.map(alunoMapper::toResponseDTO);
         return ResponseEntity.ok(pageDTO);
     }

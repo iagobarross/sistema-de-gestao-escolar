@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fateczl.sistemaDeGestaoEscolar.config.CurrentUser;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/v1/aula")
@@ -27,7 +27,7 @@ public class AulaController {
 
     private final AulaService service;
     private final AulaMapper mapper;
-    private CurrentUser currentUser;
+    private final CurrentUser currentUser;
 
     @GetMapping("/hoje")
     @PreAuthorize("hasRole('PROFESSOR')")

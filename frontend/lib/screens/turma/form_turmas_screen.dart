@@ -1,166 +1,154 @@
 import 'package:flutter/material.dart';
-import '../../models/turma.dart';
-import '../../services/turma_service.dart';
+import 'package:gestao_escolar_app/models/turma.dart';
+import 'package:gestao_escolar_app/services/turma_service.dart';
+import 'package:gestao_escolar_app/theme/app_theme.dart';
 
 class FormTurmaScreen extends StatefulWidget {
   final Turma? turmaParaEditar;
-
-  FormTurmaScreen({this.turmaParaEditar});
+  const FormTurmaScreen({super.key, this.turmaParaEditar});
 
   @override
-  _FormTurmaScreenState createState() => _FormTurmaScreenState();
+  State<FormTurmaScreen> createState() => _FormTurmaScreenState();
 }
 
 class _FormTurmaScreenState extends State<FormTurmaScreen> {
   final _formKey = GlobalKey<FormState>();
   final TurmaService _service = TurmaService();
 
-  late TextEditingController _anoController;
-  late TextEditingController _serieController;
-  late TextEditingController _turnoController;
-
+  late final TextEditingController _anoCtrl;
+  late final TextEditingController _serieCtrl;
+  String _turnoSelecionado = 'Manhã';
+  bool _salvando = false;
   bool _isEditando = false;
-  bool _isLoading = false;
+
+  static const _turnos = ['Manhã', 'Tarde', 'Noite', 'Integral'];
 
   @override
   void initState() {
     super.initState();
     _isEditando = widget.turmaParaEditar != null;
-
-    _anoController = TextEditingController(
-      text: _isEditando ? widget.turmaParaEditar!.ano.toString() : '',
+    final t = widget.turmaParaEditar;
+    _anoCtrl = TextEditingController(
+      text: t?.ano.toString() ?? DateTime.now().year.toString(),
     );
-    _serieController = TextEditingController(
-      text: _isEditando ? widget.turmaParaEditar!.serie : '',
-    );
-    _turnoController = TextEditingController(
-      text: _isEditando ? widget.turmaParaEditar!.turno : '',
-    );
+    _serieCtrl = TextEditingController(text: t?.serie ?? '');
+    if (t != null && _turnos.contains(t.turno)) {
+      _turnoSelecionado = t.turno;
+    }
   }
 
   @override
   void dispose() {
-    _anoController.dispose();
-    _serieController.dispose();
-    _turnoController.dispose();
+    _anoCtrl.dispose();
+    _serieCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _salvarTurma() async {
-    if (_formKey.currentState!.validate()) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = true;
-      });
-      String? errorMessage;
-
-      try {
-        final int? ano = int.tryParse(_anoController.text);
-        if (ano == null) {
-          throw Exception("Ano deve ser um número válido.");
-        }
-
-        if (_isEditando) {
-          await _service.updateTurma(
-            widget.turmaParaEditar!.id,
-            ano,
-            _serieController.text,
-            _turnoController.text,
-          );
-        } else {
-          await _service.createTurma(
-            ano,
-            _serieController.text,
-            _turnoController.text,
-          );
-        }
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Turma salva com sucesso!')));
-        Navigator.of(context).pop(true);
-      } catch (e) {
-        errorMessage = e.toString();
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          if (errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
+  Future<void> _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _salvando = true);
+    final ano = int.tryParse(_anoCtrl.text.trim());
+    if (ano == null) {
+      setState(() => _salvando = false);
+      return;
+    }
+    try {
+      if (_isEditando) {
+        await _service.updateTurma(
+          widget.turmaParaEditar!.id,
+          ano,
+          _serieCtrl.text.trim(),
+          _turnoSelecionado,
+        );
+      } else {
+        await _service.createTurma(
+          ano,
+          _serieCtrl.text.trim(),
+          _turnoSelecionado,
+        );
       }
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _salvando = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditando ? 'Editar Turma' : 'Nova Turma')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 600),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                children: <Widget>[
-                  const SizedBox(height: 40),
-                  TextFormField(
-                    controller: _anoController,
-                    decoration: InputDecoration(
-                      labelText: 'Ano',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+      appBar: AppBar(
+        backgroundColor: AppTheme.primary,
+        title: Text(_isEditando ? 'Editar turma' : 'Nova turma'),
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _anoCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Ano letivo *',
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Obrigatório';
+                      final n = int.tryParse(v);
+                      if (n == null || n < 2000) return 'Ano inválido';
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 40),
-                  TextFormField(
-                    controller: _serieController,
-                    decoration: InputDecoration(
-                      labelText: 'Série (ex: 6º Ano)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: DropdownButtonFormField<String>(
+                    value: _turnoSelecionado,
+                    decoration: const InputDecoration(labelText: 'Turno *'),
+                    items: _turnos
+                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _turnoSelecionado = v!),
                   ),
-                  const SizedBox(height: 40),
-                  TextFormField(
-                    controller: _turnoController,
-                    decoration: InputDecoration(
-                      labelText: 'Turno (ex: Manhã)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _salvarTurma,
-                    child: _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text('Salvar'),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _serieCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Série *',
+                hintText: 'Ex: 6º Ano',
+              ),
+              textCapitalization: TextCapitalization.words,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _salvando ? null : _salvar,
+              child: _salvando
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(_isEditando ? 'Salvar alterações' : 'Criar turma'),
+            ),
+          ],
         ),
       ),
     );

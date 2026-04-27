@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,6 +35,13 @@ public class MatrizCurricularController {
                 service.findByTurmaAndAno(turmaId, ano)));
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<MatrizCurricularResponseDTO> buscarPorId(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(mapper.toDTO(service.findById(id)));
+    }
+
     @GetMapping("/professor/{professorId}")
     @PreAuthorize("hasAnyRole('PROFESSOR', 'COORDENADOR', 'DIRETOR', 'ADMIN')")
     public ResponseEntity<List<MatrizCurricularResponseDTO>> listarPorProfessor(
@@ -43,7 +51,7 @@ public class MatrizCurricularController {
                 service.findByProfessorAndAno(professorId, ano)));
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRETOR', 'COORDENADOR')")
     public ResponseEntity<MatrizCurricularResponseDTO> atualizar(
             @PathVariable Long id,
@@ -53,7 +61,7 @@ public class MatrizCurricularController {
 
     @PatchMapping("/{id}/encerrar")
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRETOR')")
-    public ResponseEntity<Void> encerrar (@PathVariable Long id) {
+    public ResponseEntity<Void> encerrar(@PathVariable Long id) {
         service.encerrar(id);
         return ResponseEntity.noContent().build();
     }
