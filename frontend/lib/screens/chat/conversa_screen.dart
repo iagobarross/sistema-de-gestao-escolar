@@ -28,7 +28,7 @@ class _ConversaScreenState extends State<ConversaScreen> {
   final ScrollController _scroll = ScrollController();
   final List<Map<String, dynamic>> _mensagens = [];
   bool _enviando = false;
-  bool _carregandoInicial = true; // Adicionado para mostrar o loading do histórico
+  bool _carregandoInicial = true; 
   
   late ChatService _chatService;
   final AuthService _authService = AuthService();
@@ -36,11 +36,10 @@ class _ConversaScreenState extends State<ConversaScreen> {
   @override
   void initState() {
     super.initState();
-    _carregarHistorico(); // 1º Puxa as mensagens antigas
-    _iniciarConexaoWebSocket(); // 2º Liga o WebSocket para escutar novas
+    _carregarHistorico(); 
+    _iniciarConexaoWebSocket(); 
   }
 
-  // NOVO: Método para buscar o histórico na nossa API REST
   Future<void> _carregarHistorico() async {
     try {
       final res = await http.get(
@@ -98,8 +97,6 @@ class _ConversaScreenState extends State<ConversaScreen> {
     _ctrl.clear();
 
     try {
-      // Lógica Simples: Se o conversaId for 1, é o Mural Público.
-      // Se for diferente de 1, assumimos que é o ID do destinatário (Mensagem Privada)
       if (widget.conversaId == 1) {
         _chatService.enviarMensagemPublica(texto);
       } else {
@@ -151,28 +148,27 @@ class _ConversaScreenState extends State<ConversaScreen> {
       ),
       body: Column(
         children: [
-          // Lista de mensagens
           Expanded(
-            child: _mensagens.isEmpty
-                ? Center(
-                    child: Text(
-                      'Nenhuma mensagem ainda.\nSeja o primeiro a escrever!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade500),
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    itemCount: _mensagens.length,
-                    itemBuilder: (_, i) => _buildMensagem(_mensagens[i]),
-                  ),
+            child: _carregandoInicial
+                ? const Center(child: CircularProgressIndicator())
+                : _mensagens.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Nenhuma mensagem ainda.\nSeja o primeiro a escrever!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey.shade500),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scroll,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        itemCount: _mensagens.length,
+                        itemBuilder: (_, i) => _buildMensagem(_mensagens[i]),
+                      ),
           ),
-
-          // Campo de envio
           Container(
             padding: EdgeInsets.only(
               left: 12,
@@ -239,18 +235,10 @@ class _ConversaScreenState extends State<ConversaScreen> {
   }
 
   Widget _buildMensagem(Map<String, dynamic> msg) {
-    // Como os dados chegam diretamente do backend, precisamos garantir que 
-    // mapeamos os nomes dos campos corretamente conforme a classe 'Mensagem' do Java
-    
-    // Supondo que o backend retorna um ID do remetente
     final remetenteId = msg['remetente'] != null ? msg['remetente']['id'] : -1;
     final minha = remetenteId == widget.meuId;
-    
     final texto = msg['conteudo'] as String? ?? '';
-    
-    // Tenta pegar o nome se vier aninhado, senão usa um padrão
     final nomeAutor = msg['remetente'] != null ? msg['remetente']['nome'] : 'Usuário';
-    
     final enviadaEm = msg['dataEnvio'] as String? ?? '';
 
     return Padding(

@@ -138,6 +138,7 @@ class _ListaConversasScreenState extends State<ListaConversasScreen> {
       ),
       floatingActionButton: _podeIniciarConversa
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -244,7 +245,7 @@ class _ListaConversasScreenState extends State<ListaConversasScreen> {
             ),
           ),
         );
-        _carregar(); // atualiza badges ao voltar
+        _carregar(); 
       },
     );
   }
