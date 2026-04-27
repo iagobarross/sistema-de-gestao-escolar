@@ -10,6 +10,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class ChatController {
@@ -23,30 +25,26 @@ public class ChatController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    // 1. MURAL PÚBLICO (Já tínhamos feito)
     @MessageMapping("/chat.enviarPublico")
     @SendTo("/topic/publico")
-    public Mensagem enviarMensagemPublica(@Payload MensagemRequestDTO mensagemDTO, Principal principal) {
+    public Map<String, Object> enviarMensagemPublica(@Payload MensagemRequestDTO mensagemDTO, Principal principal) {
         Usuario remetente = usuarioRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
 
         Mensagem mensagem = Mensagem.builder()
                 .conteudo(mensagemDTO.getConteudo())
                 .remetente(remetente)
-                // Destinatário nulo = Mensagem pública
                 .build();
 
-        return mensagemRepository.save(mensagem);
+        Mensagem mensagemSalva = mensagemRepository.save(mensagem);
+        return converterParaMap(mensagemSalva);
     }
 
-    // 2. MENSAGEM PRIVADA (NOVO)
     @MessageMapping("/chat.enviarPrivado")
     public void enviarMensagemPrivada(@Payload MensagemPrivadaDTO mensagemDTO, Principal principal) {
-        // Quem está enviando?
         Usuario remetente = usuarioRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Remetente não encontrado!"));
 
-        // Para quem é?
         Usuario destinatario = usuarioRepository.findById(mensagemDTO.getDestinatarioId())
                 .orElseThrow(() -> new RuntimeException("Destinatário não encontrado!"));
 
@@ -57,20 +55,34 @@ public class ChatController {
                 .build();
 
         Mensagem mensagemSalva = mensagemRepository.save(mensagem);
+        Map<String, Object> dtoSeguro = converterParaMap(mensagemSalva);
 
-        // Envia a mensagem para a fila PESSOAL do destinatário
-        // O Flutter do destinatário deve escutar em: /user/queue/privado
         messagingTemplate.convertAndSendToUser(
-                destinatario.getEmail(), // Usa o e-mail como identificador da sessão
+                destinatario.getEmail(),
                 "/queue/privado",
-                mensagemSalva
+                dtoSeguro
         );
 
-        // Opcional: Enviar de volta para o remetente também ver a mensagem no ecrã dele
         messagingTemplate.convertAndSendToUser(
                 remetente.getEmail(),
                 "/queue/privado",
-                mensagemSalva
+                dtoSeguro
         );
+    }
+
+    private Map<String, Object> converterParaMap(Mensagem m) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", m.getId());
+        dto.put("conteudo", m.getConteudo());
+
+        Map<String, Object> remetenteMap = new HashMap<>();
+        if (m.getRemetente() != null) {
+            remetenteMap.put("id", m.getRemetente().getId());
+            remetenteMap.put("nome", m.getRemetente().getNome());
+        }
+        dto.put("remetente", remetenteMap);
+        dto.put("dataEnvio", m.getDataEnvio() != null ? m.getDataEnvio().toString() : "");
+
+        return dto;
     }
 }

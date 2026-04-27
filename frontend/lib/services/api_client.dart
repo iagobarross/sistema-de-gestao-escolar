@@ -4,9 +4,17 @@ import 'package:flutter/foundation.dart';
 class ApiClient {
   static const _storage = FlutterSecureStorage();
 
-  static String get baseDomain {
+  // Substitua este IP pelo IP atual da sua rede quando for testar
+  static const String _meuIp = '172.20.10.2';
+
+ static String get baseDomain {
     if (kIsWeb) return 'http://localhost:8081/api/v1';
-    return 'http://192.168.0.150:8081/api/v1';
+    return 'http://$_meuIp:8081/api/v1';
+  }
+
+  static String get wsDomain {
+    if (kIsWeb) return 'ws://localhost:8081/ws-chat/websocket';
+    return 'ws://$_meuIp:8081/ws-chat/websocket';
   }
 
   static Future<Map<String, String>> getHeaders() async {

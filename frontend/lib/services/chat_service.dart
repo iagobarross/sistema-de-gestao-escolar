@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import 'package:gestao_escolar_app/services/api_client.dart';
 
 class ChatService {
   StompClient? _stompClient;
@@ -8,8 +9,7 @@ class ChatService {
   ChatService({required this.onMensagemRecebida});
 
   void conectar(String tokenJwt) {
-    // Porta 8081 que corrigimos anteriormente!
-    final String url = 'ws://10.0.2.2:8081/ws-chat/websocket';
+    final String url = ApiClient.wsDomain;
 
     _stompClient = StompClient(
       config: StompConfig(
@@ -29,7 +29,6 @@ class ChatService {
   void _onConnect(StompFrame frame) {
     print('Conectado ao WebSocket com sucesso!');
 
-    // 1. Ouvir o Canal Público (Mural)
     _stompClient?.subscribe(
       destination: '/topic/publico',
       callback: (StompFrame frame) {
@@ -40,7 +39,6 @@ class ChatService {
       },
     );
 
-    // 2. Ouvir o Canal Privado (Mensagens Diretas para mim)
     _stompClient?.subscribe(
       destination: '/user/queue/privado',
       callback: (StompFrame frame) {
@@ -62,7 +60,6 @@ class ChatService {
     }
   }
 
-  // NOVO: Método para enviar mensagem privada passando o ID do destinatário
   void enviarMensagemPrivada(String texto, int destinatarioId) {
     if (_stompClient != null && _stompClient!.isActive) {
       final payload = json.encode({
