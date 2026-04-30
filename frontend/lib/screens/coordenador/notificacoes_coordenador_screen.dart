@@ -58,8 +58,7 @@ class _NotificacoesCoordenadorScreenState
       builder: (_) => AlertDialog(
         title: const Text('Encaminhar ao Responsável'),
         content: Text(
-          'Deseja enviar esta notificação sobre ${n.nomeAluno} '
-          'ao responsável cadastrado?',
+          'Deseja enviar esta notificação sobre ${n.nomeAluno} ao responsável?',
         ),
         actions: [
           TextButton(
@@ -74,13 +73,12 @@ class _NotificacoesCoordenadorScreenState
       ),
     );
     if (confirmar != true || !mounted) return;
-
     try {
       await _service.encaminharAoResponsavel(n.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Comunicado enviado ao responsável com sucesso!'),
+          content: Text('Comunicado enviado ao responsável!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -93,13 +91,9 @@ class _NotificacoesCoordenadorScreenState
     }
   }
 
+  // FIX #3 — abre o sheet PRIMEIRO, marca como lido DEPOIS (silencioso)
   Future<void> _abrirDetalhes(Notificacao n) async {
-    if (n.status == StatusNotificacao.PENDENTE) {
-      await _service.marcarLida(n.id);
-    }
-
-    if (!mounted) return;
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -113,7 +107,14 @@ class _NotificacoesCoordenadorScreenState
         },
       ),
     );
-    _carregar();
+
+    // Marca como lida apenas depois do sheet fechar, sem bloquear a abertura
+    if (n.status == StatusNotificacao.PENDENTE) {
+      try {
+        await _service.marcarLida(n.id);
+      } catch (_) {}
+    }
+    if (mounted) _carregar();
   }
 
   @override
@@ -121,6 +122,7 @@ class _NotificacoesCoordenadorScreenState
     return Scaffold(
       body: Column(
         children: [
+          // ── Painel de análise IA ────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
             color: AppTheme.coordenadorColor.withOpacity(0.06),
@@ -171,6 +173,7 @@ class _NotificacoesCoordenadorScreenState
           ),
           const Divider(height: 1),
 
+          // ── Lista de notificações ──────────────────────────────────────
           Expanded(
             child: FutureBuilder<List<Notificacao>>(
               future: _futureNotificacoes,
@@ -225,6 +228,8 @@ class _NotificacoesCoordenadorScreenState
   }
 }
 
+// ── Cartão de notificação ─────────────────────────────────────────────────────
+
 class _CartaoNotificacao extends StatelessWidget {
   final Notificacao notificacao;
   final VoidCallback onTap;
@@ -236,42 +241,33 @@ class _CartaoNotificacao extends StatelessWidget {
     required this.onEncaminhar,
   });
 
-  Color get _corTipo {
-    return switch (notificacao.tipo) {
-      TipoNotificacao.BAIXO_DESEMPENHO => Colors.orange,
-      TipoNotificacao.BAIXA_FREQUENCIA => Colors.red,
-      TipoNotificacao.DESEMPENHO_E_FREQUENCIA => Colors.deepOrange,
-    };
-  }
+  Color get _corTipo => switch (notificacao.tipo) {
+    TipoNotificacao.BAIXO_DESEMPENHO => Colors.orange,
+    TipoNotificacao.BAIXA_FREQUENCIA => Colors.red,
+    TipoNotificacao.DESEMPENHO_E_FREQUENCIA => Colors.deepOrange,
+  };
 
-  String get _labelTipo {
-    return switch (notificacao.tipo) {
-      TipoNotificacao.BAIXO_DESEMPENHO => 'Desempenho',
-      TipoNotificacao.BAIXA_FREQUENCIA => 'Frequência',
-      TipoNotificacao.DESEMPENHO_E_FREQUENCIA => 'Desempenho e Frequência',
-    };
-  }
+  String get _labelTipo => switch (notificacao.tipo) {
+    TipoNotificacao.BAIXO_DESEMPENHO => 'Desempenho',
+    TipoNotificacao.BAIXA_FREQUENCIA => 'Frequência',
+    TipoNotificacao.DESEMPENHO_E_FREQUENCIA => 'Desempenho e Frequência',
+  };
 
-  Color get _corStatus {
-    return switch (notificacao.status) {
-      StatusNotificacao.PENDENTE => Colors.blue,
-      StatusNotificacao.LIDA => Colors.grey,
-      StatusNotificacao.ENCAMINHADA => Colors.green,
-    };
-  }
+  Color get _corStatus => switch (notificacao.status) {
+    StatusNotificacao.PENDENTE => Colors.blue,
+    StatusNotificacao.LIDA => Colors.grey,
+    StatusNotificacao.ENCAMINHADA => Colors.green,
+  };
 
-  String get _labelStatus {
-    return switch (notificacao.status) {
-      StatusNotificacao.PENDENTE => 'Pendente',
-      StatusNotificacao.LIDA => 'Lida',
-      StatusNotificacao.ENCAMINHADA => 'Encaminhada',
-    };
-  }
+  String get _labelStatus => switch (notificacao.status) {
+    StatusNotificacao.PENDENTE => 'Pendente',
+    StatusNotificacao.LIDA => 'Lida',
+    StatusNotificacao.ENCAMINHADA => 'Encaminhada',
+  };
 
   @override
   Widget build(BuildContext context) {
     final isPendente = notificacao.status == StatusNotificacao.PENDENTE;
-
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -343,7 +339,6 @@ class _CartaoNotificacao extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -360,7 +355,6 @@ class _CartaoNotificacao extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-
               Text(
                 notificacao.resumo,
                 style: const TextStyle(
@@ -371,7 +365,6 @@ class _CartaoNotificacao extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 10),
-
               Row(
                 children: [
                   Icon(Icons.schedule, size: 12, color: Colors.grey.shade500),
@@ -386,7 +379,7 @@ class _CartaoNotificacao extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.coordenadorColor,
                         padding: EdgeInsets.zero,
-                        minimumSize: const Size(0, 0),
+                        minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: onEncaminhar,
@@ -436,6 +429,8 @@ class _CartaoNotificacao extends StatelessWidget {
   }
 }
 
+// ── Bottom sheet de detalhe ───────────────────────────────────────────────────
+
 class _DetalheNotificacaoSheet extends StatelessWidget {
   final Notificacao notificacao;
   final VoidCallback onEncaminhar;
@@ -452,8 +447,8 @@ class _DetalheNotificacaoSheet extends StatelessWidget {
       maxChildSize: 0.95,
       minChildSize: 0.4,
       expand: false,
-      builder: (_, scrollController) => SingleChildScrollView(
-        controller: scrollController,
+      builder: (_, sc) => SingleChildScrollView(
+        controller: sc,
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,7 +464,6 @@ class _DetalheNotificacaoSheet extends StatelessWidget {
                 ),
               ),
             ),
-
             Row(
               children: [
                 CircleAvatar(
@@ -506,9 +500,7 @@ class _DetalheNotificacaoSheet extends StatelessWidget {
                 ),
               ],
             ),
-
             const Divider(height: 24),
-
             Row(
               children: [
                 Container(
@@ -524,18 +516,19 @@ class _DetalheNotificacaoSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Análise gerada por Inteligência Artificial',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.purple,
+                const Expanded(
+                  child: Text(
+                    'Análise gerada por Inteligência Artificial',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.purple,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 14),
-
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -548,9 +541,7 @@ class _DetalheNotificacaoSheet extends StatelessWidget {
                 style: const TextStyle(fontSize: 14, height: 1.6),
               ),
             ),
-
             const SizedBox(height: 24),
-
             if (notificacao.status != StatusNotificacao.ENCAMINHADA)
               SizedBox(
                 width: double.infinity,

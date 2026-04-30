@@ -1,51 +1,50 @@
+// frontend/lib/theme/app_theme.dart
 import 'package:flutter/material.dart';
 
 class AppTheme {
   AppTheme._();
 
-  static const Color primary = Color(0xFF1565C0);
-  static const Color primaryDark = Color(0xFF0D47A1);
-  static const Color primaryLight = Color(0xFF1E88E5);
-  static const Color accent = Color(0xFF26C6DA);
+  // ── Paleta base (azul) ────────────────────────────────────────────────────
+  static const Color primary = Color(0xFF1565C0); // azul principal
+  static const Color primaryDark = Color(0xFF0D47A1); // azul escuro
+  static const Color primaryLight = Color(0xFF1E88E5); // azul médio
+  static const Color accent = Color(0xFF42A5F5); // azul claro
   static const Color surface = Color(0xFFF8F9FA);
   static const Color cardBg = Colors.white;
   static const Color divider = Color(0xFFE0E0E0);
   static const Color textPrimary = Color(0xFF212121);
   static const Color textSecondary = Color(0xFF757575);
 
-  static const Color adminColor = Color(0xFFD32F2F);
-  static const Color diretorColor = Color(0xFF303F9F);
-  static const Color coordenadorColor = Color(0xFF7B1FA2);
-  static const Color secretariaColor = Color(0xFF00838F);
-  static const Color professorColor = Color(0xFF00695C);
-  static const Color responsavelColor = Color(0xFF1565C0);
-  static const Color alunoColor = Color(0xFF2E7D32);
+  // ── Cores por papel — todas em tons de azul ───────────────────────────────
+  static const Color adminColor = Color(0xFF0D47A1); // azul muito escuro
+  static const Color diretorColor = Color(0xFF1565C0); // primary
+  static const Color coordenadorColor = Color(0xFF1976D2); // azul
+  static const Color secretariaColor = Color(0xFF1E88E5); // azul médio
+  static const Color professorColor = Color(0xFF2196F3); // azul vivo
+  static const Color responsavelColor = Color(0xFF1565C0); // primary
+  static const Color alunoColor = Color(0xFF0D47A1); // azul escuro
 
-  static Color roleColor(String? role) {
-    return switch (role) {
-      'ADMIN' => adminColor,
-      'DIRETOR' => diretorColor,
-      'COORDENADOR' => coordenadorColor,
-      'SECRETARIA' => secretariaColor,
-      'PROFESSOR' => professorColor,
-      'RESPONSAVEL' => responsavelColor,
-      'ALUNO' => alunoColor,
-      _ => primary,
-    };
-  }
+  static Color roleColor(String? role) => switch (role) {
+    'ADMIN' => adminColor,
+    'DIRETOR' => diretorColor,
+    'COORDENADOR' => coordenadorColor,
+    'SECRETARIA' => secretariaColor,
+    'PROFESSOR' => professorColor,
+    'RESPONSAVEL' => responsavelColor,
+    'ALUNO' => alunoColor,
+    _ => primary,
+  };
 
-  static String roleLabel(String? role) {
-    return switch (role) {
-      'ADMIN' => 'Administrador',
-      'DIRETOR' => 'Diretor',
-      'COORDENADOR' => 'Coordenador',
-      'SECRETARIA' => 'Secretaria',
-      'PROFESSOR' => 'Professor',
-      'RESPONSAVEL' => 'Responsável',
-      'ALUNO' => 'Aluno',
-      _ => 'Usuário',
-    };
-  }
+  static String roleLabel(String? role) => switch (role) {
+    'ADMIN' => 'Administrador',
+    'DIRETOR' => 'Diretor',
+    'COORDENADOR' => 'Coordenador',
+    'SECRETARIA' => 'Secretaria',
+    'PROFESSOR' => 'Professor',
+    'RESPONSAVEL' => 'Responsável',
+    'ALUNO' => 'Aluno',
+    _ => 'Usuário',
+  };
 
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
@@ -74,6 +73,14 @@ class AppTheme {
         side: const BorderSide(color: divider),
       ),
       margin: EdgeInsets.zero,
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: surface,
+      selectedColor: primary,
+      checkmarkColor: Colors.white,
+      labelStyle: const TextStyle(fontSize: 12),
+      side: const BorderSide(color: divider),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -116,8 +123,6 @@ class AppTheme {
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     ),
     dividerTheme: const DividerThemeData(color: divider, space: 1),
-    navigationDrawerTheme: const NavigationDrawerThemeData(
-      backgroundColor: Colors.white,
-    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: primary),
   );
 }

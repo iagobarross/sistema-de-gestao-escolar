@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestao_escolar_app/screens/escola/resumo_escola_screen.dart';
+import 'package:gestao_escolar_app/screens/funcionario/lista_funcionarios_screen.dart';
 import 'package:gestao_escolar_app/widgets/scoped_shell.dart';
 import 'package:gestao_escolar_app/widgets/main_shell.dart';
 import 'package:gestao_escolar_app/screens/aluno/lista_alunos_screen.dart';
@@ -22,9 +23,13 @@ class DiretorDashboard extends StatelessWidget {
           page: const ResumoEscolaScreen(),
         ),
         NavItem(
+          label: 'Funcionários',
+          icon: Icons.badge_outlined,
+          page: ListaFuncionariosScreen(escolaIdFiltro: escolaId),
+        ),
+        NavItem(
           label: 'Alunos',
           icon: Icons.person_outlined,
-          // podeCadastrar: false — ADMIN e SECRETARIA cadastram alunos
           page: ListaAlunoScreen(
             escolaIdFiltro: escolaId,
             podeCadastrar: false,
@@ -33,7 +38,7 @@ class DiretorDashboard extends StatelessWidget {
         NavItem(
           label: 'Turmas',
           icon: Icons.groups_outlined,
-          page: ListaTurmaScreen(podeCadastrar: false),
+          page: const ListaTurmaScreen(podeCadastrar: false),
         ),
         NavItem(
           label: 'Minha Escola',
