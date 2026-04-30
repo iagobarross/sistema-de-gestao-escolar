@@ -34,7 +34,6 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
   }
 
   Future<void> _carregarDados() async {
-    // FIX: não chamamos setState com Future — usamos bool de loading.
     setState(() => _carregando = true);
     try {
       await Future.wait([_buscarAvaliacoes(), _buscarAlunos()]);
@@ -49,8 +48,6 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
       headers: await ApiClient.getHeaders(),
     );
     if (res.statusCode == 200 && mounted) {
-      // Não chamamos setState aqui; o await acima é dentro de _carregarDados
-      // que já controla o estado via _carregando.
       _avaliacoes = List<Map<String, dynamic>>.from(
         jsonDecode(utf8.decode(res.bodyBytes)),
       );
@@ -76,6 +73,14 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
     }
   }
 
+  Future<void> _selecionarAvaliacao(Map<String, dynamic> av) async {
+    // Limpa campos antes de carregar novas
+    for (final c in _controllers.values) c.clear();
+    setState(() => _avaliacaoSelecionada = av);
+    await _carregarNotasExistentes(av['id'] as int);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _carregarNotasExistentes(int avaliacaoId) async {
     final res = await http.get(
       Uri.parse('${ApiClient.baseDomain}/nota/avaliacao/$avaliacaoId'),
@@ -93,12 +98,7 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
   }
 
   Future<void> _salvarNotas() async {
-    if (_avaliacaoSelecionada == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione uma avaliação primeiro.')),
-      );
-      return;
-    }
+    if (_avaliacaoSelecionada == null) return;
 
     final notaMax = (_avaliacaoSelecionada!['notaMaxima'] as num).toDouble();
     final erros = <String>[];
@@ -189,18 +189,38 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
     );
   }
 
+  // ── Helpers de apresentação ──────────────────────────────────────────────
+
+  Color _corTipo(String tipo) => switch (tipo) {
+    'PROVA' => Colors.blue,
+    'TRABALHO' => Colors.green,
+    'PARTICIPACAO' => Colors.teal,
+    'RECUPERACAO' => Colors.orange,
+    'SIMULADO' => Colors.purple,
+    _ => Colors.grey,
+  };
+
+  String _labelTipo(String tipo) => switch (tipo) {
+    'PROVA' => 'Prova',
+    'TRABALHO' => 'Trabalho',
+    'PARTICIPACAO' => 'Participação',
+    'RECUPERACAO' => 'Recuperação',
+    'SIMULADO' => 'Simulado',
+    _ => tipo,
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.orange.shade800,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Lançar notas'),
             Text(
-              widget.matriz.nomeDisciplina,
+              '${widget.matriz.nomeDisciplina} · ${widget.matriz.nomeTurma}',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
@@ -235,175 +255,334 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // ── Seletor de avaliação ───────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
+                // ── Seção: lista de avaliações ─────────────────────────
+                Container(
+                  color: Colors.grey.shade50,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: DropdownButtonFormField<Map<String, dynamic>>(
-                          value: _avaliacaoSelecionada,
-                          hint: const Text('Selecione uma avaliação'),
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
+                      Row(
+                        children: [
+                          const Text(
+                            'Avaliações',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
-                          items: _avaliacoes.map((av) {
-                            return DropdownMenuItem(
-                              value: av,
-                              child: Text(
-                                '${av['titulo']} · ${av['bimestre']}º bim',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (av) async {
-                            for (final c in _controllers.values) {
-                              c.clear();
-                            }
-                            setState(() => _avaliacaoSelecionada = av);
-                            if (av != null) {
-                              await _carregarNotasExistentes(av['id']);
-                              if (mounted) setState(() {});
-                            }
-                          },
+                          const Spacer(),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.primary,
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: _abrirCriarAvaliacao,
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text(
+                              'Nova',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      if (_avaliacoes.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            'Nenhuma avaliação cadastrada. Crie a primeira.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        )
+                      else
+                        // Rolagem horizontal de cartões de avaliação
+                        SizedBox(
+                          height: 80,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _avaliacoes.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (_, i) {
+                              final av = _avaliacoes[i];
+                              final isSelected =
+                                  _avaliacaoSelecionada?['id'] == av['id'];
+                              final cor = _corTipo(av['tipo'] as String? ?? '');
+
+                              return GestureDetector(
+                                onTap: () => _selecionarAvaliacao(av),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 160,
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppTheme.primary
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppTheme.primary
+                                          : Colors.grey.shade200,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.primary
+                                                  .withOpacity(0.25),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 5,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? Colors.white.withOpacity(
+                                                      0.2,
+                                                    )
+                                                  : cor.withOpacity(0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              _labelTipo(
+                                                av['tipo'] as String? ?? '',
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: isSelected
+                                                    ? Colors.white
+                                                    : cor,
+                                              ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            '${av['bimestre']}º bim',
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              color: isSelected
+                                                  ? Colors.white70
+                                                  : AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        av['titulo'] as String? ?? '',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Máx: ${av['notaMaxima']}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: isSelected
+                                                  ? Colors.white70
+                                                  : AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Peso: ${av['peso']}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: isSelected
+                                                  ? Colors.white70
+                                                  : AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.outlined(
-                        onPressed: _abrirCriarAvaliacao,
-                        icon: const Icon(Icons.add),
-                        tooltip: 'Nova avaliação',
-                      ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
 
-                if (_avaliacaoSelecionada != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Nota máxima: ${_avaliacaoSelecionada!['notaMaxima']}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Peso: ${_avaliacaoSelecionada!['peso']}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                 const Divider(height: 1),
 
-                // ── Lista de alunos / campo de nota ────────────────────
+                // ── Seção: lista de alunos com campo de nota ───────────
                 _avaliacaoSelecionada == null
                     ? Expanded(
                         child: Center(
-                          child: Text(
-                            'Selecione uma avaliação acima\npara lançar as notas.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade500),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.touch_app_outlined,
+                                size: 48,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Selecione uma avaliação acima\npara lançar as notas.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey.shade500),
+                              ),
+                            ],
                           ),
                         ),
                       )
                     : Expanded(
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          itemCount: _alunos.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final aluno = _alunos[i];
-                            final id = aluno['id'] as int;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          children: [
+                            // Info da avaliação selecionada
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              color: AppTheme.primary.withOpacity(0.05),
                               child: Row(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: Colors.orange.withOpacity(
-                                      0.1,
-                                    ),
-                                    child: Text(
-                                      (aluno['nome'] as String)[0],
-                                      style: TextStyle(
-                                        color: Colors.orange.shade800,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                  Icon(
+                                    Icons.quiz_outlined,
+                                    size: 16,
+                                    color: AppTheme.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _avaliacaoSelecionada!['titulo'] as String,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.primary,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          aluno['nome'],
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          'RA: ${aluno['matricula']}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppTheme.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 76,
-                                    child: TextFormField(
-                                      controller: _controllers[id],
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                            decimal: true,
-                                          ),
-                                      textAlign: TextAlign.center,
-                                      decoration: InputDecoration(
-                                        hintText: '—',
-                                        hintStyle: TextStyle(
-                                          color: Colors.grey.shade400,
-                                        ),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 10,
-                                            ),
-                                      ),
+                                  const Spacer(),
+                                  Text(
+                                    'Nota máx: ${_avaliacaoSelecionada!['notaMaxima']}  ·  Peso: ${_avaliacaoSelecionada!['peso']}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.textSecondary,
                                     ),
                                   ),
                                 ],
                               ),
-                            );
-                          },
+                            ),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: ListView.separated(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                itemCount: _alunos.length,
+                                separatorBuilder: (_, __) =>
+                                    const Divider(height: 1),
+                                itemBuilder: (_, i) {
+                                  final aluno = _alunos[i];
+                                  final id = aluno['id'] as int;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 18,
+                                          backgroundColor: AppTheme.primary
+                                              .withOpacity(0.1),
+                                          child: Text(
+                                            (aluno['nome'] as String)[0],
+                                            style: const TextStyle(
+                                              color: AppTheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                aluno['nome'],
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              Text(
+                                                'RA: ${aluno['matricula']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppTheme.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 76,
+                                          child: TextFormField(
+                                            controller: _controllers[id],
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              hintText: '—',
+                                              hintStyle: TextStyle(
+                                                color: Colors.grey.shade400,
+                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 10,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
               ],
@@ -412,9 +591,8 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom sheet para criar nova avaliação
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Bottom sheet: Criar nova avaliação ──────────────────────────────────────
+// FIX #4: campos de Peso e Nota Máxima adicionados
 
 class _FormNovaAvaliacao extends StatefulWidget {
   final int matrizId;
@@ -427,6 +605,8 @@ class _FormNovaAvaliacao extends StatefulWidget {
 
 class _FormNovaAvaliacaoState extends State<_FormNovaAvaliacao> {
   final _tituloCtrl = TextEditingController();
+  final _notaMaxCtrl = TextEditingController(text: '10.0');
+  final _pesoCtrl = TextEditingController(text: '1.0');
   String _tipo = 'PROVA';
   int _bimestre = 1;
   DateTime _data = DateTime.now().add(const Duration(days: 1));
@@ -440,14 +620,48 @@ class _FormNovaAvaliacaoState extends State<_FormNovaAvaliacao> {
     'SIMULADO',
   ];
 
+  static const _labeisTipos = {
+    'PROVA': 'Prova',
+    'TRABALHO': 'Trabalho',
+    'PARTICIPACAO': 'Participação',
+    'RECUPERACAO': 'Recuperação',
+    'SIMULADO': 'Simulado',
+  };
+
   @override
   void dispose() {
     _tituloCtrl.dispose();
+    _notaMaxCtrl.dispose();
+    _pesoCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _salvar() async {
-    if (_tituloCtrl.text.trim().isEmpty) return;
+    if (_tituloCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe o título da avaliação.')),
+      );
+      return;
+    }
+
+    final notaMax = double.tryParse(
+      _notaMaxCtrl.text.trim().replaceAll(',', '.'),
+    );
+    final peso = double.tryParse(_pesoCtrl.text.trim().replaceAll(',', '.'));
+
+    if (notaMax == null || notaMax <= 0 || notaMax > 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nota máxima deve ser entre 0.1 e 10.')),
+      );
+      return;
+    }
+    if (peso == null || peso <= 0 || peso > 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Peso deve ser entre 0.1 e 5.')),
+      );
+      return;
+    }
+
     setState(() => _salvando = true);
     try {
       final body = {
@@ -455,19 +669,40 @@ class _FormNovaAvaliacaoState extends State<_FormNovaAvaliacao> {
         'titulo': _tituloCtrl.text.trim(),
         'tipo': _tipo,
         'dataAplicacao': _data.toIso8601String().substring(0, 10),
-        'notaMaxima': 10.0,
+        'notaMaxima': notaMax,
         'bimestre': _bimestre,
-        'peso': 1.0,
+        'peso': peso,
       };
       final res = await http.post(
         Uri.parse('${ApiClient.baseDomain}/avaliacao'),
         headers: await ApiClient.getHeaders(),
         body: jsonEncode(body),
       );
-      if (res.statusCode == 201) widget.onSalvo();
+      if (res.statusCode == 201) {
+        widget.onSalvo();
+      } else {
+        final erro = jsonDecode(res.body)['erro'] ?? 'Erro ao criar avaliação';
+        throw Exception(erro);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
+  }
+
+  Future<void> _selecionarData() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _data,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _data = picked);
   }
 
   @override
@@ -479,88 +714,172 @@ class _FormNovaAvaliacaoState extends State<_FormNovaAvaliacao> {
         right: 20,
         top: 20,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Nova avaliação',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _tituloCtrl,
-            decoration: InputDecoration(
-              labelText: 'Título *',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _tipo,
-                  decoration: InputDecoration(
-                    labelText: 'Tipo',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  items: _tipos
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _tipo = v!),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  value: _bimestre,
-                  decoration: InputDecoration(
-                    labelText: 'Bimestre',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+            ),
+            const Text(
+              'Nova avaliação',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+
+            // Título
+            TextField(
+              controller: _tituloCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: 'Título *',
+                hintText: 'Ex: Prova Bimestral 1',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Tipo e Bimestre
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _tipo,
+                    decoration: InputDecoration(
+                      labelText: 'Tipo',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    items: _tipos
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(_labeisTipos[t] ?? t),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _tipo = v!),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    value: _bimestre,
+                    decoration: InputDecoration(
+                      labelText: 'Bimestre',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    items: [1, 2, 3, 4]
+                        .map(
+                          (b) => DropdownMenuItem(
+                            value: b,
+                            child: Text('$bº bimestre'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _bimestre = v!),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Nota Máxima e Peso  ← FIX #4
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _notaMaxCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Nota máxima *',
+                      hintText: '0.1 – 10.0',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
-                  items: [1, 2, 3, 4]
-                      .map(
-                        (b) => DropdownMenuItem(
-                          value: b,
-                          child: Text('$b º bimestre'),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _pesoCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Peso *',
+                      hintText: '0.1 – 5.0',
+                      helperText: 'Usado na média ponderada',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Data de aplicação
+            OutlinedButton.icon(
+              onPressed: _selecionarData,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.calendar_today, size: 18),
+              label: Text(
+                'Data de aplicação: '
+                '${_data.day.toString().padLeft(2, '0')}/'
+                '${_data.month.toString().padLeft(2, '0')}/'
+                '${_data.year}',
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: _salvando ? null : _salvar,
+                child: _salvando
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
                         ),
                       )
-                      .toList(),
-                  onChanged: (v) => setState(() => _bimestre = v!),
-                ),
+                    : const Text('Criar avaliação'),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade700,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              onPressed: _salvando ? null : _salvar,
-              child: _salvando
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text('Criar avaliação'),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

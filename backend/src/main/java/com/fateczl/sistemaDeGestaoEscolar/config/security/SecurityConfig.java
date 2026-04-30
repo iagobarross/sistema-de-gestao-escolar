@@ -41,7 +41,7 @@ public class SecurityConfig {
                         // Somente Admin da Prefeitura
                         .requestMatchers(HttpMethod.POST, "/api/v1/escola/com-diretor").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/escola/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/funcionario/**").hasAnyRole("ADMIN", "DIRETOR")
+                        .requestMatchers("/api/v1/funcionario/**").hasAnyRole("ADMIN", "DIRETOR", "COORDENADOR")
 
                         // Admin + Diretor podem criar/editar recursos da escola
                         .requestMatchers(HttpMethod.POST, "/api/v1/escola").hasRole("ADMIN")

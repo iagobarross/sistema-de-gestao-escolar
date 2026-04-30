@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/coordenador/coordenador_home_screen.dart';
 import 'package:gestao_escolar_app/screens/coordenador/notificacoes_coordenador_screen.dart';
+import 'package:gestao_escolar_app/screens/funcionario/lista_funcionarios_screen.dart';
 import 'package:gestao_escolar_app/widgets/scoped_shell.dart';
 import 'package:gestao_escolar_app/widgets/main_shell.dart';
 import 'package:gestao_escolar_app/screens/aluno/lista_alunos_screen.dart';
@@ -17,12 +19,22 @@ class CoordenadorDashboard extends StatelessWidget {
       role: 'COORDENADOR',
       itemsBuilder: (escolaId) => [
         NavItem(
+          label: 'Início',
+          icon: Icons.person_outlined,
+          page: const CoordenadorHomeScreen(),
+        ),
+        NavItem(
           label: 'Alunos',
           icon: Icons.person_outlined,
           page: ListaAlunoScreen(
             escolaIdFiltro: escolaId,
             podeCadastrar: false,
           ),
+        ),
+        NavItem(
+          label: 'Funcionários',
+          icon: Icons.badge_outlined,
+          page: ListaFuncionariosScreen(escolaIdFiltro: escolaId),
         ),
         NavItem(
           label: 'Turmas',
