@@ -67,6 +67,9 @@ public class SecurityConfig {
                         // Comunicados — responsável visualiza
                         .requestMatchers("/api/v1/comunicado/**").hasRole("RESPONSAVEL")
 
+                        // Atividades
+                        .requestMatchers("/api/v1/atividade/**").authenticated()
+
                         // Tudo autenticado pode fazer GET
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

@@ -23,7 +23,7 @@ public class AgendadorNotificacoes {
      * "0 * * * * *" (executa a cada minuto)
      * "0 0 7 * * MON" (executa a cada segunda-feira às 7h da manhã)
      */
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 7 * * MON")
     public void analisarTodasAsEscolas() {
         log.info("=== Iniciando análise semanal de desempenho e frequência ===");
 
