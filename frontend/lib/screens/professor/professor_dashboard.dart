@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/professor/atividades_professor_screen.dart';
 import 'package:gestao_escolar_app/screens/professor/chamada_hoje_screen.dart';
 import 'package:gestao_escolar_app/screens/professor/minhas_turmas_screen.dart';
 import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
@@ -22,6 +23,11 @@ class ProfessorDashboard extends StatelessWidget {
           label: 'Minhas Turmas',
           icon: Icons.groups_outlined,
           page: MinhasTurmasScreen(),
+        ),
+        NavItem(
+          label: 'Atividades',
+          icon: Icons.assignment_outlined,
+          page: AtividadesProfessorScreen(),
         ),
         NavItem(
           label: 'Mensagens',

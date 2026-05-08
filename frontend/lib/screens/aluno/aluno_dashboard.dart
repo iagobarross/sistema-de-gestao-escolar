@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestao_escolar_app/screens/aluno/atividades_aluno_screen.dart';
 import 'package:gestao_escolar_app/screens/responsavel/boletim_screen.dart';
 import 'package:gestao_escolar_app/screens/chat/lista_conversas_screen.dart';
 import 'package:gestao_escolar_app/screens/responsavel/frequencia_aluno_screen.dart';
@@ -13,6 +14,11 @@ class AlunoDashboard extends StatelessWidget {
       titulo: 'Portal do Aluno',
       role: 'ALUNO',
       items: [
+        NavItem(
+          label: 'Atividades',
+          icon: Icons.assignment_outlined,
+          page: AtividadesAlunoScreen(),
+        ),
         NavItem(
           label: 'Meu Boletim',
           icon: Icons.assignment_outlined,
