@@ -46,6 +46,10 @@ public class NotaServiceImpl implements NotaService {
                             .findByAvaliacaoIdAndAlunoId(dto.getAvaliacaoId(), item.getAlunoId())
                             .orElse(new Nota());
 
+                   if (item.getValor() > avaliacao.getNotaMaxima()){
+                        throw new BusinessException("Nota " + item.getValor() + " não pode ser maior que a nota máxima " + avaliacao.getNotaMaxima());
+                   }
+
                     nota.setAvaliacao(avaliacao);
                     nota.setAluno(aluno);
                     nota.setValor(item.getValor());

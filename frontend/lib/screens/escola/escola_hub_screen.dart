@@ -161,20 +161,20 @@ class _EscolaHubScreenState extends State<EscolaHubScreen>
                         const SizedBox(height: 12),
                         // KPIs rápidos
                         if (!_carregandoStats)
-                          Row(
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
                             children: [
                               _statChip(
                                 '$_totalAlunos',
                                 'alunos',
                                 Icons.person,
                               ),
-                              const SizedBox(width: 8),
                               _statChip(
                                 '$_totalTurmas',
                                 'turmas',
                                 Icons.groups,
                               ),
-                              const SizedBox(width: 8),
                               _statChip(
                                 '$_totalFuncionarios',
                                 'funcionários',

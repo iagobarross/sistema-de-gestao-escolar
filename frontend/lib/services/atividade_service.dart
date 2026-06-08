@@ -47,18 +47,34 @@ class AtividadeService {
       Uri.parse('$_base/$id'),
       headers: await ApiClient.getHeaders(),
     );
-    if (res.statusCode != 204) throw Exception('Erro ao deletar');
+    if (res.statusCode != 204) throw Exception('Erro ao deletar atividade');
   }
 
-  Future<AtividadeEntrega> entregar(int atividadeId, String conteudo) async {
+  Future<AtividadeEntrega> entregar({
+    required int atividadeId,
+    String? conteudo,
+    String? arquivoBase64,
+    String? arquivoNome,
+    String? arquivoTipo,
+  }) async {
+    final body = <String, dynamic>{'atividadeId': atividadeId};
+    if (conteudo != null && conteudo.isNotEmpty) body['conteudo'] = conteudo;
+    if (arquivoBase64 != null) {
+      body['arquivoBase64'] = arquivoBase64;
+      body['arquivoNome'] = arquivoNome;
+      body['arquivoTipo'] = arquivoTipo;
+    }
     final res = await http.post(
       Uri.parse('$_base/entregar'),
       headers: await ApiClient.getHeaders(),
-      body: jsonEncode({'atividadeId': atividadeId, 'conteudo': conteudo}),
+      body: jsonEncode(body),
     );
-    if (res.statusCode == 201)
-      return AtividadeEntrega.fromJson(jsonDecode(res.body));
-    throw Exception(jsonDecode(res.body)['erro'] ?? 'Erro ao entregar');
+    if (res.statusCode == 201) {
+      return AtividadeEntrega.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
+    }
+    throw Exception(
+      jsonDecode(res.body)['erro'] ?? 'Erro ao entregar atividade',
+    );
   }
 
   Future<List<AtividadeEntrega>> minhasEntregas() async {
@@ -85,5 +101,36 @@ class AtividadeService {
           .toList();
     }
     throw Exception('Erro ${res.statusCode}');
+  }
+
+  /// Todos os alunos da turma com status de entrega (inclusive pendentes).
+  Future<List<AtividadeAlunoStatus>> statusAlunos(int atividadeId) async {
+    final res = await http.get(
+      Uri.parse('$_base/$atividadeId/status-alunos'),
+      headers: await ApiClient.getHeaders(),
+    );
+    if (res.statusCode == 200) {
+      return (jsonDecode(utf8.decode(res.bodyBytes)) as List)
+          .map((j) => AtividadeAlunoStatus.fromJson(j))
+          .toList();
+    }
+    throw Exception('Erro ao buscar status dos alunos: ${res.statusCode}');
+  }
+
+  /// Baixa o arquivo base64 de uma entrega específica (sob demanda).
+  Future<Map<String, String>?> baixarArquivo(int entregaId) async {
+    final res = await http.get(
+      Uri.parse('$_base/entrega/$entregaId/arquivo'),
+      headers: await ApiClient.getHeaders(),
+    );
+    if (res.statusCode == 200) {
+      final j = jsonDecode(utf8.decode(res.bodyBytes));
+      return {
+        'arquivoBase64': j['arquivoBase64'] ?? '',
+        'arquivoNome': j['arquivoNome'] ?? 'arquivo',
+        'arquivoTipo': j['arquivoTipo'] ?? 'application/octet-stream',
+      };
+    }
+    return null;
   }
 }

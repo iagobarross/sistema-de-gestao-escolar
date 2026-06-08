@@ -9,6 +9,8 @@ public interface AtividadeService {
     List<Atividade> findByProfessor(Long professorId);
     void deletar(Long id);
     AtividadeEntrega entregar(Long alunoId, AtividadeEntregaRequestDTO dto);
+    AtividadeEntrega findEntregaById(Long entregaId);
     List<AtividadeEntrega> findEntregasByAtividade(Long atividadeId);
     List<AtividadeEntrega> findEntregasByAluno(Long alunoId);
+    List<AtividadeAlunoStatusDTO> getStatusAlunos(Long atividadeId);
 }

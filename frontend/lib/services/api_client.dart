@@ -4,10 +4,9 @@ import 'package:flutter/foundation.dart';
 class ApiClient {
   static const _storage = FlutterSecureStorage();
 
-  // Substitua este IP pelo IP atual da sua rede quando for testar
-  static const String _meuIp = '172.20.10.2';
+  static const String _meuIp = '10.0.2.2';
 
- static String get baseDomain {
+  static String get baseDomain {
     if (kIsWeb) return 'http://localhost:8081/api/v1';
     return 'http://$_meuIp:8081/api/v1';
   }

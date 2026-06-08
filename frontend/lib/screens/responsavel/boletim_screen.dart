@@ -286,6 +286,7 @@ class _BoletimScreenState extends State<BoletimScreen> {
                 Text(
                   '${d['faltas'] ?? 0} faltas'
                   ' · ${d['totalAulas'] ?? 0} aulas',
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(width: 8),

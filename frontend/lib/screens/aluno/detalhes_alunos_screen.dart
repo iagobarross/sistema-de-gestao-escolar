@@ -475,6 +475,7 @@ class _BoletimTab extends StatelessWidget {
                               fontSize: 11,
                               color: AppTheme.textSecondary,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

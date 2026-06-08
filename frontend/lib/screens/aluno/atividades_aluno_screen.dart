@@ -5,6 +5,8 @@ import 'package:gestao_escolar_app/services/atividade_service.dart';
 import 'package:gestao_escolar_app/services/api_client.dart';
 import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:gestao_escolar_app/theme/app_theme.dart';
+import 'package:gestao_escolar_app/widgets/arquivo_chip.dart';
+import 'package:gestao_escolar_app/widgets/file_upload_helper.dart';
 import 'package:http/http.dart' as http;
 
 class AtividadesAlunoScreen extends StatefulWidget {
@@ -27,36 +29,24 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
   }
 
   Future<void> _carregar() async {
-    setState(() {
-      _carregando = true;
-    });
+    setState(() => _carregando = true);
     try {
       final payload = await AuthService().getPayload();
       final meuId = payload?['id'] as int?;
       if (meuId == null) return;
 
-      // Busca turmas do aluno para encontrar atividades
-      final resAluno = await http.get(
-        Uri.parse('${ApiClient.baseDomain}/aluno/$meuId'),
+      final resTurmas = await http.get(
+        Uri.parse('${ApiClient.baseDomain}/turma'),
         headers: await ApiClient.getHeaders(),
       );
 
       List<Atividade> todasAtividades = [];
-      if (resAluno.statusCode == 200) {
-        final aluno = jsonDecode(utf8.decode(resAluno.bodyBytes));
-        final turmas = (aluno['turmas'] as List?) ?? [];
-        // Busca turma IDs pelo boletim para pegar as atividades
-        final resTurmas = await http.get(
-          Uri.parse('${ApiClient.baseDomain}/turma'),
-          headers: await ApiClient.getHeaders(),
-        );
-        if (resTurmas.statusCode == 200) {
-          final listaTurmas =
-              jsonDecode(utf8.decode(resTurmas.bodyBytes)) as List;
-          for (final t in listaTurmas) {
-            final tAtiv = await _service.porTurma(t['id']);
-            todasAtividades.addAll(tAtiv);
-          }
+      if (resTurmas.statusCode == 200) {
+        final listaTurmas =
+            jsonDecode(utf8.decode(resTurmas.bodyBytes)) as List;
+        for (final t in listaTurmas) {
+          final tAtiv = await _service.porTurma(t['id']);
+          todasAtividades.addAll(tAtiv);
         }
       }
 
@@ -75,60 +65,122 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
     }
   }
 
-  Future<void> _entregar(Atividade a) async {
-    final ctrl = TextEditingController(
-      text: _entregasMap[a.id]?.conteudo ?? '',
+  Future<void> _abrirModalEntrega(Atividade a) async {
+    final entregaExistente = _entregasMap[a.id];
+    final conteudoCtrl = TextEditingController(
+      text: entregaExistente?.conteudo ?? '',
     );
+    ArquivoSelecionado? arquivoNovo;
+
     final ok = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              a.titulo,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              a.descricao,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: ctrl,
-              maxLines: 5,
-              decoration: InputDecoration(
-                labelText: 'Sua resposta / entrega',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
+
+              Text(
+                a.titulo,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (a.descricao.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  a.descricao,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+
+              // Campo de texto
+              TextField(
+                controller: conteudoCtrl,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: 'Resposta / comentário (opcional)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ── Arquivo já enviado anteriormente ─────────────────────
+              if (entregaExistente != null &&
+                  (entregaExistente.temArquivo ||
+                      entregaExistente.arquivoNome != null)) ...[
+                const Text(
+                  'Arquivo enviado anteriormente:',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 4),
+                ArquivoChip(
+                  nome: entregaExistente.arquivoNome ?? 'Arquivo',
+                  tipo: entregaExistente.arquivoTipo,
+                  // Passa entregaId para habilitar download
+                  entregaId: entregaExistente.id,
+                ),
+                const SizedBox(height: 4),
+              ],
+
+              // ── Novo arquivo selecionado ──────────────────────────────
+              if (arquivoNovo != null) ...[
+                const Text(
+                  'Novo arquivo (substituirá o anterior):',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 4),
+                ArquivoChip(
+                  nome: arquivoNovo!.nome,
+                  tipo: arquivoNovo!.tipo,
+                  tamanho: arquivoNovo!.tamanhoFormatado,
+                  onRemover: () => setModal(() => arquivoNovo = null),
+                ),
+                const SizedBox(height: 4),
+              ],
+
+              // Botão de selecionar arquivo
+              OutlinedButton.icon(
                 onPressed: () async {
                   try {
-                    await _service.entregar(a.id, ctrl.text.trim());
-                    if (context.mounted) Navigator.pop(context, true);
+                    final selecionado =
+                        await FileUploadHelper.selecionarArquivo();
+                    if (selecionado != null) {
+                      setModal(() => arquivoNovo = selecionado);
+                    }
                   } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
                         SnackBar(
                           content: Text('$e'),
                           backgroundColor: Colors.red,
@@ -137,17 +189,57 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
                     }
                   }
                 },
-                child: Text(
-                  _entregasMap.containsKey(a.id)
-                      ? 'Atualizar entrega'
-                      : 'Entregar atividade',
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: Icon(
+                  arquivoNovo != null ? Icons.swap_horiz : Icons.attach_file,
+                ),
+                label: Text(
+                  arquivoNovo != null
+                      ? 'Trocar arquivo'
+                      : entregaExistente?.temArquivo == true
+                      ? 'Substituir arquivo'
+                      : 'Anexar arquivo',
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                'PDF, Word, Excel, PowerPoint, imagens, ZIP… • Máx: 10 MB',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              ),
+              const SizedBox(height: 16),
+
+              // Botão de enviar
+              _BotaoEnviar(
+                isEdicao: entregaExistente != null,
+                onEnviar: () async {
+                  await _service.entregar(
+                    atividadeId: a.id,
+                    conteudo: conteudoCtrl.text.trim(),
+                    arquivoBase64: arquivoNovo?.base64,
+                    arquivoNome: arquivoNovo?.nome,
+                    arquivoTipo: arquivoNovo?.tipo,
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx, true);
+                },
+                onErro: (msg) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
+
     if (ok == true) _carregar();
   }
 
@@ -218,7 +310,11 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
                           ),
                         ),
                       ),
-                      _statusChip(entregue, atrasada, entrega?.status),
+                      _StatusChip(
+                        entregue: entregue,
+                        atrasada: atrasada,
+                        status: entrega?.status,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -238,6 +334,18 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+
+                  // Arquivo anexado — visível no card da lista
+                  if (entregue &&
+                      (entrega.temArquivo || entrega.arquivoNome != null)) ...[
+                    const SizedBox(height: 8),
+                    ArquivoChip(
+                      nome: entrega.arquivoNome ?? 'Arquivo',
+                      tipo: entrega.arquivoTipo,
+                      entregaId: entrega.id,
+                    ),
+                  ],
+
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -260,7 +368,7 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
                       const Spacer(),
                       if (!a.atrasada || entregue)
                         TextButton(
-                          onPressed: () => _entregar(a),
+                          onPressed: () => _abrirModalEntrega(a),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
@@ -281,8 +389,22 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
       ),
     );
   }
+}
 
-  Widget _statusChip(bool entregue, bool atrasada, StatusEntrega? status) {
+// ── Widgets auxiliares ────────────────────────────────────────────────────────
+
+class _StatusChip extends StatelessWidget {
+  final bool entregue;
+  final bool atrasada;
+  final StatusEntrega? status;
+  const _StatusChip({
+    required this.entregue,
+    required this.atrasada,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     String label;
     Color cor;
     if (entregue) {
@@ -304,6 +426,54 @@ class _AtividadesAlunoScreenState extends State<AtividadesAlunoScreen> {
       child: Text(
         label,
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: cor),
+      ),
+    );
+  }
+}
+
+class _BotaoEnviar extends StatefulWidget {
+  final bool isEdicao;
+  final Future<void> Function() onEnviar;
+  final void Function(String) onErro;
+  const _BotaoEnviar({
+    required this.isEdicao,
+    required this.onEnviar,
+    required this.onErro,
+  });
+
+  @override
+  State<_BotaoEnviar> createState() => _BotaoEnviarState();
+}
+
+class _BotaoEnviarState extends State<_BotaoEnviar> {
+  bool _salvando = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _salvando
+            ? null
+            : () async {
+                setState(() => _salvando = true);
+                try {
+                  await widget.onEnviar();
+                } catch (e) {
+                  widget.onErro('$e');
+                  setState(() => _salvando = false);
+                }
+              },
+        child: _salvando
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(widget.isEdicao ? 'Atualizar entrega' : 'Enviar atividade'),
       ),
     );
   }

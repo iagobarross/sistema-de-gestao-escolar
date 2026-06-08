@@ -191,15 +191,15 @@ class _DetalhesTurmasScreenState extends State<DetalhesTurmasScreen>
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
                           children: [
                             _chip(Icons.wb_sunny_outlined, _turma!.turno),
-                            const SizedBox(width: 8),
                             _chip(
                               Icons.calendar_today_outlined,
                               '${_turma!.ano}',
                             ),
-                            const SizedBox(width: 8),
                             _chip(
                               Icons.people_outlined,
                               '${_alunos.length} alunos',
