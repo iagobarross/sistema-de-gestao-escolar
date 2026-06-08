@@ -6,6 +6,8 @@ import 'package:gestao_escolar_app/services/atividade_service.dart';
 import 'package:gestao_escolar_app/services/api_client.dart';
 import 'package:gestao_escolar_app/services/auth_service.dart';
 import 'package:gestao_escolar_app/theme/app_theme.dart';
+import 'package:gestao_escolar_app/widgets/file_upload_helper.dart';
+import 'package:gestao_escolar_app/widgets/arquivo_chip.dart';
 import 'package:http/http.dart' as http;
 
 class AtividadesProfessorScreen extends StatefulWidget {
@@ -36,7 +38,6 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   Future<void> _criarAtividade() async {
-    // Busca matrizes do professor
     final id = await AuthService().getId();
     final ano = DateTime.now().year;
     final res = await http.get(
@@ -67,13 +68,6 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
           _carregar();
         },
       ),
-    );
-  }
-
-  Future<void> _verEntregas(Atividade a) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => _EntregasAtividadeScreen(atividade: a)),
     );
   }
 
@@ -114,7 +108,6 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (_, i) {
                 final a = lista[i];
-                final atrasada = a.atrasada;
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(14),
@@ -132,25 +125,9 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
                                 ),
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: atrasada
-                                    ? Colors.red.withOpacity(0.1)
-                                    : Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                atrasada ? 'Encerrada' : 'Aberta',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: atrasada ? Colors.red : Colors.green,
-                                ),
-                              ),
+                            _badge(
+                              a.atrasada ? 'Encerrada' : 'Aberta',
+                              a.atrasada ? Colors.red : Colors.green,
                             ),
                           ],
                         ),
@@ -173,14 +150,9 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
                             const SizedBox(width: 4),
                             Text(
                               'Entrega: ${_formatarData(a.dataEntrega)}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
-                                color: atrasada
-                                    ? Colors.red.shade700
-                                    : AppTheme.textSecondary,
-                                fontWeight: atrasada
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
+                                color: AppTheme.textSecondary,
                               ),
                             ),
                           ],
@@ -189,10 +161,16 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
                         Row(
                           children: [
                             OutlinedButton.icon(
-                              onPressed: () => _verEntregas(a),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      _EntregasAtividadeScreen(atividade: a),
+                                ),
+                              ),
                               icon: const Icon(Icons.people_outline, size: 16),
                               label: const Text(
-                                'Ver entregas',
+                                'Ver alunos',
                                 style: TextStyle(fontSize: 12),
                               ),
                               style: OutlinedButton.styleFrom(
@@ -211,8 +189,34 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
                                 size: 20,
                               ),
                               onPressed: () async {
-                                await _service.deletar(a.id);
-                                _carregar();
+                                final ok = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text('Excluir atividade'),
+                                    content: const Text(
+                                      'Todas as entregas serão removidas. Confirma?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                        ),
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text('Excluir'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (ok == true) {
+                                  await _service.deletar(a.id);
+                                  _carregar();
+                                }
                               },
                             ),
                           ],
@@ -235,13 +239,28 @@ class _AtividadesProfessorScreenState extends State<AtividadesProfessorScreen> {
       ),
     );
   }
+
+  Widget _badge(String label, Color cor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: cor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: cor),
+      ),
+    );
+  }
 }
 
-// ── Form Nova Atividade ──────────────────────────────────────────────────────
+// ── Formulário: nova atividade ────────────────────────────────────────────────
 
 class _FormNovaAtividade extends StatefulWidget {
   final List<MatrizCurricular> matrizes;
   final VoidCallback onSalvo;
+
   const _FormNovaAtividade({required this.matrizes, required this.onSalvo});
 
   @override
@@ -249,28 +268,34 @@ class _FormNovaAtividade extends StatefulWidget {
 }
 
 class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
+  final _service = AtividadeService();
   final _tituloCtrl = TextEditingController();
   final _descricaoCtrl = TextEditingController();
   MatrizCurricular? _matrizSelecionada;
-  DateTime _dataEntrega = DateTime.now().add(const Duration(days: 7));
+  DateTime? _dataEntrega;
   bool _salvando = false;
 
-  @override
-  void dispose() {
-    _tituloCtrl.dispose();
-    _descricaoCtrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _salvar() async {
-    if (_tituloCtrl.text.trim().isEmpty || _matrizSelecionada == null) return;
+    if (_matrizSelecionada == null ||
+        _tituloCtrl.text.trim().isEmpty ||
+        _dataEntrega == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preencha todos os campos obrigatórios.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _salvando = true);
     try {
-      await AtividadeService().criar({
+      await _service.criar({
         'matrizCurricularId': _matrizSelecionada!.id,
         'titulo': _tituloCtrl.text.trim(),
         'descricao': _descricaoCtrl.text.trim(),
-        'dataEntrega': _dataEntrega.toIso8601String().substring(0, 10),
+        'dataEntrega':
+            '${_dataEntrega!.year}-${_dataEntrega!.month.toString().padLeft(2, '0')}-${_dataEntrega!.day.toString().padLeft(2, '0')}',
       });
       widget.onSalvo();
     } catch (e) {
@@ -278,9 +303,8 @@ class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$e'), backgroundColor: Colors.red),
         );
+        setState(() => _salvando = false);
       }
-    } finally {
-      if (mounted) setState(() => _salvando = false);
     }
   }
 
@@ -295,17 +319,32 @@ class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
           const Text(
-            'Nova atividade',
+            'Nova Atividade',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
+
+          // Disciplina / turma
           DropdownButtonFormField<MatrizCurricular>(
             value: _matrizSelecionada,
-            isExpanded: true,
-            hint: const Text('Turma / Disciplina *'),
             decoration: InputDecoration(
+              labelText: 'Disciplina / Turma *',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -315,7 +354,7 @@ class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
                   (m) => DropdownMenuItem(
                     value: m,
                     child: Text(
-                      '${m.nomeTurma} · ${m.nomeDisciplina}',
+                      '${m.nomeDisciplina} · ${m.nomeTurma}',
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -324,6 +363,8 @@ class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
             onChanged: (v) => setState(() => _matrizSelecionada = v),
           ),
           const SizedBox(height: 12),
+
+          // Título
           TextField(
             controller: _tituloCtrl,
             decoration: InputDecoration(
@@ -334,45 +375,55 @@ class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
             ),
           ),
           const SizedBox(height: 12),
+
+          // Descrição
           TextField(
             controller: _descricaoCtrl,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: 'Descrição / Enunciado',
+              labelText: 'Descrição (opcional)',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
           ),
           const SizedBox(height: 12),
+
+          // Data de entrega
           OutlinedButton.icon(
             onPressed: () async {
-              final d = await showDatePicker(
+              final picked = await showDatePicker(
                 context: context,
-                initialDate: _dataEntrega,
+                initialDate: DateTime.now().add(const Duration(days: 7)),
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 365)),
               );
-              if (d != null) setState(() => _dataEntrega = d);
+              if (picked != null) setState(() => _dataEntrega = picked);
             },
-            icon: const Icon(Icons.calendar_today, size: 18),
-            label: Text(
-              'Entrega: ${_dataEntrega.day.toString().padLeft(2, '0')}/${_dataEntrega.month.toString().padLeft(2, '0')}/${_dataEntrega.year}',
-            ),
             style: OutlinedButton.styleFrom(
-              alignment: Alignment.centerLeft,
-              minimumSize: const Size.fromHeight(48),
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: Text(
+              _dataEntrega == null
+                  ? 'Selecionar data de entrega *'
+                  : 'Entrega: ${_dataEntrega!.day.toString().padLeft(2, '0')}/${_dataEntrega!.month.toString().padLeft(2, '0')}/${_dataEntrega!.year}',
             ),
           ),
           const SizedBox(height: 20),
+
+          // Botão salvar
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _salvando ? null : _salvar,
               child: _salvando
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
+                      height: 20,
+                      width: 20,
                       child: CircularProgressIndicator(
                         color: Colors.white,
                         strokeWidth: 2,
@@ -387,10 +438,11 @@ class _FormNovaAtividadeState extends State<_FormNovaAtividade> {
   }
 }
 
-// ── Tela de entregas da atividade ────────────────────────────────────────────
+// ── Tela: entregas / status de alunos (Bug 3 corrigido) ──────────────────────
 
 class _EntregasAtividadeScreen extends StatefulWidget {
   final Atividade atividade;
+
   const _EntregasAtividadeScreen({required this.atividade});
 
   @override
@@ -399,138 +451,298 @@ class _EntregasAtividadeScreen extends StatefulWidget {
 }
 
 class _EntregasAtividadeScreenState extends State<_EntregasAtividadeScreen> {
-  late Future<List<AtividadeEntrega>> _futureEntregas;
+  final _service = AtividadeService();
+  List<AtividadeAlunoStatus> _status = [];
+  bool _carregando = true;
+  String _filtro = 'TODOS'; // TODOS | ENTREGUE | PENDENTE | ATRASADA
 
   @override
   void initState() {
     super.initState();
-    _futureEntregas = AtividadeService().entregasDaAtividade(
-      widget.atividade.id,
-    );
+    _carregar();
   }
 
-  Color _statusColor(StatusEntrega s) => switch (s) {
-    StatusEntrega.ENTREGUE => Colors.green,
-    StatusEntrega.ATRASADA => Colors.orange,
-    StatusEntrega.PENDENTE => Colors.grey,
-  };
+  Future<void> _carregar() async {
+    setState(() => _carregando = true);
+    try {
+      // Bug 3 corrigido: usa /status-alunos que retorna TODOS os alunos,
+      // inclusive os que ainda não entregaram.
+      final lista = await _service.statusAlunos(widget.atividade.id);
+      if (mounted) setState(() => _status = lista);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _carregando = false);
+    }
+  }
+
+  List<AtividadeAlunoStatus> get _filtrado {
+    if (_filtro == 'TODOS') return _status;
+    if (_filtro == 'ENTREGUE') {
+      return _status
+          .where((s) => s.status == 'ENTREGUE' || s.status == 'ATRASADA')
+          .toList();
+    }
+
+    return _status.where((s) => s.status == _filtro).toList();
+  }
+
+  int get _totalEntregaram => _status.where((s) => s.entregou).length;
+
+  String _formatarData(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.primary,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.atividade.titulo),
-            Text(
-              widget.atividade.nomeTurma,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
+        title: Text(
+          widget.atividade.titulo,
+          style: const TextStyle(fontSize: 16),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: _carregando
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '$_totalEntregaram / ${_status.length} entregaram',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      _FiltroChip(
+                        label: 'Todos',
+                        selecionado: _filtro == 'TODOS',
+                        onTap: () => setState(() => _filtro = 'TODOS'),
+                      ),
+                      const SizedBox(width: 4),
+                      _FiltroChip(
+                        label: 'Entregues',
+                        cor: Colors.green,
+                        selecionado: _filtro == 'ENTREGUE',
+                        onTap: () => setState(() => _filtro = 'ENTREGUE'),
+                      ),
+                      const SizedBox(width: 4),
+                      _FiltroChip(
+                        label: 'Pendentes',
+                        cor: Colors.orange,
+                        selecionado: _filtro == 'PENDENTE',
+                        onTap: () => setState(() => _filtro = 'PENDENTE'),
+                      ),
+                    ],
+                  ),
+                ),
         ),
       ),
-      body: FutureBuilder<List<AtividadeEntrega>>(
-        future: _futureEntregas,
-        builder: (_, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final lista = snap.data ?? [];
-          final entregues = lista
-              .where((e) => e.status != StatusEntrega.PENDENTE)
-              .length;
-          return Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: AppTheme.primary.withOpacity(0.06),
-                child: Row(
-                  children: [
-                    _badge('$entregues entregues', Colors.green),
-                    const SizedBox(width: 8),
-                    _badge(
-                      '${widget.atividade.totalAlunos - entregues} pendentes',
-                      Colors.grey,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: lista.isEmpty
-                    ? const Center(child: Text('Nenhuma entrega ainda.'))
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: lista.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 6),
-                        itemBuilder: (_, i) {
-                          final e = lista[i];
-                          return Card(
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _statusColor(
-                                  e.status,
-                                ).withOpacity(0.12),
-                                child: Text(
-                                  e.nomeAluno[0].toUpperCase(),
-                                  style: TextStyle(
-                                    color: _statusColor(e.status),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(e.nomeAluno),
-                              subtitle: Text(
-                                e.conteudo ?? '(sem texto)',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              trailing: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _statusColor(
-                                    e.status,
-                                  ).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  e.status.name,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: _statusColor(e.status),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+      body: _carregando
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _carregar,
+              child: _filtrado.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Nenhum aluno encontrado.',
+                        style: TextStyle(color: AppTheme.textSecondary),
                       ),
-              ),
-            ],
-          );
-        },
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: _filtrado.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (_, i) {
+                        final s = _filtrado[i];
+                        final cor = s.status == 'ENTREGUE'
+                            ? Colors.green
+                            : s.status == 'ATRASADA'
+                            ? Colors.orange
+                            : Colors.grey;
+
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: cor.withOpacity(0.4),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: cor.withOpacity(0.15),
+                                      child: Text(
+                                        s.nomeAluno
+                                            .substring(0, 1)
+                                            .toUpperCase(),
+                                        style: TextStyle(
+                                          color: cor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            s.nomeAluno,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Text(
+                                            s.matriculaAluno,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: cor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        s.status == 'ENTREGUE'
+                                            ? 'Entregue'
+                                            : s.status == 'ATRASADA'
+                                            ? 'Atrasada'
+                                            : 'Pendente',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: cor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                // Conteúdo da entrega
+                                if (s.entregou &&
+                                    s.conteudo != null &&
+                                    s.conteudo!.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  const Divider(height: 1),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    s.conteudo!,
+                                    style: const TextStyle(fontSize: 13),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+
+                                // Arquivo anexado — Bug 2 corrigido:
+                                // usa ArquivoChip compartilhado com entregaId
+                                if (s.entregou &&
+                                    (s.temArquivo ||
+                                        s.arquivoNome != null)) ...[
+                                  const SizedBox(height: 8),
+                                  ArquivoChip(
+                                    nome: s.arquivoNome ?? 'Arquivo',
+                                    tipo: s.arquivoTipo,
+                                    // entregaId habilita o download sob demanda
+                                    entregaId: s.entregaId,
+                                  ),
+                                ],
+
+                                // Data de entrega
+                                if (s.entregueEm != null) ...[
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.schedule_outlined,
+                                        size: 12,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Enviado em: ${_formatarData(s.entregueEm!)}',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+    );
+  }
+}
+
+// ── Chip de filtro ────────────────────────────────────────────────────────────
+
+class _FiltroChip extends StatelessWidget {
+  final String label;
+  final Color cor;
+  final bool selecionado;
+  final VoidCallback onTap;
+
+  const _FiltroChip({
+    required this.label,
+    this.cor = AppTheme.primary,
+    required this.selecionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selecionado ? cor.withOpacity(0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: selecionado ? cor : Colors.grey.shade300),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: selecionado ? FontWeight.bold : FontWeight.normal,
+            color: selecionado ? cor : Colors.white,
+          ),
+        ),
       ),
     );
   }
-
-  Widget _badge(String label, Color color) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: color.withOpacity(0.12),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(
-      label,
-      style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
-    ),
-  );
 }

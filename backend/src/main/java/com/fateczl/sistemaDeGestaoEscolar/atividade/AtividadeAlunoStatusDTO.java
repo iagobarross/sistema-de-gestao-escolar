@@ -5,18 +5,16 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
-public class AtividadeEntregaResponseDTO {
-    private Long id;
-    private Long atividadeId;
-    private String tituloAtividade;
+public class AtividadeAlunoStatusDTO {
     private Long alunoId;
     private String nomeAluno;
     private String matriculaAluno;
-    private String conteudo;
-    private LocalDateTime entregueEm;
-    private StatusEntrega status;
 
+    private Long entregaId;
+    private String status;
+    private String conteudo;
     private String arquivoNome;
     private String arquivoTipo;
     private boolean temArquivo;
+    private LocalDateTime entregueEm;
 }

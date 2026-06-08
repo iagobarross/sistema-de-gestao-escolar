@@ -333,6 +333,8 @@ class _ListaAlunoScreenState extends State<ListaAlunoScreen> {
                                     if (turmas.isNotEmpty)
                                       Text(
                                         turmas.join(' · '),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: AppTheme.textSecondary,

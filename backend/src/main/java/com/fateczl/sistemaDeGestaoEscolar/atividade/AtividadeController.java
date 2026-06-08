@@ -47,6 +47,26 @@ public class AtividadeController {
             .map(this::toEntregaDTO).collect(Collectors.toList()));
     }
 
+    @GetMapping("/{atividadeId}/status-alunos")
+    @PreAuthorize("hasAnyRole('PROFESSOR', 'COORDENADOR', 'DIRETOR', 'ADMIN')")
+    public ResponseEntity<List<AtividadeAlunoStatusDTO>> statusAlunos(@PathVariable Long atividadeId) {
+        return ResponseEntity.ok(service.getStatusAlunos(atividadeId));
+    }
+
+    @GetMapping("/entrega/{entregaId}/arquivo")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AtividadeArquivoDTO> baixarArquivo(@PathVariable Long entregaId){
+        AtividadeEntrega entrega = service.findEntregaById(entregaId);
+        if (entrega.getArquivoBase64() == null || entrega.getArquivoBase64().isBlank()){
+            return ResponseEntity.notFound().build();
+        }
+        AtividadeArquivoDTO dto = new AtividadeArquivoDTO();
+        dto.setArquivoBase64(entrega.getArquivoBase64());
+        dto.setArquivoNome(entrega.getArquivoNome());
+        dto.setArquivoTipo(entrega.getArquivoTipo());
+        return ResponseEntity.ok(dto);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('PROFESSOR','COORDENADOR','ADMIN')")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {

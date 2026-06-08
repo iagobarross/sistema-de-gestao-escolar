@@ -46,6 +46,15 @@ public class AtividadeEntrega {
     @Column(columnDefinition = "TEXT")
     private String conteudo;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String arquivoBase64;
+
+    @Column(length = 255)
+    private String arquivoNome;
+
+    @Column(length = 100)
+    private String arquivoTipo;
+
     private LocalDateTime entregueEm;
 
     @Enumerated(EnumType.STRING)

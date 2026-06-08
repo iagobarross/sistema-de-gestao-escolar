@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 enum StatusEntrega { PENDENTE, ENTREGUE, ATRASADA }
 
 class Atividade {
@@ -53,6 +51,9 @@ class AtividadeEntrega {
   final String? conteudo;
   final DateTime? entregueEm;
   final StatusEntrega status;
+  final String? arquivoNome;
+  final String? arquivoTipo;
+  final bool temArquivo;
 
   AtividadeEntrega({
     required this.id,
@@ -64,6 +65,9 @@ class AtividadeEntrega {
     this.conteudo,
     this.entregueEm,
     required this.status,
+    this.arquivoNome,
+    this.arquivoTipo,
+    required this.temArquivo,
   });
 
   factory AtividadeEntrega.fromJson(Map<String, dynamic> j) => AtividadeEntrega(
@@ -81,5 +85,59 @@ class AtividadeEntrega {
       (s) => s.name == j['status'],
       orElse: () => StatusEntrega.PENDENTE,
     ),
+    arquivoNome: j['arquivoNome'],
+    arquivoTipo: j['arquivoTipo'],
+    // Usa nome como fallback caso temArquivo não venha no JSON
+    temArquivo:
+        j['temArquivo'] == true ||
+        (j['arquivoNome'] != null && (j['arquivoNome'] as String).isNotEmpty),
   );
+}
+
+/// Status de um aluno em relação a uma atividade (inclusive pendentes).
+class AtividadeAlunoStatus {
+  final int alunoId;
+  final String nomeAluno;
+  final String matriculaAluno;
+  final int? entregaId;
+  final String status; // PENDENTE | ENTREGUE | ATRASADA
+  final String? conteudo;
+  final String? arquivoNome;
+  final String? arquivoTipo;
+  final bool temArquivo;
+  final DateTime? entregueEm;
+
+  AtividadeAlunoStatus({
+    required this.alunoId,
+    required this.nomeAluno,
+    required this.matriculaAluno,
+    this.entregaId,
+    required this.status,
+    this.conteudo,
+    this.arquivoNome,
+    this.arquivoTipo,
+    required this.temArquivo,
+    this.entregueEm,
+  });
+
+  bool get entregou => status != 'PENDENTE';
+
+  factory AtividadeAlunoStatus.fromJson(Map<String, dynamic> j) =>
+      AtividadeAlunoStatus(
+        alunoId: j['alunoId'],
+        nomeAluno: j['nomeAluno'] ?? '',
+        matriculaAluno: j['matriculaAluno'] ?? '',
+        entregaId: j['entregaId'],
+        status: j['status'] ?? 'PENDENTE',
+        conteudo: j['conteudo'],
+        arquivoNome: j['arquivoNome'],
+        arquivoTipo: j['arquivoTipo'],
+        temArquivo:
+            j['temArquivo'] == true ||
+            (j['arquivoNome'] != null &&
+                (j['arquivoNome'] as String).isNotEmpty),
+        entregueEm: j['entregueEm'] != null
+            ? DateTime.parse(j['entregueEm'])
+            : null,
+      );
 }

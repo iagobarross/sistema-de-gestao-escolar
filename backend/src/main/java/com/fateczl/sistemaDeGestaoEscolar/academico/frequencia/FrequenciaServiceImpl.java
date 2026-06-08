@@ -21,6 +21,7 @@ public class FrequenciaServiceImpl implements FrequenciaService {
     private final AulaRepository aulaRepository;
     private final AlunoRepository alunoRepository;
 
+    @Transactional
     public List<Frequencia> lancarChamada(LancarChamadaRequestDTO dto) {
         var aula = aulaRepository.findById(dto.getAulaId())
             .orElseThrow(() -> new ResourceNotFoundException("Aula não encontrada com o ID: " + dto.getAulaId()));

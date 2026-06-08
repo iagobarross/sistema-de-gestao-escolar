@@ -483,6 +483,7 @@ class _LancarNotasScreenState extends State<LancarNotasScreen> {
                                   const SizedBox(width: 6),
                                   Text(
                                     _avaliacaoSelecionada!['titulo'] as String,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
