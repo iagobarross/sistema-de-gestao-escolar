@@ -2,6 +2,7 @@ package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -12,13 +13,12 @@ import com.fateczl.sistemaDeGestaoEscolar.config.exception.BusinessException;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundException;
 
 @Service
+@RequiredArgsConstructor
 public class ResponsavelServiceImpl implements ResponsavelService{
-    
-    @Autowired
-    private ResponsavelRepository responsavelRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final ResponsavelRepository responsavelRepository;
+
+    private final PasswordEncoder passwordEncoder;
     
     @Override
     public List<Responsavel> findAll() {

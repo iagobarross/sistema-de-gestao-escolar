@@ -5,6 +5,7 @@ import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundExcep
 import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,16 +13,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FuncionarioServiceImpl implements FuncionarioService {
 
-    @Autowired
-    private FuncionarioRepository funcionarioRepository;
+    private final FuncionarioRepository funcionarioRepository;
 
-    @Autowired
-    private EscolaRepository escolaRepository;
+    private final EscolaRepository escolaRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<Funcionario> findAll() {

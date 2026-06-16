@@ -1,0 +1,162 @@
+@startuml
+' --- Configurações Estéticas ---
+skinparam monochrome true
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+hide empty members
+
+' --- PACOTE DE DOMÍNIO (ENTIDADES) ---
+package "Domain / Entities" {
+    abstract class Usuario {
+        - Long id
+        - String nome
+        - String email
+        - String senha
+        - boolean ativo
+        - LocalDateTime dataCriacao
+    }
+
+    class Aluno {
+        - String matricula
+        - LocalDate dataNascimento
+    }
+
+    class Professor {
+        - String especialidade
+    }
+
+    class Responsavel {
+        - String cpf
+        - String telefone
+    }
+
+    class Escola {
+        - Long id
+        - String codigo
+        - String nome
+        - String cnpj
+        - String endereco
+    }
+
+    class Turma {
+        - Long id
+        - int ano
+        - String serie
+        - String turno
+    }
+
+    class Disciplina {
+        - Long id
+        - String codigo
+        - String nome
+        - String descricao
+        - double notaMinima
+        - int cargaHoraria
+    }
+}
+
+' --- RELACIONAMENTOS ENTRE ENTIDADES (ESTILO CLÁSSICO) ---
+Usuario <|-- Aluno
+Usuario <|-- Professor
+Usuario <|-- Responsavel
+
+Aluno "n" --> "1" Escola : estuda em
+Aluno "n" --> "1" Responsavel : possui
+Aluno "0..*" -- "0..*" Turma : matriculado em
+Professor "n" --> "1" Escola : leciona em
+Responsavel "1" --> "0..*" Aluno : responsável por
+Turma "0..*" -- "0..*" Aluno : contém
+
+' --- CAMADA DE APLICAÇÃO (SERVICES & REPOSITORIES) ---
+package "Application / Infrastructure" {
+    interface EscolaRepository <<interface>>
+    interface AlunoRepository <<interface>>
+    interface ProfessorRepository <<interface>>
+    interface ResponsavelRepository <<interface>>
+    interface TurmaRepository <<interface>>
+    interface DisciplinaRepository <<interface>>
+
+    interface EscolaService <<interface>>
+    class EscolaServiceImpl
+    interface AlunoService <<interface>>
+    class AlunoServiceImpl
+    interface ProfessorService <<interface>>
+    class ProfessorServiceImpl
+    interface ResponsavelService <<interface>>
+    class ResponsavelServiceImpl
+    interface TurmaService <<interface>>
+    class TurmaServiceImpl
+    interface DisciplinaService <<interface>>
+    class DisciplinaServiceImpl
+}
+
+' Implementações de Service
+EscolaService <|.. EscolaServiceImpl
+AlunoService <|.. AlunoServiceImpl
+ProfessorService <|.. ProfessorServiceImpl
+ResponsavelService <|.. ResponsavelServiceImpl
+TurmaService <|.. TurmaServiceImpl
+DisciplinaService <|.. DisciplinaServiceImpl
+
+' Dependências de Service para Repository
+EscolaServiceImpl --> EscolaRepository
+AlunoServiceImpl --> AlunoRepository
+AlunoServiceImpl --> EscolaRepository
+AlunoServiceImpl --> ResponsavelRepository
+ProfessorServiceImpl --> ProfessorRepository
+ProfessorServiceImpl --> EscolaRepository
+ResponsavelServiceImpl --> ResponsavelRepository
+TurmaServiceImpl --> TurmaRepository
+TurmaServiceImpl --> AlunoRepository
+DisciplinaServiceImpl --> DisciplinaRepository
+
+' --- CAMADA DE API (CONTROLLERS & MAPPERS) ---
+package "Web / API" {
+    class EscolaController
+    class AlunoController
+    class ProfessorController
+    class ResponsavelController
+    class TurmaController
+    class DisciplinaController
+
+    class EscolaMapper
+    class AlunoMapper
+    class ProfessorMapper
+    class ResponsavelMapper
+    class TurmaMapper
+    class DisciplinaMapper
+}
+
+' Relacionamentos Web -> Service
+EscolaController --> EscolaService
+AlunoController --> AlunoService
+ProfessorController --> ProfessorService
+ResponsavelController --> ResponsavelService
+TurmaController --> TurmaService
+DisciplinaController --> DisciplinaService
+
+' Relacionamentos Controller -> Mapper
+EscolaController ..> EscolaMapper
+AlunoController ..> AlunoMapper
+ProfessorController ..> ProfessorMapper
+ResponsavelController ..> ResponsavelMapper
+TurmaController ..> TurmaMapper
+DisciplinaController ..> DisciplinaMapper
+
+' --- CONFIGURAÇÕES E EXCEÇÕES ---
+package "Config & Exceptions" {
+    class SecurityConfig
+    class DataSeeder
+    class BusinessException
+    class ResourceNotFoundException
+}
+
+DataSeeder --> EscolaRepository
+DataSeeder --> AlunoRepository
+DataSeeder --> ProfessorRepository
+DataSeeder --> ResponsavelRepository
+DataSeeder --> TurmaRepository
+DataSeeder --> DisciplinaRepository
+
+@enduml

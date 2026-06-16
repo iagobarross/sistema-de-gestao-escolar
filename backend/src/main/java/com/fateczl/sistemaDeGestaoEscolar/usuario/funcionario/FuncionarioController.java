@@ -1,6 +1,7 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,13 +10,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/funcionario")
+@RequiredArgsConstructor
 public class FuncionarioController {
 
-    @Autowired
-    private FuncionarioService funcionarioService;
+    private final FuncionarioService funcionarioService;
 
-    @Autowired
-    private FuncionarioMapper funcionarioMapper;
+    private final FuncionarioMapper funcionarioMapper;
 
     @GetMapping
     public ResponseEntity<List<FuncionarioResponseDTO>> listarTodos() {

@@ -2,6 +2,7 @@ package com.fateczl.sistemaDeGestaoEscolar.academico.avaliacao;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,9 +58,19 @@ public class AvaliacaoControllerTest {
     @Test
     @WithMockUser(roles = "ALUNO")
     public void deveRetornarForbidden_AoTentarCriarAvaliacaoComoAluno() throws Exception {
+        // 1. Precisamos montar um DTO válido para passar pelo @Valid e testar apenas a segurança
+        AvaliacaoRequestDTO dtoValido = new AvaliacaoRequestDTO();
+        dtoValido.setMatrizCurricularId(1L);
+        dtoValido.setTitulo("P1 - Backend");
+        dtoValido.setTipo(TipoAvaliacao.PROVA);
+        dtoValido.setDataAplicacao(LocalDate.now().plusDays(1));
+        dtoValido.setBimestre(1); // Bimestre >= 1 para não dar erro @Min
+
+        // 2. Disparar a requisição
         mockMvc.perform(post("/api/v1/avaliacao")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().isForbidden());
+                        .with(csrf()) // IMPORTANTE: Mantenha o csrf() para POSTs no Spring Security
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dtoValido))) // Envia o JSON preenchido
+                .andExpect(status().isForbidden()); // Agora sim, esperamos o 403!
     }
 }

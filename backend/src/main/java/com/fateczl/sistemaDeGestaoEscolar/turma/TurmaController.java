@@ -3,6 +3,7 @@ package com.fateczl.sistemaDeGestaoEscolar.turma;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,13 +22,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/turma")
+@RequiredArgsConstructor
 public class TurmaController {
 
-    @Autowired
-    private TurmaService turmaService;
+    private final TurmaService turmaService;
 
-    @Autowired
-    private TurmaMapper turmaMapper;
+    private final TurmaMapper turmaMapper;
 
     // --- CRUD Básico ---
 

@@ -2,6 +2,7 @@ package com.fateczl.sistemaDeGestaoEscolar.chat;
 
 import com.fateczl.sistemaDeGestaoEscolar.usuario.Usuario;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -14,16 +15,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
+@RequiredArgsConstructor
 public class ChatController {
 
-    @Autowired
-    private MensagemRepository mensagemRepository;
+    private final MensagemRepository mensagemRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat.enviarPublico")
     @SendTo("/topic/publico")

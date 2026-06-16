@@ -6,6 +6,7 @@ import com.fateczl.sistemaDeGestaoEscolar.usuario.Role;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario.Funcionario;
 import com.fateczl.sistemaDeGestaoEscolar.usuario.funcionario.FuncionarioRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -16,19 +17,17 @@ import com.fateczl.sistemaDeGestaoEscolar.config.exception.BusinessException;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundException;
 
 @Service
+@RequiredArgsConstructor
 public class EscolaServiceImpl implements EscolaService{
 
-	@Autowired
-	private EscolaRepository escolaRepository;
+	private final EscolaRepository escolaRepository;
 
-	@Autowired
-	private EscolaMapper escolaMapper; // NOVO: Certifique-se que o Mapper da escola está injetado aqui
+	private final EscolaMapper escolaMapper; // NOVO: Certifique-se que o Mapper da escola está injetado aqui
 
-	@Autowired
-	private FuncionarioRepository funcionarioRepository;
+	private final FuncionarioRepository funcionarioRepository;
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+	private final PasswordEncoder passwordEncoder;
+
     @Override
 	public List<Escola> findAll(){
 		return escolaRepository.findAll(Sort.by("nome").ascending());

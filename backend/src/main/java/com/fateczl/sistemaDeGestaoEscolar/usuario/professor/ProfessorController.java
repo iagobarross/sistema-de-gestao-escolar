@@ -1,6 +1,8 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.professor;
 
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,13 +11,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/professor")
+@RequiredArgsConstructor
 public class ProfessorController {
 
-    @Autowired
-    private ProfessorService professorService;
+    private final ProfessorService professorService;
 
-    @Autowired
-    private ProfessorMapper professorMapper;
+    private final ProfessorMapper professorMapper;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA', 'PROFESSOR')")

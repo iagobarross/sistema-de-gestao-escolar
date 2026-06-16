@@ -1,6 +1,8 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.professor;
 
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,16 +14,14 @@ import com.fateczl.sistemaDeGestaoEscolar.escola.Escola;
 import com.fateczl.sistemaDeGestaoEscolar.escola.EscolaRepository;
 
 @Service
+@RequiredArgsConstructor
 public class ProfessorServiceImpl implements ProfessorService {
 
-    @Autowired
-    private ProfessorRepository professorRepository;
+    private final ProfessorRepository professorRepository;
 
-    @Autowired
-    private EscolaRepository escolaRepository;
+    private final EscolaRepository escolaRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<Professor> findAll() {

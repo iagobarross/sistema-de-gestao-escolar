@@ -2,6 +2,7 @@ package com.fateczl.sistemaDeGestaoEscolar.disciplina;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -11,10 +12,10 @@ import com.fateczl.sistemaDeGestaoEscolar.config.exception.BusinessException;
 import com.fateczl.sistemaDeGestaoEscolar.config.exception.ResourceNotFoundException;
 
 @Service
+@RequiredArgsConstructor
 public class DisciplinaServiceImpl implements DisciplinaService{
-    
-    @Autowired
-    private DisciplinaRepository disciplinaRepository;
+
+    private final DisciplinaRepository disciplinaRepository;
 
 	@Override
     public List<Disciplina> findAll(){

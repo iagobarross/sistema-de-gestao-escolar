@@ -1,5 +1,6 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.aluno;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,13 +13,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/aluno")
+@RequiredArgsConstructor
 public class AlunoController {
 
-    @Autowired
-    private AlunoService alunoService;
+    private final AlunoService alunoService;
 
-    @Autowired
-    private AlunoMapper alunoMapper;
+    private final AlunoMapper alunoMapper;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA','COORDENADOR', 'PROFESSOR', 'RESPONSAVEL')")

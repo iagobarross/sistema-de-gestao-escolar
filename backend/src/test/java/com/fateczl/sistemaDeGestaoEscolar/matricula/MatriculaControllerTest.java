@@ -1,7 +1,8 @@
 package com.fateczl.sistemaDeGestaoEscolar.matricula;
 
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,12 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fateczl.sistemaDeGestaoEscolar.turma.TurmaService;
 
 @SpringBootTest
@@ -30,44 +29,40 @@ public class MatriculaControllerTest {
     @MockBean
     private TurmaService turmaService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private MatriculaDTO matriculaDTO;
+    private Long alunoId;
+    private Long turmaId;
 
     @BeforeEach
     void setUp() {
-        matriculaDTO = new MatriculaDTO();
-        matriculaDTO.setAlunoId(1L);
-        matriculaDTO.setTurmaId(10L);
+        // Em vez de usar o DTO que enviava um JSON, vamos usar os IDs para a URL
+        alunoId = 1L;
+        turmaId = 10L;
     }
 
     /**
      * Testa se um ADMIN consegue realizar a matrícula.
-     * Note: Este teste assume que você criará um método matricularAluno no
-     * TurmaService.
      */
     @Test
     @WithMockUser(roles = "ADMIN")
     public void deveRealizarMatricula_QuandoUsuarioForAdmin() throws Exception {
-        // Simulando que o serviço de matrícula não retorna erro
-        // doNothing().when(turmaService).matricularAluno(anyLong(), anyLong());
+        // Simulando o retorno da procedure do banco que está no seu TurmaController
+        when(turmaService.matricularAlunoViaProcedure(anyLong(), anyLong()))
+                .thenReturn("Matrícula realizada com sucesso");
 
-        mockMvc.perform(post("/api/v1/turma/matricula")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(matriculaDTO)))
+        // A URL mudou e não enviamos mais .content() com JSON
+        mockMvc.perform(post("/api/v1/turma/" + turmaId + "/matricular/" + alunoId)
+                        .with(csrf())) // Adicionado csrf() para evitar erro 403
                 .andExpect(status().isOk());
     }
 
     /**
-     * Testa se a segurança bloqueia usuários sem a Role ADMIN.
+     * Testa se a segurança bloqueia usuários sem a Role correta (ex: USER comum).
      */
     @Test
     @WithMockUser(roles = "USER")
     public void deveRetornarForbidden_QuandoUsuarioNaoForAdmin() throws Exception {
-        mockMvc.perform(post("/api/v1/turma/matricula")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(matriculaDTO)))
+        mockMvc.perform(post("/api/v1/turma/" + turmaId + "/matricular/" + alunoId)
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -76,9 +71,8 @@ public class MatriculaControllerTest {
      */
     @Test
     public void deveRetornarUnauthorized_QuandoNaoAutenticado() throws Exception {
-        mockMvc.perform(post("/api/v1/turma/matricula")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(matriculaDTO)))
+        mockMvc.perform(post("/api/v1/turma/" + turmaId + "/matricular/" + alunoId)
+                        .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 }

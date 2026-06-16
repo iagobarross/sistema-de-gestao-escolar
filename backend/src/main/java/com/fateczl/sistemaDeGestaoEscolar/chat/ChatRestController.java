@@ -1,5 +1,6 @@
 package com.fateczl.sistemaDeGestaoEscolar.chat;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +12,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/chat")
+@RequiredArgsConstructor
 public class ChatRestController {
 
-    @Autowired
-    private MensagemRepository mensagemRepository;
+    private final MensagemRepository mensagemRepository;
 
     @GetMapping("/conversas/{conversaId}/mensagens")
     public ResponseEntity<List<Map<String, Object>>> getHistorico(@PathVariable Long conversaId) {

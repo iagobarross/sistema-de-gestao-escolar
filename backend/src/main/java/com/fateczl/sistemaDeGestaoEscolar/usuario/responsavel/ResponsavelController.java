@@ -1,6 +1,8 @@
 package com.fateczl.sistemaDeGestaoEscolar.usuario.responsavel;
 
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,13 +11,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/responsavel")
+@RequiredArgsConstructor
 public class ResponsavelController {
 
-    @Autowired
-    private ResponsavelService responsavelService;
+    private final ResponsavelService responsavelService;
 
-    @Autowired
-    private ResponsavelMapper responsavelMapper;
+    private final ResponsavelMapper responsavelMapper;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','DIRETOR','SECRETARIA')")

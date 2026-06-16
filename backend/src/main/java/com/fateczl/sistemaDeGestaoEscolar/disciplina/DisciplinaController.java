@@ -2,6 +2,7 @@ package com.fateczl.sistemaDeGestaoEscolar.disciplina;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,13 +20,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/disciplina")
+@RequiredArgsConstructor
 public class DisciplinaController {
     
-    @Autowired
-    private DisciplinaService disciplinaService;
+    private final DisciplinaService disciplinaService;
 
-    @Autowired
-    private DisciplinaMapper disciplinaMapper;
+    private final DisciplinaMapper disciplinaMapper;
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")

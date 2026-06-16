@@ -25,17 +25,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AlunoServiceImpl implements AlunoService {
-    @Autowired
-    private AlunoRepository alunoRepository;
 
-    @Autowired
-    private EscolaRepository escolaRepository; // Injeção necessária
+    private final AlunoRepository alunoRepository;
 
-    @Autowired
-    private ResponsavelRepository responsavelRepository; // Injeção necessária
+    private final EscolaRepository escolaRepository; // Injeção necessária
 
-    @Autowired
-    private PasswordEncoder passwordEncoder; // Injeção necessária
+    private final ResponsavelRepository responsavelRepository; // Injeção necessária
+
+    private final PasswordEncoder passwordEncoder; // Injeção necessária
 
     private final FuncionarioRepository funcionarioRepository;
 

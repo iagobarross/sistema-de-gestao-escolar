@@ -2,6 +2,7 @@ package com.fateczl.sistemaDeGestaoEscolar.escola;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,13 +20,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/escola")
+@RequiredArgsConstructor
 public class EscolaController {
 
-	@Autowired
-	private EscolaService escolaService;
+	private final EscolaService escolaService;
 	
-	@Autowired
-	private EscolaMapper escolaMapper;
+	private final EscolaMapper escolaMapper;
 	
 	@GetMapping
 	@PreAuthorize("isAuthenticated()")
